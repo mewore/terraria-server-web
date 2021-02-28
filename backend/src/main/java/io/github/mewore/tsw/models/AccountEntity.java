@@ -37,16 +37,16 @@ public class AccountEntity {
 
     @Builder.Default
     @Column(nullable = false, unique = true)
-    private final @NonNull @NotBlank String username = null;
+    private final @NonNull @NotBlank String username = "";
 
     @JsonIgnore
     @Builder.Default
     @Column(nullable = false)
-    private final @NonNull byte[] password = new byte[0];
+    private final byte[] password = new byte[0];
 
     @Builder.Default
     @Column(nullable = false)
-    private final @NonNull byte[] session = new byte[0];
+    private final byte[] session = new byte[0];
 
     @Builder.Default
     @Column(nullable = false)
@@ -54,5 +54,6 @@ public class AccountEntity {
 
     @Builder.Default
     @ManyToOne
-    private final @Nullable AccountRoleEntity role = null;
+    @Nullable
+    private final AccountRoleEntity role = null;
 }

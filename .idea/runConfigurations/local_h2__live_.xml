@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="local-h2 (live)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="io.github.mewore.tsw.Application" />
+    <module name="terraria-server-web.backend.main" />
+    <option name="PROGRAM_PARAMETERS" value="--spring.profiles.active=common,local-h2,live-frontend" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

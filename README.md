@@ -7,7 +7,7 @@ A web UI for Terraria server management.
 ### MVP
 
 - [x] 💙💜💛 Minimal project with basic authentication
-- [ ] 💙 Hosts register their state in the database
+- [x] 💙 Hosts register their state in the database
 - [ ] 💙💛 Host summary (on the front page)
 - [ ] 💙💛 Ability to configure the Terraria executable path of a host ("${HOME}/.local/share/Terraria/{Instances |
   Executables}" by default) and to view what is present

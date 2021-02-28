@@ -1,4 +1,4 @@
-CREATE TABLE public.account (
+CREATE TABLE account (
 	id int8 NOT NULL,
 	"password" bytea NOT NULL,
 	"session" bytea NOT NULL,
@@ -9,5 +9,5 @@ CREATE TABLE public.account (
 	CONSTRAINT account_username_ukey UNIQUE (username)
 );
 
--- public.account foreign keys
-ALTER TABLE public.account ADD CONSTRAINT account_role_fkey FOREIGN KEY (role_id) REFERENCES account_role(id);
+-- account foreign keys
+ALTER TABLE account ADD CONSTRAINT account_role_fkey FOREIGN KEY (role_id) REFERENCES account_role(id);
