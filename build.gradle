@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+}
+
+group = 'io.github.mewore.terraria'
+version = '0.0.1-SNAPSHOT'
+
+def backendTask = tasks.getByPath('backend:bootJar')
+def frontendTask = tasks.getByPath('frontend:jar')
+def jarTasksToMerge = [backendTask, frontendTask]
+jar.dependsOn(jarTasksToMerge)
+jar {
+    jarTasksToMerge.forEach {
+        inputs.dir(it.project.buildDir)
+    }
+
+    doFirst 'Detect .jar files', {
+        FileTree combinedFiles
+        jarTasksToMerge.forEach {
+            final boolean useManifest = it == backendTask
+            it.outputs.files.files.forEach {
+                if (it.name.endsWith('.jar')) {
+                    def jarTree = zipTree(it)
+                    combinedFiles = combinedFiles == null ? jarTree : combinedFiles + jarTree
+                    if (useManifest) {
+                        manifest = manifest.from(jarTree.filter {
+                            final File file = it
+                            return file.name == 'MANIFEST.MF'
+                        }.singleFile)
+                    }
+                }
+            }
+        }
+
+        from combinedFiles
+        entryCompression = ZipEntryCompression.STORED
+    }
+}

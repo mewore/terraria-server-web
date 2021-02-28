@@ -1,0 +1,52 @@
+{
+    "app": {
+        "name": "Terraria Server"
+    },
+    "authentication": {
+        "dialog": {
+            "errors": {
+                "bad-request": "Invalid username or password!",
+                "unauthorized": "Incorrect username or password!"
+            },
+            "username": {
+                "label": "Enter your username",
+                "placeholder": "Username"
+            },
+            "password": {
+                "label": "Enter your password",
+                "placeholder": "Password"
+            },
+            "buttons": {
+                "sign-up": "Sign up",
+                "log-in": "Log in",
+                "log-out": "Log out"
+            },
+            "title": "Log in or sign up"
+        }
+    },
+    "dialog": {
+        "buttons": {
+            "cancel": "Cancel"
+        }
+    },
+    "header": {
+        "session-info": {
+            "username": {
+                "anonymous": "[Anonymous]"
+            }
+        }
+    },
+    "input": {
+        "errors": {
+            "required": "* Required"
+        }
+    },
+    "log-out": {
+        "dialog": {
+            "buttons": {
+                "log-out": "Log out"
+            },
+            "title": "Log out"
+        }
+    }
+}

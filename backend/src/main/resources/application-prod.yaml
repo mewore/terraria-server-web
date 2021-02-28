@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${TSW_DB_LOCATION:localhost}:5432/${TSW_DB_NAME}
+    driverClassName: org.postgresql.Driver
+    username: ${TSW_DB_USERNAME}
+    password: ${TSW_DB_PASSWORD}
+  flyway:
+    enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL82Dialect
+    hibernate:
+      ddl-auto: validate

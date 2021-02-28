@@ -1,0 +1,4 @@
+<div>
+    {{ username || ('header.session-info.username.anonymous' | translate) }}
+    <button mat-icon-button (click)="onAuthButtonClicked()"><mat-icon>exit_to_app</mat-icon></button>
+</div>

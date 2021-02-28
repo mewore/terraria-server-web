@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/terraria_server_web_dev
+    driverClassName: org.postgresql.Driver
+    username: ${TSW_DB_USERNAME:tswdev}
+    password: ${TSW_DB_PASSWORD}
+  flyway:
+    enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL82Dialect
+    hibernate:
+      ddl-auto: validate

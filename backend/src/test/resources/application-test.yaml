@@ -1,0 +1,16 @@
+# Same as local-h2, except that it does not have the H2 console
+spring:
+  main:
+    banner-mode: off
+  datasource:
+    url: jdbc:h2:mem:localh2
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create
+logging:
+  level:
+    root: WARN

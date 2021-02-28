@@ -1,0 +1,3 @@
+rootProject.name = 'terraria-server-web'
+include 'backend'
+include 'frontend'

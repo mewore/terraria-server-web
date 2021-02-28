@@ -1,0 +1,9 @@
+<h2>{{ 'log-out.dialog.title' | translate }}</h2>
+
+<mat-dialog-actions align="end">
+    <button mat-button [mat-dialog-close]>{{ 'dialog.buttons.cancel' | translate }}</button>
+    <button mat-raised-button (click)="logOut()" [disabled]="loggingOut" color="warn">
+        {{ 'log-out.dialog.buttons.log-out' | translate }}
+    </button>
+    <mat-progress-bar mode="indeterminate" [class]="loggingOut ? '' : 'tsw-invisible'" color="warn"></mat-progress-bar>
+</mat-dialog-actions>

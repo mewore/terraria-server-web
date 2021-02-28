@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id "com.github.node-gradle.node" version "3.0.0-rc5"
+}
+
+group = 'io.github.mewore.terraria'
+version = '0.0.1-SNAPSHOT'
+
+node {
+    version = '10.19.0'
+    npmVersion = '6.14.4'
+    download = true
+}
+
+final String GENERATED_TS_DIR = "src/generated"
+def generateTsTask = tasks.getByPath(':backend:generateTypeScript')
+task getBackendDefinitions(type: Copy, dependsOn: generateTsTask) {
+    inputs.files(generateTsTask.outputs.getFiles())
+    from generateTsTask.outputs.getFiles()
+
+    outputs.dir(GENERATED_TS_DIR)
+    into GENERATED_TS_DIR
+}
+
+final String[] COMMON_ROOT_SOURCE_FILES = ['angular.json', 'package.json', 'package-lock.json', 'tsconfig.json']
+
+task frontendLint(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
+    inputs.dir('src')
+    inputs.files(COMMON_ROOT_SOURCE_FILES)
+    inputs.files('tslint.json')
+    outputs.upToDateWhen { true }
+    args = ['run', 'lint']
+    description('Lints the frontend code.')
+}
+
+task frontendBuild(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
+    inputs.dir('src')
+    inputs.files(COMMON_ROOT_SOURCE_FILES)
+    inputs.file('tsconfig.app.json')
+    outputs.dir('dist')
+    args = ['run', 'build']
+    description('Builds the the frontend after ensuring the NPM dependencies are present.')
+}
+
+task frontendBuildProd(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
+    inputs.dir('src')
+    inputs.files(COMMON_ROOT_SOURCE_FILES)
+    inputs.file('tsconfig.app.json')
+    outputs.dir('dist')
+    args = ['run', 'build-prod']
+    description('Builds the the frontend after ensuring the NPM dependencies are present.')
+}
+
+task frontendBuildWatch(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
+    args = ['run', 'build-watch']
+    description('Builds the the frontend after ensuring the NPM dependencies are present and watches for changes.')
+}
+
+task frontendTest(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
+    inputs.dir('src')
+    inputs.files(COMMON_ROOT_SOURCE_FILES)
+    inputs.files('tsconfig.spec.json', 'karma.conf.js')
+    outputs.dir('coverage')
+    args = ['run', 'test']
+    description('Tests the frontend.')
+}
+
+// TODO: Fix and uncomment frontendTest
+jar.dependsOn([frontendLint, frontendBuildProd, /*frontendTest*/])
+jar {
+    inputs.dir('dist')
+    outputs.dir('build')
+    from 'dist/terraria-server-web' into 'BOOT-INF/classes/static'
+}

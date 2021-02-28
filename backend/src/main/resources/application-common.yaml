@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    open-in-view: false
+    # Set `show-sql`/`format_sql`/`generate_statistics` to true locally if debugging is necessary
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        generate_statistics: false
+        jdbc:
+          batch_size: 100
+          order_inserts: true
+          order_updates: true
+  resources:
+    static-locations: classpath:/static/
+  flyway:
+    baselineOnMigrate: true
+    baselineVersion: 0.0
+    enabled: false
+hibernate:
+  id:
+    new_generator_mappings: true
