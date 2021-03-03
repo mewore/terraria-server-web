@@ -18,6 +18,7 @@ import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.FileService;
+import lombok.Getter;
 import lombok.NonNull;
 
 /**
@@ -33,6 +34,7 @@ public class LocalHostService {
 
     private static final Path UUID_FILE_PATH = Paths.get(".tsw_host_uuid");
 
+    @Getter
     private final UUID hostUuid;
 
     private final @NonNull HostRepository hostRepository;

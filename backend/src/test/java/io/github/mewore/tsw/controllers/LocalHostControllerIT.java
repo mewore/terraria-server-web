@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
-import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.services.LocalHostService;
 
 import static org.mockito.Mockito.when;
@@ -29,18 +28,10 @@ class LocalHostControllerIT {
     private LocalHostService localHostService;
 
     @Test
-    void testGetLocalHost() throws Exception {
-        final HostEntity host = HostEntity.builder()
-                .id(8L)
-                .uuid(UUID.fromString("f7cda826-a3b6-4d0a-932f-4e384914b1c6"))
-                .name("Host name")
-                .build();
-        when(localHostService.getHost()).thenReturn(host);
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts/local"))
+    void testGetLocalHostUuid() throws Exception {
+        when(localHostService.getHostUuid()).thenReturn(UUID.fromString("f7cda826-a3b6-4d0a-932f-4e384914b1c6"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts/local/uuid"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
-                .andExpect(MockMvcResultMatchers.content()
-                        .string("{\"id\":8,\"uuid\":\"f7cda826-a3b6-4d0a-932f-4e384914b1c6\",\"alive\":false," +
-                                "\"name\":\"Host name\",\"url\":null," + "\"terrariaInstanceDirectory\":\"" +
-                                host.getTerrariaInstanceDirectory().toUri().toString() + "\"}"));
+                .andExpect(MockMvcResultMatchers.content().string("\"f7cda826-a3b6-4d0a-932f-4e384914b1c6\""));
     }
 }

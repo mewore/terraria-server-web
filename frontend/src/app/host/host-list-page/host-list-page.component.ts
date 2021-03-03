@@ -9,19 +9,28 @@ import { HostEntity } from 'src/generated/backend';
 })
 export class HostListPageComponent implements OnInit {
     localHost?: HostEntity;
-    private allHosts?: HostEntity[];
+
+    readonly otherHosts: HostEntity[] = [];
+
+    loading = true;
 
     constructor(private readonly restApi: RestApiService) {}
 
-    get otherHosts(): HostEntity[] | undefined {
-        if (!this.localHost || !this.allHosts) {
-            return undefined;
+    async ngOnInit(): Promise<void> {
+        try {
+            const [localHostUuid, allHosts] = await Promise.all([
+                this.restApi.getLocalHostUuid(),
+                this.restApi.getHosts(),
+            ]);
+            for (const host of allHosts) {
+                if (host.uuid === localHostUuid) {
+                    this.localHost = host;
+                } else {
+                    this.otherHosts.push(host);
+                }
+            }
+        } finally {
+            this.loading = false;
         }
-        return this.allHosts.filter((host) => host.id !== this.localHost?.id);
-    }
-
-    ngOnInit(): void {
-        this.restApi.getLocalHost().then((localHost) => (this.localHost = localHost));
-        this.restApi.getHosts().then((allHosts) => (this.allHosts = allHosts));
     }
 }

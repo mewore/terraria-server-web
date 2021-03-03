@@ -4,7 +4,7 @@
 
     <h3 class="tsw-host-list-header">{{ 'host-list-page.other-hosts-title' | translate }}</h3>
     <mat-spinner
-        *ngIf="!otherHosts; else otherHostsContainer"
+        *ngIf="loading; else otherHostsContainer"
         type="indeterminate"
         class="host-loading-spinner"
     ></mat-spinner>
