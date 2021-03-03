@@ -29,6 +29,7 @@ public class AccountUserDetails implements UserDetails {
 
     private final Collection<GrantedAuthority> authorities;
 
+    @Getter(AccessLevel.NONE)
     private final Instant expiration;
 
     public AccountUserDetails(final AccountEntity account, final String password) {

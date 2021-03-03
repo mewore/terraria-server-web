@@ -21,6 +21,7 @@ import io.github.mewore.tsw.services.util.FileService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -75,10 +76,9 @@ class LocalHostServiceTest {
     void testInitialization() throws IOException {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
-        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService, HOST_URL);
+        new LocalHostService(hostRepository, fileService, asyncService);
 
         verify(asyncService, only()).scheduleAtFixedRate(any(), heartbeatDelayCaptor.capture(),
                 heartbeatPeriodCaptor.capture());
@@ -91,7 +91,7 @@ class LocalHostServiceTest {
         when(fileService.fileExists(any())).thenReturn(false);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService, HOST_URL);
+        new LocalHostService(hostRepository, fileService, asyncService);
         verify(fileService).makeFile(any(), any());
         verify(hostRepository, never()).findByUuid(any());
     }
@@ -102,9 +102,34 @@ class LocalHostServiceTest {
         when(fileService.readFile(any())).thenReturn("Invalid UUID string");
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService, HOST_URL);
+        new LocalHostService(hostRepository, fileService, asyncService);
         verify(fileService).makeFile(any(), any());
         verify(hostRepository, never()).findByUuid(any());
+    }
+
+    @Test
+    void testGetHost() throws IOException {
+        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
+        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
+
+        assertSame(EXISTING_HOST, new LocalHostService(hostRepository, fileService, asyncService).getHost());
+        verify(hostRepository).findByUuid(HOST_UUID);
+    }
+
+    @Test
+    void testGetHost_nonExistent() throws IOException {
+        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
+        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.empty());
+        final HostEntity hostReturnedBySave = HostEntity.builder().build();
+        when(hostRepository.save(any())).thenAnswer(invocation -> hostReturnedBySave);
+
+        assertSame(hostReturnedBySave, new LocalHostService(hostRepository, fileService, asyncService).getHost());
+        verify(hostRepository).save(hostCaptor.capture());
+        final HostEntity savedHost = hostCaptor.getValue();
+        assertEquals(HOST_UUID, savedHost.getUuid());
+        assertTrue(savedHost.isAlive());
     }
 
     @Test
@@ -125,7 +150,7 @@ class LocalHostServiceTest {
         when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService, HOST_URL);
+        new LocalHostService(hostRepository, fileService, asyncService);
         verify(asyncService, only()).scheduleAtFixedRate(heartbeatCaptor.capture(), any(), any());
         return heartbeatCaptor.getValue();
     }
@@ -138,7 +163,7 @@ class LocalHostServiceTest {
                 Optional.of(HostEntity.builder().alive(true).lastHeartbeat(Instant.MAX).build()));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService, HOST_URL).preDestroy();
+        new LocalHostService(hostRepository, fileService, asyncService).preDestroy();
         verify(future, only()).cancel(false);
         verify(hostRepository).save(hostCaptor.capture());
         assertFalse(hostCaptor.getValue().isAlive());

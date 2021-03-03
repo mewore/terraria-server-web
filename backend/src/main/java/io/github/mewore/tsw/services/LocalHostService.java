@@ -8,11 +8,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +21,8 @@ import io.github.mewore.tsw.services.util.FileService;
 import lombok.NonNull;
 
 /**
- * Keeps and updates the information regarding the host where this Spring app is running.
+ * Keeps and updates the information regarding the host where this Spring app is running. Unlike other hosts, this one
+ * can be managed much more easily.
  */
 @Service
 public class LocalHostService {
@@ -34,39 +33,40 @@ public class LocalHostService {
 
     private static final Path UUID_FILE_PATH = Paths.get(".tsw_host_uuid");
 
-    private final @NonNull AtomicReference<@NonNull HostEntity> hostReference;
+    private final UUID hostUuid;
 
     private final @NonNull HostRepository hostRepository;
 
     private final @NonNull Future<?> heartbeatFuture;
 
     public LocalHostService(final @NonNull HostRepository hostRepository,
-            final FileService fileService,
-            final AsyncService asyncService,
-            @Nullable @Value("${tsw.host.url:#{null}}") final String url) throws IOException {
+            final @NonNull FileService fileService,
+            final @NonNull AsyncService asyncService) throws IOException {
 
         this.hostRepository = hostRepository;
 
-        hostReference = new AtomicReference<>(getInitialHost(fileService, hostRepository).toBuilder()
-                .heartbeatDuration(HEARTBEAT_DURATION)
-                .url(url)
-                .build());
+        final UUID existingUuid = getUuid(fileService);
+        hostUuid = existingUuid != null ? existingUuid : makeNewUuid(fileService);
+
         heartbeatFuture = asyncService.scheduleAtFixedRate(this::doHeartbeat, Duration.ZERO, HEARTBEAT_DURATION);
     }
 
-    private void doHeartbeat() {
-        LOGGER.info("Heartbeat...");
-        hostReference.updateAndGet(
-                host -> hostRepository.save(host.toBuilder().alive(true).lastHeartbeat(Instant.now()).build()));
+    public @NonNull HostEntity getHost() {
+        return hostRepository.findByUuid(hostUuid)
+                .orElseGet(() -> hostRepository.save(
+                        HostEntity.builder().uuid(hostUuid).heartbeatDuration(HEARTBEAT_DURATION).build()));
     }
 
-    private static HostEntity getInitialHost(final FileService fileService, final HostRepository hostRepository)
-            throws IOException {
-
-        final UUID existingUuid = getUuid(fileService);
-        return existingUuid == null
-                ? HostEntity.builder().uuid(makeNewUuid(fileService)).build()
-                : hostRepository.findByUuid(existingUuid).orElse(HostEntity.builder().uuid(existingUuid).build());
+    /**
+     * Let the other hosts know that this host is alive.
+     */
+    private void doHeartbeat() {
+        LOGGER.debug("Heartbeat...");
+        hostRepository.save(getHost().toBuilder()
+                .alive(true)
+                .heartbeatDuration(HEARTBEAT_DURATION)
+                .lastHeartbeat(Instant.now())
+                .build());
     }
 
     @Nullable
@@ -94,6 +94,6 @@ public class LocalHostService {
     @PreDestroy
     public void preDestroy() {
         heartbeatFuture.cancel(false);
-        hostReference.updateAndGet(host -> hostRepository.save(host.toBuilder().alive(false).build()));
+        hostRepository.save(getHost().toBuilder().alive(false).build());
     }
 }

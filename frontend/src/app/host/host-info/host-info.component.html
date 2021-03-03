@@ -1,0 +1,17 @@
+<mat-expansion-panel [disabled]="loading">
+    <mat-expansion-panel-header>
+        <mat-panel-title>
+            <span *ngIf="loading; else hostTitle">{{ 'loading' | translate }}</span>
+            <ng-template #hostTitle>{{ hostName || ('host-info.no-name' | translate) }}</ng-template>
+        </mat-panel-title>
+        <mat-panel-description *ngIf="loaded">
+            {{ hostUuid }}
+            <mat-icon
+                [class]="'tsw-host-status-' + hostStatus"
+                [matTooltip]="'host-info.status.' + hostStatus | translate"
+            >
+                {{ hostIcon }}
+            </mat-icon>
+        </mat-panel-description>
+    </mat-expansion-panel-header>
+</mat-expansion-panel>

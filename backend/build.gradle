@@ -63,6 +63,8 @@ generateTypeScript {
 
     optionalAnnotations = ['org.springframework.lang.Nullable']
 
+    customTypeMappings = ['java.nio.file.Path:string']
+
     outputFileType = TypeScriptFileType.implementationFile
     jsonLibrary = JsonLibrary.jackson2
     outputKind = 'module'

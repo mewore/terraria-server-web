@@ -27,15 +27,19 @@ export class SessionInfoComponent implements OnDestroy {
         });
     }
 
+    get isAuthenticated(): boolean {
+        return !!this.authenticationService.currentUser;
+    }
+
     ngOnDestroy(): void {
         this.subscription.unsubscribe();
     }
 
-    onAuthButtonClicked(): void {
-        if (this.authenticationService.currentUser) {
-            this.logOutDialogService.openDialog();
-        } else {
-            this.authenticationDialogService.openDialog();
-        }
+    onLogInClicked(): void {
+        this.authenticationDialogService.openDialog();
+    }
+
+    onLogOutClicked(): void {
+        this.logOutDialogService.openDialog();
     }
 }

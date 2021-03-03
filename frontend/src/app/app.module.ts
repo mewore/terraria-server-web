@@ -10,6 +10,7 @@ import { AppComponent } from './app.component';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { CoreModule } from './core/core.module';
 import { HeaderModule } from './header/header.module';
+import { HostModule } from './host/host.module';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(httpClient: HttpClient): TranslateLoader {
@@ -25,6 +26,7 @@ export function HttpLoaderFactory(httpClient: HttpClient): TranslateLoader {
         CoreModule,
         AuthenticationModule,
         HeaderModule,
+        HostModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,

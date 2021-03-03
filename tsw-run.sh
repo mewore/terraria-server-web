@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-version=${1:-'0.0.1'}
-jar_location="./terraria-server-web-${version}-SNAPSHOT.jar"
+version=${1:-'0.0.1-SNAPSHOT'}
+jar_location="./terraria-server-web-${version}.jar"
 if ! [ -f "${jar_location}" ]; then
   echo "${jar_location} does not exist!"
   exit 1

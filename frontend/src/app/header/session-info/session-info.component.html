@@ -1,4 +1,14 @@
-<div>
-    {{ username || ('header.session-info.username.anonymous' | translate) }}
-    <button mat-icon-button (click)="onAuthButtonClicked()"><mat-icon>exit_to_app</mat-icon></button>
+<div [class]="isAuthenticated ? '' : 'right-padded'">
+    <span *ngIf="isAuthenticated; else anonymous">
+        {{ username }}
+        <button mat-icon-button (click)="onLogOutClicked()">
+            <mat-icon [matTooltip]="'header.session-info.buttons.log-out' | translate">logout</mat-icon>
+        </button>
+    </span>
+    <ng-template #anonymous>
+        <label class="logged-out-username">{{ 'header.session-info.username.anonymous' | translate }}</label>
+        <button mat-icon-button (click)="onLogInClicked()">
+            <mat-icon [matTooltip]="'header.session-info.buttons.log-in' | translate">login</mat-icon>
+        </button>
+    </ng-template>
 </div>

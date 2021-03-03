@@ -31,16 +31,33 @@
     },
     "header": {
         "session-info": {
+            "buttons": {
+                "log-in": "Log in / Sign up",
+                "log-out": "Log out"
+            },
             "username": {
-                "anonymous": "[Anonymous]"
+                "anonymous": "Anonymous"
             }
         }
+    },
+    "host-info": {
+        "no-name": "[No name]",
+        "status": {
+            "running": "Running",
+            "stopped": "Stopped"
+        }
+    },
+    "host-list-page": {
+        "local-host-title": "Local host",
+        "other-hosts-title": "Other hosts",
+        "no-hosts-placeholder": "No hosts"
     },
     "input": {
         "errors": {
             "required": "* Required"
         }
     },
+    "loading": "Loading",
     "log-out": {
         "dialog": {
             "buttons": {

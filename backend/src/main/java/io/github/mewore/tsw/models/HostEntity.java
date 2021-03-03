@@ -52,7 +52,7 @@ public class HostEntity {
     @Builder.Default
     @Getter(AccessLevel.NONE)
     @Column(nullable = false)
-    private final @NonNull Instant lastHeartbeat = Instant.MIN;
+    private final @NonNull Instant lastHeartbeat = Instant.now();
 
     @Builder.Default
     @Getter(AccessLevel.NONE)
@@ -62,7 +62,12 @@ public class HostEntity {
     @Nullable
     @Builder.Default
     @Column
-    private final String url = "";
+    private final String name = null;
+
+    @Nullable
+    @Builder.Default
+    @Column
+    private final String url = null;
 
     @Builder.Default
     @Column(nullable = false)

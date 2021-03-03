@@ -1,0 +1,17 @@
+<mat-accordion>
+    <h3 class="tsw-host-list-header">{{ 'host-list-page.local-host-title' | translate }}</h3>
+    <tsw-host-info [host]="localHost"></tsw-host-info>
+
+    <h3 class="tsw-host-list-header">{{ 'host-list-page.other-hosts-title' | translate }}</h3>
+    <mat-spinner
+        *ngIf="!otherHosts; else otherHostsContainer"
+        type="indeterminate"
+        class="host-loading-spinner"
+    ></mat-spinner>
+    <ng-template #otherHostsContainer>
+        <tsw-host-info *ngFor="let otherHost of otherHosts" [host]="otherHost"></tsw-host-info>
+        <p *ngIf="!otherHosts?.length" class="no-hosts-placeholder">
+            {{ 'host-list-page.no-hosts-placeholder' | translate }}
+        </p>
+    </ng-template>
+</mat-accordion>

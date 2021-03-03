@@ -8,7 +8,7 @@ A web UI for Terraria server management.
 
 - [x] 💙💜💛 Minimal project with basic authentication
 - [x] 💙 Hosts register their state in the database
-- [ ] 💙💛 Host summary (on the front page)
+- [x] 💙💛 Host summary (on the front page)
 - [ ] 💙💛 Ability to configure the Terraria executable path of a host ("${HOME}/.local/share/Terraria/{Instances |
   Executables}" by default) and to view what is present
 - [ ] 💙💛 Ability to tell the host to download a certain tModLoader executable

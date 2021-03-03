@@ -12,6 +12,4 @@ import io.github.mewore.tsw.models.HostEntity;
 public interface HostRepository extends JpaRepository<HostEntity, Long> {
 
     Optional<HostEntity> findByUuid(final UUID uuid);
-
-    boolean existsByUuid(final UUID uuid);
 }

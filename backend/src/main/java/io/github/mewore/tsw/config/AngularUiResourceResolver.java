@@ -7,11 +7,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
 @Builder
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 class AngularUiResourceResolver extends PathResourceResolver {
 
     private static final String INDEX_FILE_NAME = "index.html";
