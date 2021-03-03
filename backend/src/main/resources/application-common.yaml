@@ -11,6 +11,7 @@ spring:
           batch_size: 100
           order_inserts: true
           order_updates: true
+          time_zone: UTC
   resources:
     static-locations: classpath:/static/
   flyway:
