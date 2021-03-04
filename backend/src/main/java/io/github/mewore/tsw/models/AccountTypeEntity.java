@@ -19,8 +19,8 @@ import lombok.With;
 @Getter
 @With
 @Entity
-@Table(name = "account_role")
-public class AccountRoleEntity {
+@Table(name = "account_type")
+public class AccountTypeEntity {
 
     @Builder.Default
     @Id
@@ -29,5 +29,5 @@ public class AccountRoleEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private final boolean manageAccounts = false;
+    private final boolean allowedToManageAccounts = false;
 }

@@ -1,29 +1,33 @@
 <h2>{{ 'authentication.dialog.title' | translate }}</h2>
 
 <mat-dialog-content>
-    <mat-form-field appearance="standard">
-        <mat-label>{{ 'authentication.dialog.username.label' | translate }}</mat-label>
-        <input
-            matInput
-            [formControl]="usernameFormControl"
-            [placeholder]="'authentication.dialog.username.placeholder' | translate"
-        />
-        <mat-error *ngIf="usernameFormControl.hasError('required')">{{
-            'input.errors.required' | translate
-        }}</mat-error>
-    </mat-form-field>
-    <mat-form-field appearance="standard">
-        <mat-label>{{ 'authentication.dialog.password.label' | translate }}</mat-label>
-        <input
-            matInput
-            [formControl]="passwordFormControl"
-            type="password"
-            [placeholder]="'authentication.dialog.password.placeholder' | translate"
-        />
-        <mat-error *ngIf="passwordFormControl.hasError('required')">{{
-            'input.errors.required' | translate
-        }}</mat-error>
-    </mat-form-field>
+    <form>
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'authentication.dialog.username.label' | translate }}</mat-label>
+            <input
+                matInput
+                [formControl]="usernameFormControl"
+                [placeholder]="'authentication.dialog.username.placeholder' | translate"
+            />
+            <mat-error *ngIf="usernameFormControl.hasError('required')">{{
+                'input.errors.required' | translate
+                }}
+            </mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'authentication.dialog.password.label' | translate }}</mat-label>
+            <input
+                matInput
+                [formControl]="passwordFormControl"
+                type="password"
+                [placeholder]="'authentication.dialog.password.placeholder' | translate"
+            />
+            <mat-error *ngIf="passwordFormControl.hasError('required')">{{
+                'input.errors.required' | translate
+                }}
+            </mat-error>
+        </mat-form-field>
+    </form>
     <p [class]="errorMessageKey ? 'tsw-error-message' : 'tsw-invisible'">
         {{ errorMessageKey ? (errorMessageKey | translate) : 'Nothing' }}
     </p>

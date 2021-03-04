@@ -9,8 +9,6 @@ A web UI for Terraria server management.
 - [x] 💙💜💛 Minimal project with basic authentication
 - [x] 💙 Hosts register their state in the database
 - [x] 💙💛 Host summary (on the front page)
-- [ ] 💙💛 Ability to configure the Terraria executable path of a host ("${HOME}/.local/share/Terraria/{Instances |
-  Executables}" by default) and to view what is present
 - [ ] 💙💛 Ability to tell the host to download a certain tModLoader executable
   from [GitHub](https://github.com/tModLoader/tModLoader/releases/) through a specified three-part version
 - [ ] 💙💛 Ability to tell the host to download a certain Terraria dedicated server executable
@@ -23,6 +21,8 @@ A web UI for Terraria server management.
 
 ### Basic features
 
+- [ ] 💙💛 Ability to configure the Terraria executable path of a host ("${HOME}/.local/share/Terraria/{Instances |
+  Executables}" by default) and to view what is present
 - [ ] 💙💛 Ability to upload Terraria worlds
 - [ ] 💙💛 Display the Terraria mods of a host
 - [ ] 💙💛 Ability to upload Terraria mods

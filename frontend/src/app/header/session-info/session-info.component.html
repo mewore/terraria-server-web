@@ -1,13 +1,13 @@
-<div [class]="isAuthenticated ? '' : 'right-padded'">
+<div>
     <span *ngIf="isAuthenticated; else anonymous">
         {{ username }}
-        <button mat-icon-button (click)="onLogOutClicked()">
+        <button mat-icon-button (click)="onLogOutClicked()" class="left-padded">
             <mat-icon [matTooltip]="'header.session-info.buttons.log-out' | translate">logout</mat-icon>
         </button>
     </span>
     <ng-template #anonymous>
         <label class="logged-out-username">{{ 'header.session-info.username.anonymous' | translate }}</label>
-        <button mat-icon-button (click)="onLogInClicked()">
+        <button mat-icon-button (click)="onLogInClicked()" class="right-padded">
             <mat-icon [matTooltip]="'header.session-info.buttons.log-in' | translate">login</mat-icon>
         </button>
     </ng-template>

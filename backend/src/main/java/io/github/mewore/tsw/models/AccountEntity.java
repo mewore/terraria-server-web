@@ -55,5 +55,5 @@ public class AccountEntity {
     @Builder.Default
     @ManyToOne
     @Nullable
-    private final AccountRoleEntity role = null;
+    private final AccountTypeEntity type = null;
 }

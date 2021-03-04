@@ -18,7 +18,9 @@ import io.github.mewore.tsw.config.security.AccountUserDetails;
 import io.github.mewore.tsw.exceptions.auth.InvalidCredentialsException;
 import io.github.mewore.tsw.exceptions.auth.InvalidUsernameException;
 import io.github.mewore.tsw.models.AccountEntity;
+import io.github.mewore.tsw.models.AccountTypeEntity;
 import io.github.mewore.tsw.models.auth.LoginModel;
+import io.github.mewore.tsw.models.auth.SessionViewModel;
 import io.github.mewore.tsw.models.auth.SignupModel;
 import io.github.mewore.tsw.repositories.AccountRepository;
 import lombok.NonNull;
@@ -36,8 +38,9 @@ public class AuthenticationService implements UserDetailsService {
 
     private final PasswordEncoder encoder;
 
-    public @NonNull UUID logIn(final @NonNull LoginModel loginModel) throws InvalidCredentialsException {
-        final AccountEntity account = accountRepository.findByUsername(loginModel.getUsername())
+    public @NonNull SessionViewModel logIn(final @NonNull LoginModel loginModel) throws InvalidCredentialsException {
+        final AccountEntity account = accountRepository
+                .findByUsername(loginModel.getUsername())
                 .orElseThrow(() -> InvalidCredentialsException.forUsername(loginModel.getUsername()));
 
         if (!encoder.matches(loginModel.getPassword(), new String(account.getPassword(), BINARY_CHARSET))) {
@@ -46,11 +49,12 @@ public class AuthenticationService implements UserDetailsService {
 
         final UUID token = UUID.randomUUID();
         final byte[] encodedToken = encode(token.toString());
-        accountRepository.save(account.withSession(encodedToken).withSessionExpiration(getNewSessionExpiration()));
-        return token;
+        final AccountEntity savedAccount = accountRepository.save(
+                account.withSession(encodedToken).withSessionExpiration(getNewSessionExpiration()));
+        return new SessionViewModel(token, savedAccount.getType());
     }
 
-    public @NonNull UUID signUp(final @NonNull SignupModel signupModel) throws InvalidUsernameException {
+    public @NonNull SessionViewModel signUp(final @NonNull SignupModel signupModel) throws InvalidUsernameException {
         if (accountRepository.existsByUsername(signupModel.getUsername())) {
             throw new InvalidUsernameException(
                     String.format("An account with the username '%s' already exists", signupModel.getUsername()));
@@ -60,13 +64,17 @@ public class AuthenticationService implements UserDetailsService {
         final byte[] encodedSessionToken = encode(sessionToken.toString());
         final AccountEntity newAccount = new AccountEntity(null, signupModel.getUsername(), encodedPassword,
                 encodedSessionToken, getNewSessionExpiration(), null);
-        accountRepository.save(newAccount);
-        return sessionToken;
+        final AccountEntity savedAccount = accountRepository.save(newAccount);
+        return new SessionViewModel(sessionToken, savedAccount.getType());
     }
 
     public void logOut(final @Nullable Authentication authentication) throws InvalidCredentialsException {
         final AccountEntity account = getAuthenticatedAccount(authentication);
         accountRepository.save(account.withSessionExpiration(Instant.now()));
+    }
+
+    public AccountTypeEntity getRole(final @Nullable Authentication authentication) throws InvalidCredentialsException {
+        return getAuthenticatedAccount(authentication).getType();
     }
 
     public AccountEntity getAuthenticatedAccount(final @Nullable Authentication authentication)
@@ -76,7 +84,8 @@ public class AuthenticationService implements UserDetailsService {
             throw new InvalidCredentialsException("Unauthenticated users cannot log out");
         }
         final String username = authentication.getName();
-        return accountRepository.findByUsername(username)
+        return accountRepository
+                .findByUsername(username)
                 .orElseThrow(() -> InvalidCredentialsException.forUsername(username));
     }
 
@@ -90,7 +99,8 @@ public class AuthenticationService implements UserDetailsService {
 
     @NonNull
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
-        return accountRepository.findByUsername(username)
+        return accountRepository
+                .findByUsername(username)
                 .map((account) -> new AccountUserDetails(account, new String(account.getSession(), BINARY_CHARSET)))
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Could not find an account with username '" + username + "'"));

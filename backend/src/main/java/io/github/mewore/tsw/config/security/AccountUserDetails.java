@@ -12,7 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import io.github.mewore.tsw.models.AccountEntity;
-import io.github.mewore.tsw.models.AccountRoleEntity;
+import io.github.mewore.tsw.models.AccountTypeEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,8 +20,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AccountUserDetails implements UserDetails {
-
-    private static final GrantedAuthority MANAGE_USERS_AUTHORITY = new SimpleGrantedAuthority("manageUsers");
 
     private final String username;
 
@@ -37,13 +35,16 @@ public class AccountUserDetails implements UserDetails {
     }
 
     private static Collection<GrantedAuthority> extractAuthorities(final AccountEntity account) {
-        final AccountRoleEntity role = account.getRole();
+        final AccountTypeEntity role = account.getType();
         if (role == null) {
             return Collections.emptySet();
         }
 
-        return Stream.of(role.isManageAccounts() ? MANAGE_USERS_AUTHORITY : null)
+        return Stream.<String>builder()
+                .add(role.isAllowedToManageAccounts() ? AuthorityRoles.MANAGE_ACCOUNTS : null)
+                .build()
                 .filter(Objects::nonNull)
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toUnmodifiableSet());
     }
 

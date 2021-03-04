@@ -8,7 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import io.github.mewore.tsw.models.AccountEntity;
-import io.github.mewore.tsw.models.AccountRoleEntity;
+import io.github.mewore.tsw.models.AccountTypeEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,15 +26,15 @@ class AccountUserDetailsTest {
 
     @Test
     void testGetAuthorities_emptyRole() {
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withRole(new AccountRoleEntity()), "");
+        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(new AccountTypeEntity()), "");
         assertEquals(Collections.emptySet(), user.getAuthorities());
     }
 
     @Test
     void testGetAuthorities_manageAccountsRole() {
-        final AccountRoleEntity roleWithManageUsers = AccountRoleEntity.builder().manageAccounts(true).build();
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withRole(roleWithManageUsers), "");
-        assertEquals(Collections.singleton(new SimpleGrantedAuthority("manageUsers")), user.getAuthorities());
+        final AccountTypeEntity roleWithManageUsers = AccountTypeEntity.builder().allowedToManageAccounts(true).build();
+        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(roleWithManageUsers), "");
+        assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_ACCOUNTS")), user.getAuthorities());
     }
 
     @Test

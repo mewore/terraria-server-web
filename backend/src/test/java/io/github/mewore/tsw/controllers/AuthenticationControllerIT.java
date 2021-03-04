@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
+import io.github.mewore.tsw.models.auth.SessionViewModel;
 import io.github.mewore.tsw.services.AuthenticationService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,29 +46,35 @@ class AuthenticationControllerIT {
     @Test
     void testLogIn() throws Exception {
         final UUID session = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505");
-        when(authenticationService.logIn(any())).thenReturn(session);
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/login").contentType(MediaType.APPLICATION_JSON).content("""
-                {
-                    "username": "some-existing-username",
-                    "password": "some-password"
-                }
-                """))
+        when(authenticationService.logIn(any())).thenReturn(new SessionViewModel(session, null));
+        mockMvc
+                .perform(MockMvcRequestBuilders.post("/auth/login").contentType(MediaType.APPLICATION_JSON).content("""
+                        {
+                            "username": "some-existing-username",
+                            "password": "some-password"
+                        }
+                        """))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
-                .andExpect(MockMvcResultMatchers.content().string("\"e0f245dc-e6e4-4f8a-982b-004cbb04e505\""));
+                .andExpect(MockMvcResultMatchers
+                        .content()
+                        .string("{\"token\":\"e0f245dc-e6e4-4f8a-982b-004cbb04e505\",\"role\":null}"));
     }
 
     @Test
     void testSignUp() throws Exception {
         final UUID session = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505");
-        when(authenticationService.signUp(any())).thenReturn(session);
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/signup").contentType(MediaType.APPLICATION_JSON).content("""
-                {
-                    "username": "some-new-username",
-                    "password": "some-password"
-                }
-                """))
+        when(authenticationService.signUp(any())).thenReturn(new SessionViewModel(session, null));
+        mockMvc
+                .perform(MockMvcRequestBuilders.post("/auth/signup").contentType(MediaType.APPLICATION_JSON).content("""
+                        {
+                            "username": "some-new-username",
+                            "password": "some-password"
+                        }
+                        """))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("\"e0f245dc-e6e4-4f8a-982b-004cbb04e505\""));
+                .andExpect(MockMvcResultMatchers
+                        .content()
+                        .string("{\"token\":\"e0f245dc-e6e4-4f8a-982b-004cbb04e505\",\"role\":null}"));
     }
 
     @WithMockUser(username = USERNAME)
@@ -87,8 +94,12 @@ class AuthenticationControllerIT {
     @WithMockUser(username = USERNAME)
     @Test
     void testPing() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/ping")).andExpect(MockMvcResultMatchers.status().isOk());
-        verify(authenticationService, only()).getAuthenticatedAccount(authenticationCaptor.capture());
+        when(authenticationService.getRole(any())).thenReturn(null);
+        mockMvc
+                .perform(MockMvcRequestBuilders.post("/auth/ping"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(""));
+        verify(authenticationService, only()).getRole(authenticationCaptor.capture());
         assertEquals(USERNAME, ((UserDetails) authenticationCaptor.getValue().getPrincipal()).getUsername());
     }
 

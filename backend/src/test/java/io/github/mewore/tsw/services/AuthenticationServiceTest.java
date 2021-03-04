@@ -4,7 +4,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +21,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import io.github.mewore.tsw.exceptions.auth.InvalidCredentialsException;
 import io.github.mewore.tsw.exceptions.auth.InvalidUsernameException;
 import io.github.mewore.tsw.models.AccountEntity;
+import io.github.mewore.tsw.models.AccountTypeEntity;
 import io.github.mewore.tsw.models.auth.LoginModel;
+import io.github.mewore.tsw.models.auth.SessionViewModel;
 import io.github.mewore.tsw.models.auth.SignupModel;
 import io.github.mewore.tsw.repositories.AccountRepository;
 
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +46,10 @@ class AuthenticationServiceTest {
 
     private static final String SESSION = "e0f245dc-e6e4-4f8a-982b-004cbb04e505";
 
+    private static final AccountTypeEntity ROLE = new AccountTypeEntity();
+
     private static final AccountEntity EXISTING_ACCOUNT = new AccountEntity(1L, USERNAME,
-            PASSWORD.getBytes(BINARY_CHARSET), SESSION.getBytes(BINARY_CHARSET), Instant.now(), null);
+            PASSWORD.getBytes(BINARY_CHARSET), SESSION.getBytes(BINARY_CHARSET), Instant.now(), ROLE);
 
     private static final String NEW_USERNAME = "new-username";
 
@@ -69,10 +73,12 @@ class AuthenticationServiceTest {
     @Test
     void testLogIn() throws InvalidCredentialsException {
         when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
+        when(accountRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        final UUID token = authenticationService.logIn(new LoginModel(USERNAME, PASSWORD));
+        final SessionViewModel session = authenticationService.logIn(new LoginModel(USERNAME, PASSWORD));
         verify(accountRepository).save(accountCaptor.capture());
-        assertEquals(token.toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
+        assertEquals(session.getToken().toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
+        assertSame(ROLE, session.getRole());
     }
 
     @Test
@@ -92,11 +98,13 @@ class AuthenticationServiceTest {
     @Test
     void testSignUp() throws InvalidUsernameException {
         when(accountRepository.existsByUsername(NEW_USERNAME)).thenReturn(false);
+        when(accountRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        final UUID token = authenticationService.signUp(new SignupModel(NEW_USERNAME, PASSWORD));
+        final SessionViewModel session = authenticationService.signUp(new SignupModel(NEW_USERNAME, PASSWORD));
         verify(accountRepository).save(accountCaptor.capture());
-        assertEquals(token.toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
+        assertEquals(session.getToken().toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
         assertEquals(PASSWORD, new String(accountCaptor.getValue().getPassword(), BINARY_CHARSET));
+        assertSame(null, session.getRole());
     }
 
     @Test
@@ -164,8 +172,7 @@ class AuthenticationServiceTest {
     @Test
     void testLoadUserByUsername_nonExistentUsername() {
         when(accountRepository.findByUsername(NEW_USERNAME)).thenReturn(Optional.empty());
-        assertThrows(UsernameNotFoundException.class,
-                () -> authenticationService.loadUserByUsername(NEW_USERNAME),
+        assertThrows(UsernameNotFoundException.class, () -> authenticationService.loadUserByUsername(NEW_USERNAME),
                 "Could not find an account with username 'new-username'");
     }
 

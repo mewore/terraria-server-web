@@ -1,7 +1,6 @@
 package io.github.mewore.tsw.controllers;
 
 import javax.validation.Valid;
-import java.util.UUID;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.mewore.tsw.config.security.AuthConfigConstants;
 import io.github.mewore.tsw.exceptions.auth.InvalidCredentialsException;
 import io.github.mewore.tsw.exceptions.auth.InvalidUsernameException;
+import io.github.mewore.tsw.models.AccountTypeEntity;
 import io.github.mewore.tsw.models.auth.LoginModel;
+import io.github.mewore.tsw.models.auth.SessionViewModel;
 import io.github.mewore.tsw.models.auth.SignupModel;
 import io.github.mewore.tsw.services.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,12 +30,12 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping({AuthConfigConstants.AUTH_LOGIN_ENDPOINT})
-    public UUID logIn(@RequestBody @Valid final LoginModel loginModel) throws InvalidCredentialsException {
+    public SessionViewModel logIn(@RequestBody @Valid final LoginModel loginModel) throws InvalidCredentialsException {
         return authenticationService.logIn(loginModel);
     }
 
     @PostMapping({AuthConfigConstants.AUTH_SIGN_UP_ENDPOINT})
-    public UUID signUp(@RequestBody @Valid final SignupModel signupModel) throws InvalidUsernameException {
+    public SessionViewModel signUp(@RequestBody @Valid final SignupModel signupModel) throws InvalidUsernameException {
         return authenticationService.signUp(signupModel);
     }
 
@@ -46,7 +47,7 @@ public class AuthenticationController {
 
     @Operation(security = {@SecurityRequirement(name = AuthConfigConstants.AUTH_SECURITY_REQUIREMENT)})
     @PostMapping({AuthConfigConstants.AUTH_PING_ENDPOINT})
-    public void ping() throws InvalidCredentialsException {
-        authenticationService.getAuthenticatedAccount(SecurityContextHolder.getContext().getAuthentication());
+    public AccountTypeEntity ping() throws InvalidCredentialsException {
+        return authenticationService.getRole(SecurityContextHolder.getContext().getAuthentication());
     }
 }
