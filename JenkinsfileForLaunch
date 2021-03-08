@@ -47,7 +47,7 @@ pipeline {
                     if (curlStatus == 0) {
                         error "The app is still running or something else has taken up port :8080! Kill it manually."
                     }
-                    sh "mkdir -p 'old-logs' && mv tsw-*.log ./old-logs"
+                    sh "mkdir -p 'old-logs' && mv tsw-*.log ./old-logs || echo 'No logs to move.'"
                 }
             }
         }
