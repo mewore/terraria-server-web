@@ -69,15 +69,15 @@ export class AuthenticationService {
 
     async logIn(username: string, password: string): Promise<AuthenticatedUser> {
         const session = await this.restApi.logIn({ username, password });
-        return this.saveSesssion(username, session);
+        return this.saveSession(username, session);
     }
 
     async signUp(username: string, password: string): Promise<AuthenticatedUser> {
         const session = await this.restApi.signUp({ username, password });
-        return this.saveSesssion(username, session);
+        return this.saveSession(username, session);
     }
 
-    private saveSesssion(username: string, session: SessionViewModel): AuthenticatedUser {
+    private saveSession(username: string, session: SessionViewModel): AuthenticatedUser {
         const result: AuthenticatedUser = {
             username,
             sessionToken: session.token,
