@@ -22,7 +22,7 @@ task getBackendDefinitions(type: Copy, dependsOn: generateTsTask) {
     into GENERATED_TS_DIR
 }
 
-final String[] COMMON_ROOT_SOURCE_FILES = ['angular.json', 'package.json', 'package-lock.json', 'tsconfig.json']
+final String[] COMMON_ROOT_SOURCE_FILES = ['build.gradle', 'angular.json', 'package.json', 'tsconfig.json']
 
 task frontendLint(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
     inputs.dir('src')

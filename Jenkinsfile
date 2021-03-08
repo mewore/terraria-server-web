@@ -5,43 +5,25 @@ pipeline {
     }
 
     stages {
-        stage('Display Info') {
-            steps {
-                sh 'java -version'
-            }
-        }
-        stage('Checkout') {
+        stage('Prepare') {
             steps {
                 git branch: 'main',
                     credentialsId: 'mewore',
                     url: 'git@github.com:mewore/terraria-server-web.git'
+                sh 'java -version'
             }
         }
-        stage('Backend build') {
-            steps {
-                script {
-                    sh './gradlew backend:compileJava --no-daemon'
-                }
-            }
-        }
-        stage('Backend tests') {
+        stage('Backend') {
             steps {
                 script {
                     sh './gradlew backend:cleanTest backend:test --no-daemon'
                 }
             }
         }
-        stage('Frontend lint') {
+        stage('Frontend') {
             steps {
                 script {
-                    sh './gradlew frontend:frontendLint --no-daemon'
-                }
-            }
-        }
-        stage('Frontend build') {
-            steps {
-                script {
-                    sh './gradlew frontend:frontendBuildProd --no-daemon'
+                    sh './gradlew frontend:frontendLint frontend:frontendBuildProd --no-daemon'
                 }
             }
         }
