@@ -52,11 +52,12 @@ pipeline {
                 }
             }
         }
-        post {
-            always {
-                archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
-                junit 'backend/build/reports/**/*.xml'
-            }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+            junit 'backend/build/reports/**/*.xml'
         }
     }
 }
