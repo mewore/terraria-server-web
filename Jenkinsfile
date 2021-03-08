@@ -27,7 +27,7 @@ pipeline {
         stage('Backend tests') {
             steps {
                 script {
-                    sh './gradlew backend:test --no-daemon'
+                    sh './gradlew backend:cleanTest backend:test --no-daemon'
                 }
             }
         }
