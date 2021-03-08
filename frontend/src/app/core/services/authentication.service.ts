@@ -98,6 +98,6 @@ export class AuthenticationService {
     }
 
     canManageAccounts(): boolean {
-        return this.currentUser?.accountType?.manageAccounts || false;
+        return this.currentUser?.accountType?.allowedToManageAccounts || false;
     }
 }
