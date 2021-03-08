@@ -1,3 +1,4 @@
+BEGIN;
 CREATE TABLE account (
 	id int8 NOT NULL,
 	"password" bytea NOT NULL,
@@ -11,3 +12,4 @@ CREATE TABLE account (
 
 -- account foreign keys
 ALTER TABLE account ADD CONSTRAINT account_role_fkey FOREIGN KEY (role_id) REFERENCES account_role(id);
+COMMIT;
