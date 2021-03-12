@@ -10,7 +10,7 @@ A web UI for Terraria server management.
 - [x] 💙 Hosts register their state in the database
 - [x] 💙💛 Host summary (on the front page)
 - [ ] 💙💛 Ability to tell the host to download a certain tModLoader executable
-  from [GitHub](https://github.com/tModLoader/tModLoader/releases/) through a specified three-part version
+  from [GitHub](https://github.com/tModLoader/tModLoader/releases/) through a specified version
 - [ ] 💙💛 Ability to tell the host to download a certain Terraria dedicated server executable
   from [the Terraria wiki](https://terraria.gamepedia.com/Server#Downloads) through any user-inputted URL that starts
   with "http://terraria.org/" or "https://www.terraria.org/"
