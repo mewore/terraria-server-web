@@ -1,5 +1,6 @@
 package io.github.mewore.tsw.services;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,13 +19,16 @@ import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.FileService;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Keeps and updates the information regarding the host where this Spring app is running. Unlike other hosts, this one
  * can be managed much more easily.
  */
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @Service
 public class LocalHostService {
 
@@ -34,27 +38,27 @@ public class LocalHostService {
 
     private static final Path UUID_FILE_PATH = Paths.get(".tsw_host_uuid");
 
-    @Getter
-    private final UUID hostUuid;
-
     private final @NonNull HostRepository hostRepository;
 
-    private final @NonNull Future<?> heartbeatFuture;
+    private final @NonNull FileService fileService;
 
-    public LocalHostService(final @NonNull HostRepository hostRepository,
-            final @NonNull FileService fileService,
-            final @NonNull AsyncService asyncService) throws IOException {
+    private final @NonNull AsyncService asyncService;
 
-        this.hostRepository = hostRepository;
+    @Getter
+    private UUID hostUuid;
 
+    private Future<?> heartbeatFuture;
+
+    @PostConstruct
+    void setUp() throws IOException {
         final UUID existingUuid = getUuid(fileService);
         hostUuid = existingUuid != null ? existingUuid : makeNewUuid(fileService);
-
         heartbeatFuture = asyncService.scheduleAtFixedRate(this::doHeartbeat, Duration.ZERO, HEARTBEAT_DURATION);
     }
 
     public @NonNull HostEntity getHost() {
-        return hostRepository.findByUuid(hostUuid)
+        return hostRepository
+                .findByUuid(hostUuid)
                 .orElseGet(() -> hostRepository.save(
                         HostEntity.builder().uuid(hostUuid).heartbeatDuration(HEARTBEAT_DURATION).build()));
     }

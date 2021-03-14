@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -42,11 +43,11 @@ class LocalHostServiceTest {
 
     private static final String HOST_URL = "host-url";
 
-    private static final HostEntity EXISTING_HOST = HostEntity.builder()
-            .uuid(HOST_UUID)
-            .url(HOST_URL)
-            .alive(false)
-            .build();
+    private static final HostEntity EXISTING_HOST =
+            HostEntity.builder().uuid(HOST_UUID).url(HOST_URL).alive(false).build();
+
+    @InjectMocks
+    private LocalHostService localHostService;
 
     @Mock
     private HostRepository hostRepository;
@@ -73,36 +74,36 @@ class LocalHostServiceTest {
     private ArgumentCaptor<Duration> heartbeatPeriodCaptor;
 
     @Test
-    void testInitialization() throws IOException {
+    void testSetUp() throws IOException {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService);
-
+        localHostService.setUp();
         verify(asyncService, only()).scheduleAtFixedRate(any(), heartbeatDelayCaptor.capture(),
                 heartbeatPeriodCaptor.capture());
         assertEquals(Duration.ZERO, heartbeatDelayCaptor.getValue());
         assertEquals(Duration.ofMinutes(1), heartbeatPeriodCaptor.getValue());
+        assertEquals(HOST_UUID, localHostService.getHostUuid());
     }
 
     @Test
-    void testInitialization_noUuidFile() throws IOException {
+    void testSetUp_noUuidFile() throws IOException {
         when(fileService.fileExists(any())).thenReturn(false);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService);
+        localHostService.setUp();
         verify(fileService).makeFile(any(), any());
         verify(hostRepository, never()).findByUuid(any());
     }
 
     @Test
-    void testInitialization_invalidUuidFile() throws IOException {
+    void testSetUp_invalidUuidFile() throws IOException {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn("Invalid UUID string");
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService);
+        localHostService.setUp();
         verify(fileService).makeFile(any(), any());
         verify(hostRepository, never()).findByUuid(any());
     }
@@ -113,7 +114,8 @@ class LocalHostServiceTest {
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
 
-        assertSame(EXISTING_HOST, new LocalHostService(hostRepository, fileService, asyncService).getHost());
+        localHostService.setUp();
+        assertSame(EXISTING_HOST, localHostService.getHost());
         verify(hostRepository).findByUuid(HOST_UUID);
     }
 
@@ -125,7 +127,8 @@ class LocalHostServiceTest {
         final HostEntity hostReturnedBySave = HostEntity.builder().build();
         when(hostRepository.save(any())).thenAnswer(invocation -> hostReturnedBySave);
 
-        assertSame(hostReturnedBySave, new LocalHostService(hostRepository, fileService, asyncService).getHost());
+        localHostService.setUp();
+        assertSame(hostReturnedBySave, localHostService.getHost());
         verify(hostRepository).save(hostCaptor.capture());
         final HostEntity savedHost = hostCaptor.getValue();
         assertEquals(HOST_UUID, savedHost.getUuid());
@@ -150,7 +153,7 @@ class LocalHostServiceTest {
         when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService);
+        localHostService.setUp();
         verify(asyncService, only()).scheduleAtFixedRate(heartbeatCaptor.capture(), any(), any());
         return heartbeatCaptor.getValue();
     }
@@ -163,7 +166,8 @@ class LocalHostServiceTest {
                 Optional.of(HostEntity.builder().alive(true).lastHeartbeat(Instant.MAX).build()));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
-        new LocalHostService(hostRepository, fileService, asyncService).preDestroy();
+        localHostService.setUp();
+        localHostService.preDestroy();
         verify(future, only()).cancel(false);
         verify(hostRepository).save(hostCaptor.capture());
         assertFalse(hostCaptor.getValue().isAlive());

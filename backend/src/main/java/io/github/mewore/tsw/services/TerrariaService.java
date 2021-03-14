@@ -16,6 +16,7 @@ import io.github.mewore.tsw.models.github.GitHubRelease;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
 import io.github.mewore.tsw.services.util.HttpService;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -27,11 +28,11 @@ public class TerrariaService {
 
     private static final Duration T_MOD_LOADER_RELEASE_CACHE_DURATION = Duration.ofHours(1);
 
-    private final HttpService httpService;
+    private final @NonNull HttpService httpService;
 
-    private Instant tModLoaderReleaseFetchInstant = Instant.MIN;
+    private @NonNull Instant tModLoaderReleaseFetchInstant = Instant.MIN;
 
-    private List<TModLoaderVersionViewModel> tModLoaderVersions = Collections.emptyList();
+    private @NonNull List<TModLoaderVersionViewModel> tModLoaderVersions = Collections.emptyList();
 
     private void refreshTModLoaderGithubReleases() throws IOException {
         if (Instant.now().isAfter(tModLoaderReleaseFetchInstant)) {
