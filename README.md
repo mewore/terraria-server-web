@@ -9,15 +9,17 @@ A web UI for Terraria server management.
 - [x] 💙💜💛 Minimal project with basic authentication
 - [x] 💙 Hosts register their state in the database
 - [x] 💙💛 Host summary (on the front page)
-- [ ] 💙💛 Ability to tell the host to download a certain tModLoader executable
-  from [GitHub](https://github.com/tModLoader/tModLoader/releases/) through a specified version
-- [ ] 💙💛 Ability to tell the host to download a certain Terraria dedicated server executable
-  from [the Terraria wiki](https://terraria.gamepedia.com/Server#Downloads) through any user-inputted URL that starts
-  with "http://terraria.org/" or "https://www.terraria.org/"
+- [x] 💙 Ability to fetch the current TModLoader versions from
+  the [releases](https://github.com/tModLoader/tModLoader/releases/) of the tModLoader GitHub project
+- [ ] 💙💛 Ability to tell the host to download a Terraria dedicated server executable
+  from [the Terraria wiki](https://terraria.gamepedia.com/Server#Downloads) and a TModLoader and combine them into a
+  single directory.
 - [ ] 💙💛 Display the Terraria worlds of a host
-- [ ] 💙💛 Ability to start and stop Terraria (one instance per host) with a specific world. A process uses files as
-  input/output and in the code and the database, it is represented as a state machine. It keeps track of its state and
-  at which position it is in the input and output files.
+- [ ] 💙💛 Display the Terraria instances of a host
+- [ ] 💙💛 Ability to start and stop Terraria (one running instance per host) with a specific world. A process uses
+  files as input/output and in the code and the database, it is represented as a state machine. It keeps track of its
+  state and at which position it is in the input and output files. Alternatively, use `tmux`. That wouldn't be a
+  cross-platform solution, but it would be much easier to implement.
 
 ### Basic features
 
