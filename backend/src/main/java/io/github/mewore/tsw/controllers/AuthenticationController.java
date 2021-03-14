@@ -48,6 +48,7 @@ public class AuthenticationController {
     @Operation(security = {@SecurityRequirement(name = AuthConfigConstants.AUTH_SECURITY_REQUIREMENT)})
     @PostMapping({AuthConfigConstants.AUTH_PING_ENDPOINT})
     public AccountTypeEntity ping() throws InvalidCredentialsException {
-        return authenticationService.getRole(SecurityContextHolder.getContext().getAuthentication());
+        return authenticationService.getAuthenticatedAccountType(
+                SecurityContextHolder.getContext().getAuthentication());
     }
 }

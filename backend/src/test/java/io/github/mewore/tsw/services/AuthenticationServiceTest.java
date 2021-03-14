@@ -46,10 +46,11 @@ class AuthenticationServiceTest {
 
     private static final String SESSION = "e0f245dc-e6e4-4f8a-982b-004cbb04e505";
 
-    private static final AccountTypeEntity ROLE = new AccountTypeEntity();
+    private static final AccountTypeEntity ACCOUNT_TYPE = new AccountTypeEntity();
 
-    private static final AccountEntity EXISTING_ACCOUNT = new AccountEntity(1L, USERNAME,
-            PASSWORD.getBytes(BINARY_CHARSET), SESSION.getBytes(BINARY_CHARSET), Instant.now(), ROLE);
+    private static final AccountEntity EXISTING_ACCOUNT =
+            new AccountEntity(1L, USERNAME, PASSWORD.getBytes(BINARY_CHARSET), SESSION.getBytes(BINARY_CHARSET),
+                    Instant.now(), ACCOUNT_TYPE);
 
     private static final String NEW_USERNAME = "new-username";
 
@@ -78,7 +79,7 @@ class AuthenticationServiceTest {
         final SessionViewModel session = authenticationService.logIn(new LoginModel(USERNAME, PASSWORD));
         verify(accountRepository).save(accountCaptor.capture());
         assertEquals(session.getToken().toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
-        assertSame(ROLE, session.getRole());
+        assertSame(ACCOUNT_TYPE, session.getRole());
     }
 
     @Test
@@ -127,6 +128,14 @@ class AuthenticationServiceTest {
         verify(accountRepository).save(accountCaptor.capture());
         assertTrue(accountCaptor.getValue().getSessionExpiration().isBefore(Instant.now()),
                 "The session of the user should be marked as expired upon logout.");
+    }
+
+    @Test
+    void testGetAuthenticatedAccountType() throws InvalidCredentialsException {
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn(USERNAME);
+        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
+        assertSame(ACCOUNT_TYPE, authenticationService.getAuthenticatedAccountType(authentication));
     }
 
     @Test

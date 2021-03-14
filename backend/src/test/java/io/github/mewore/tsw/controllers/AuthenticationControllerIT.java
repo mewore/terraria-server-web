@@ -94,12 +94,12 @@ class AuthenticationControllerIT {
     @WithMockUser(username = USERNAME)
     @Test
     void testPing() throws Exception {
-        when(authenticationService.getRole(any())).thenReturn(null);
+        when(authenticationService.getAuthenticatedAccountType(any())).thenReturn(null);
         mockMvc
                 .perform(MockMvcRequestBuilders.post("/auth/ping"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(""));
-        verify(authenticationService, only()).getRole(authenticationCaptor.capture());
+        verify(authenticationService, only()).getAuthenticatedAccountType(authenticationCaptor.capture());
         assertEquals(USERNAME, ((UserDetails) authenticationCaptor.getValue().getPrincipal()).getUsername());
     }
 

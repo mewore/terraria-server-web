@@ -73,7 +73,8 @@ public class AuthenticationService implements UserDetailsService {
         accountRepository.save(account.withSessionExpiration(Instant.now()));
     }
 
-    public AccountTypeEntity getRole(final @Nullable Authentication authentication) throws InvalidCredentialsException {
+    public AccountTypeEntity getAuthenticatedAccountType(final @Nullable Authentication authentication)
+            throws InvalidCredentialsException {
         return getAuthenticatedAccount(authentication).getType();
     }
 
