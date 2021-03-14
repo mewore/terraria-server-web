@@ -1,4 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit, ViewChild } from '@angular/core';
+import { MatExpansionPanel } from '@angular/material/expansion';
 import { HostEntity } from 'src/generated/backend';
 
 @Component({
@@ -6,13 +7,29 @@ import { HostEntity } from 'src/generated/backend';
     templateUrl: './host-info.component.html',
     styleUrls: ['./host-info.component.sass'],
 })
-export class HostInfoComponent implements OnInit {
+export class HostInfoComponent implements AfterViewInit {
+    @ViewChild(MatExpansionPanel)
+    panel?: MatExpansionPanel;
+
     @Input()
     host?: HostEntity;
 
+    @Input()
+    hostIsLocal?: boolean;
+
     constructor() {}
 
-    ngOnInit(): void {}
+    ngAfterViewInit(): void {
+        if (this.hostIsLocal && this.panel) {
+            // TODO: Open the panel without the "expression changed after it has been checked" error and without
+            // `setTimeout`
+            setTimeout(() => {
+                if (this.panel) {
+                    this.panel.open();
+                }
+            });
+        }
+    }
 
     get loading(): boolean {
         return !this.host;

@@ -45,6 +45,9 @@
         "status": {
             "running": "Running",
             "stopped": "Stopped"
+        },
+        "terraria-instances": {
+            "title": "Terraria instances"
         }
     },
     "host-list-page": {
@@ -54,7 +57,9 @@
     },
     "input": {
         "errors": {
-            "required": "* Required"
+            "required": "* Required",
+            "fileExtension:zip": "Must be a file with the '.zip' extension",
+            "terrariaUrl": "Must a Terraria URL: http(s)://terraria.org/..."
         }
     },
     "loading": "Loading",
@@ -64,6 +69,33 @@
                 "log-out": "Log out"
             },
             "title": "Log out"
+        }
+    },
+    "terraria-instance": {
+        "card": {
+            "new": {
+                "title": "New instance",
+                "description": "Create a new Terraria server instance.",
+                "buttons": {
+                    "create": "Create"
+                }
+            }
+        },
+        "dialogs": {
+            "create": {
+                "buttons": {
+                    "create": "Create"
+                },
+                "title": "New Terraria server instance",
+                "tmodloader-version": {
+                    "label": "TModLoader version"
+                },
+                "terraria-server-url": {
+                    "label": "Enter the Terraria dedicated server download URL",
+                    "placeholder": "Terraria dedicated server download URL",
+                    "help-text": "Pick a server download link from the terraria.gamepedia.com wiki."
+                }
+            }
         }
     }
 }

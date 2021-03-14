@@ -1,6 +1,6 @@
 <mat-accordion>
     <h3 class="tsw-host-list-header">{{ 'host-list-page.local-host-title' | translate }}</h3>
-    <tsw-host-info [host]="localHost"></tsw-host-info>
+    <tsw-host-info [host]="localHost" [hostIsLocal]="true"></tsw-host-info>
 
     <h3 class="tsw-host-list-header">{{ 'host-list-page.other-hosts-title' | translate }}</h3>
     <mat-spinner

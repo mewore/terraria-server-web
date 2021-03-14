@@ -1,0 +1,48 @@
+<h2>{{ 'terraria-instance.dialogs.create.title' | translate }}</h2>
+<mat-dialog-content>
+    <form>
+        <mat-form-field appearance="standard" class="tsw-server-url-input">
+            <mat-label>{{ 'terraria-instance.dialogs.create.terraria-server-url.label' | translate }}</mat-label>
+            <input
+                id="tsw-terraria-dedicated-server-url-input"
+                matInput
+                [formControl]="terrariaServerUrlFormControl"
+                [placeholder]="'terraria-instance.dialogs.create.terraria-server-url.placeholder' | translate"
+            />
+            <mat-error *ngIf="terrariaServerUrlFormControl.hasError('required')"
+            >{{ 'input.errors.required' | translate }}
+            </mat-error>
+            <mat-error *ngIf="terrariaServerUrlFormControl.hasError('fileExtension:zip')"
+            >{{ 'input.errors.fileExtension:zip' | translate }}
+            </mat-error>
+            <mat-error *ngIf="terrariaServerUrlFormControl.hasError('terrariaUrl')"
+            >{{ 'input.errors.terrariaUrl' | translate }}
+            </mat-error>
+        </mat-form-field>
+        <p>
+            <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">{{
+                'terraria-instance.dialogs.create.terraria-server-url.help-text' | translate
+                }}</a>
+        </p>
+        <br/>
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria-instance.dialogs.create.tmodloader-version.label' | translate }}</mat-label>
+            <mat-select [formControl]="tModLoaderVersionFormControl" required>
+                <mat-option *ngFor="let version of tModLoaderVersions || []" [value]="version.releaseId">
+                    {{ version.version }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="tModLoaderVersionFormControl.hasError('required')"
+            >{{ 'input.errors.required' | translate }}
+            </mat-error>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button [mat-dialog-close]>{{ 'dialog.buttons.cancel' | translate }}</button>
+    <button mat-raised-button (click)="onCreateClicked()" [disabled]="form.invalid" color="primary">
+        {{ 'terraria-instance.dialogs.create.buttons.create' | translate }}
+    </button>
+    <mat-progress-bar mode="indeterminate" [class]="creating ? '' : 'tsw-invisible'" color="primary"></mat-progress-bar>
+</mat-dialog-actions>
