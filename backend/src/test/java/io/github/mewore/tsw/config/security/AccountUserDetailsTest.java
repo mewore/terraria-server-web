@@ -32,9 +32,23 @@ class AccountUserDetailsTest {
 
     @Test
     void testGetAuthorities_manageAccountsRole() {
-        final AccountTypeEntity roleWithManageUsers = AccountTypeEntity.builder().allowedToManageAccounts(true).build();
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(roleWithManageUsers), "");
+        final AccountTypeEntity typeWithManageUsers = AccountTypeEntity.builder().ableToManageAccounts(true).build();
+        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(typeWithManageUsers), "");
         assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_ACCOUNTS")), user.getAuthorities());
+    }
+
+    @Test
+    void testGetAuthorities_manageHostsRole() {
+        final AccountTypeEntity typeWithManageHosts = AccountTypeEntity.builder().ableToManageHosts(true).build();
+        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(typeWithManageHosts), "");
+        assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_HOSTS")), user.getAuthorities());
+    }
+
+    @Test
+    void testGetAuthorities_createTerrariaInstances() {
+        final AccountTypeEntity typeWithManageHosts = AccountTypeEntity.builder().ableToManageTerraria(true).build();
+        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(typeWithManageHosts), "");
+        assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_TERRARIA")), user.getAuthorities());
     }
 
     @Test

@@ -41,7 +41,9 @@ public class AccountUserDetails implements UserDetails {
         }
 
         return Stream.<String>builder()
-                .add(role.isAllowedToManageAccounts() ? AuthorityRoles.MANAGE_ACCOUNTS : null)
+                .add(role.isAbleToManageAccounts() ? AuthorityRoles.MANAGE_ACCOUNTS : null)
+                .add(role.isAbleToManageHosts() ? AuthorityRoles.MANAGE_HOSTS : null)
+                .add(role.isAbleToManageTerraria() ? AuthorityRoles.MANAGE_TERRARIA : null)
                 .build()
                 .filter(Objects::nonNull)
                 .map(SimpleGrantedAuthority::new)

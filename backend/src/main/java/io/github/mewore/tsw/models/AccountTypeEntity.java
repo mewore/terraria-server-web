@@ -6,6 +6,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,5 +31,15 @@ public class AccountTypeEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private final boolean allowedToManageAccounts = false;
+    private final boolean ableToManageAccounts = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private final boolean ableToManageHosts = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private final boolean ableToManageTerraria = false;
 }

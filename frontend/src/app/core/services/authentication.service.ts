@@ -96,8 +96,4 @@ export class AuthenticationService {
         await this.restApi.logOut();
         this.userSubject.next(undefined);
     }
-
-    canManageAccounts(): boolean {
-        return this.currentUser?.accountType?.allowedToManageAccounts || false;
-    }
 }
