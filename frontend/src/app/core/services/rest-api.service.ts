@@ -2,8 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { HttpClient as GeneratedHttpClient, RestApplicationClient, RestResponse } from 'src/generated/backend';
 
-const API_PREFIX = '/api';
-
 @Injectable({
     providedIn: 'root',
 })

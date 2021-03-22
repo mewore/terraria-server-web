@@ -78,6 +78,11 @@
                 "description": "Create a new Terraria server instance.",
                 "buttons": {
                     "create": "Create"
+                },
+                "disabled-tooltips": {
+                    "no-host": "The host is not defined. Maybe it has not been loaded yet.",
+                    "not-logged-in": "Must be logged in (and have the permission to manage hosts).",
+                    "no-manage-hosts-permission": "Must have the permission to manage hosts."
                 }
             }
         },

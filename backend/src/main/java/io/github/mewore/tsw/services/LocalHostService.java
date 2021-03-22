@@ -4,7 +4,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -36,7 +35,7 @@ public class LocalHostService {
 
     private static final Logger LOGGER = LogManager.getLogger(LocalHostService.class);
 
-    private static final Path UUID_FILE_PATH = Paths.get(".tsw_host_uuid");
+    private static final Path UUID_FILE_PATH = Path.of(".tsw_host_uuid");
 
     private final @NonNull HostRepository hostRepository;
 

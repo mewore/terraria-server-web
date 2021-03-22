@@ -6,8 +6,10 @@
         <p>{{ 'terraria-instance.card.new.description' | translate }}</p>
     </mat-card-content>
     <mat-card-actions>
-        <button mat-raised-button (click)="onCreateClicked()" color="primary">
-            {{ 'terraria-instance.card.new.buttons.create' | translate }}
-        </button>
+        <span [matTooltip]="createDisabledReason ? (createDisabledReason | translate) : ''">
+            <button mat-raised-button (click)="onCreateClicked()" color="primary" [disabled]="!!createDisabledReason">
+                {{ 'terraria-instance.card.new.buttons.create' | translate }}
+            </button>
+        </span>
     </mat-card-actions>
 </mat-card>

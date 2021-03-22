@@ -1,4 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { HostEntity } from 'src/generated/backend';
 import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 
 @Component({
@@ -6,15 +8,35 @@ import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance
     templateUrl: './terraria-instance-card.component.html',
     styleUrls: ['./terraria-instance-card.component.sass'],
 })
-export class TerrariaInstanceCardComponent implements OnInit {
+export class TerrariaInstanceCardComponent {
     @Input()
     newInstance?: boolean;
 
-    constructor(private readonly createDialogService: CreateTerrariaInstanceDialogService) {}
+    @Input()
+    host?: HostEntity;
 
-    ngOnInit(): void {}
+    constructor(
+        private readonly createDialogService: CreateTerrariaInstanceDialogService,
+        private readonly authService: AuthenticationService
+    ) {}
+
+    get createDisabledReason(): string | undefined {
+        if (!this.host) {
+            return 'terraria-instance.card.new.disabled-tooltips.no-host';
+        }
+        if (!this.authService.currentUser) {
+            return 'terraria-instance.card.new.disabled-tooltips.not-logged-in';
+        }
+        if (!this.authService.canManageHosts) {
+            return 'terraria-instance.card.new.disabled-tooltips.no-manage-hosts-permission';
+        }
+        return undefined;
+    }
 
     onCreateClicked(): void {
-        this.createDialogService.openDialog();
+        if (!this.host) {
+            throw new Error('The host is not defined. Cannot create a Terraria instance.');
+        }
+        this.createDialogService.openDialog(this.host);
     }
 }

@@ -27,7 +27,7 @@
         <br/>
         <mat-form-field appearance="standard">
             <mat-label>{{ 'terraria-instance.dialogs.create.tmodloader-version.label' | translate }}</mat-label>
-            <mat-select [formControl]="tModLoaderVersionFormControl" required>
+            <mat-select [formControl]="tModLoaderVersionFormControl" [disabled]="!tModLoaderVersions.length">
                 <mat-option *ngFor="let version of tModLoaderVersions || []" [value]="version.releaseId">
                     {{ version.version }}
                 </mat-option>

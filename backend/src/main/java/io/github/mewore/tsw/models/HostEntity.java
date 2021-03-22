@@ -6,7 +6,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -30,8 +29,8 @@ import lombok.NonNull;
 @DynamicUpdate
 public class HostEntity {
 
-    private static final Path DEFAULT_TERRARIA_PATH = Paths.get(System.getProperty("user.home"), ".local", "share",
-            "Terraria", "Instances");
+    private static final Path DEFAULT_TERRARIA_PATH =
+            Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "Instances");
 
     private static final int DEFAULT_PORT = 8080;
 

@@ -23,14 +23,16 @@ export class AuthenticationService {
         const initialUser = rawUser ? JSON.parse(rawUser) : undefined;
         this.userSubject = new BehaviorSubject<AuthenticatedUser | undefined>(initialUser);
         this.userObservable = this.userSubject.asObservable();
-        this.userObservable.subscribe((newAuth) => {
-            if (newAuth) {
-                sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(newAuth));
-                this.authenticationStateService.authData = newAuth.authData;
-            } else {
-                sessionStorage.removeItem(this.SESSION_STORAGE_KEY);
-                this.authenticationStateService.authData = undefined;
-            }
+        this.userObservable.subscribe({
+            next: (newAuth) => {
+                if (newAuth) {
+                    sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(newAuth));
+                    this.authenticationStateService.authData = newAuth.authData;
+                } else {
+                    sessionStorage.removeItem(this.SESSION_STORAGE_KEY);
+                    this.authenticationStateService.authData = undefined;
+                }
+            },
         });
         this.authenticationStateService.unsureObservable.subscribe({
             next: () => {
@@ -65,6 +67,10 @@ export class AuthenticationService {
 
     get currentUser(): AuthenticatedUser | undefined {
         return this.userSubject.value;
+    }
+
+    get canManageHosts(): boolean {
+        return this.currentUser?.accountType?.ableToManageHosts || false;
     }
 
     async logIn(username: string, password: string): Promise<AuthenticatedUser> {

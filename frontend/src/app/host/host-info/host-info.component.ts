@@ -23,11 +23,7 @@ export class HostInfoComponent implements AfterViewInit {
         if (this.hostIsLocal && this.panel) {
             // TODO: Open the panel without the "expression changed after it has been checked" error and without
             // `setTimeout`
-            setTimeout(() => {
-                if (this.panel) {
-                    this.panel.open();
-                }
-            });
+            setTimeout(() => this.panel?.open());
         }
     }
 

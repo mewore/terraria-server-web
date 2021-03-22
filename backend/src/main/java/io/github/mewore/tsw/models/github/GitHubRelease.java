@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
@@ -16,13 +17,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GitHubRelease {
 
-    @Nullable
-    private List<GitHubReleaseAsset> assets;
+    private @NonNull List<@NonNull GitHubReleaseAsset> assets;
 
     private long id;
 
-    @Nullable
-    private String name;
+    private @NonNull String name;
 
     @Nullable
     private String url;

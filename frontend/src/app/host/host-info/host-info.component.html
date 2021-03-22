@@ -16,6 +16,6 @@
     </mat-expansion-panel-header>
     <h3 class="tsw-host-info-title">{{ 'host-info.terraria-instances.title' | translate }}</h3>
     <div *ngIf="hostIsLocal">
-        <tsw-terraria-instance-card [newInstance]="true"></tsw-terraria-instance-card>
+        <tsw-terraria-instance-card [newInstance]="true" [host]="host"></tsw-terraria-instance-card>
     </div>
 </mat-expansion-panel>
