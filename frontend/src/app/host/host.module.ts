@@ -19,6 +19,7 @@ import { HostInfoComponent } from './host-info/host-info.component';
 import { HostListPageComponent } from './host-list-page/host-list-page.component';
 import { HostRoutingModule } from './host-routing.module';
 import { TerrariaInstanceCardComponent } from './terraria-instance-card/terraria-instance-card.component';
+import { TerrariaWorldCardComponent } from './terraria-world-card/terraria-world-card.component';
 
 @NgModule({
     declarations: [
@@ -26,6 +27,7 @@ import { TerrariaInstanceCardComponent } from './terraria-instance-card/terraria
         HostListPageComponent,
         TerrariaInstanceCardComponent,
         CreateTerrariaInstanceDialogComponent,
+        TerrariaWorldCardComponent,
     ],
     imports: [
         CommonModule,

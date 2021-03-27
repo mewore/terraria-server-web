@@ -29,6 +29,9 @@
             "cancel": "Cancel"
         }
     },
+    "general": {
+        "not-implemented": "This has not been implemented yet."
+    },
     "header": {
         "session-info": {
             "buttons": {
@@ -48,6 +51,9 @@
         },
         "terraria-instances": {
             "title": "Terraria instances"
+        },
+        "terraria-worlds": {
+            "title": "Terraria worlds"
         }
     },
     "host-list-page": {
@@ -100,6 +106,17 @@
                     "placeholder": "Terraria dedicated server download URL",
                     "help-text": "Pick a server download link from the terraria.gamepedia.com wiki."
                 }
+            }
+        }
+    },
+    "terraria-world": {
+        "card": {
+            "last-modified": {
+                "tooltip": "Last modified: {{ lastModified }}"
+            },
+            "buttons": {
+                "delete": "Delete",
+                "download": "Download"
             }
         }
     }

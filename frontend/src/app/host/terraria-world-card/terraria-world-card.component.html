@@ -1,0 +1,25 @@
+<mat-card class="tsw-terraria-world-card">
+    <mat-card-header>
+        <mat-card-title>{{ world?.name }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+        <label
+            class="world-last-modified"
+            [matTooltip]="
+                'terraria-world.card.last-modified.tooltip' | translate: { lastModified: lastModifiedDetailedString }
+            "
+        >
+            {{ lastModifiedString }}
+        </label>
+    </mat-card-content>
+    <mat-card-actions>
+        <span [matTooltip]="'general.not-implemented' | translate">
+            <button mat-raised-button color="warn" [disabled]="true">
+                {{ 'terraria-world.card.buttons.delete' | translate }}
+            </button>
+            <button mat-stroked-button color="primary" [disabled]="true">
+                {{ 'terraria-world.card.buttons.download' | translate }}
+            </button>
+        </span>
+    </mat-card-actions>
+</mat-card>

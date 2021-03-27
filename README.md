@@ -15,7 +15,7 @@ A web UI for Terraria server management.
   from [the Terraria wiki](https://terraria.gamepedia.com/Server#Downloads) and a TModLoader and combine them into a
   single directory
 - [x] 💙 Keep track of the Terraria worlds of hosts
-- [ ] 💙💛 Display the Terraria worlds of hosts
+- [x] 💙💛 Display the Terraria worlds of hosts
 - [ ] 💙💛 Display the Terraria instances of a host
 - [ ] 💙💛 Ability to start and stop Terraria (one running instance per host) with a specific world. A process uses
   files as input/output and in the code and the database, it is represented as a state machine. It keeps track of its
@@ -24,6 +24,9 @@ A web UI for Terraria server management.
 
 ### Basic features
 
+- [ ] 💙💛 Downloading the Terraria worlds of hosts
+- [ ] 💙💛 Uploading of Terraria worlds to hosts
+- [ ] 💙💛 Deleting the Terraria worlds of hosts
 - [ ] 💙💛 Ability to configure the Terraria executable path of a host ("${HOME}/.local/share/Terraria/{Instances |
   Executables}" by default) and to view what is present
 - [ ] 💙💛 Ability to upload Terraria worlds
