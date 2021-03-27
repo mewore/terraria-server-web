@@ -1,16 +1,20 @@
 package io.github.mewore.tsw.services.util;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -106,9 +110,36 @@ public class FileService {
         }
     }
 
+    public byte[] zip(final File... files) throws IOException {
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (final ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
+            for (final File file : files) {
+                zipOut.putNextEntry(new ZipEntry(file.getName()));
+                writeFileToStream(file, zipOut);
+            }
+        }
+        return outputStream.toByteArray();
+    }
+
+    public File[] listFiles(final File directory, final String... extensions) {
+        final File[] result = directory.listFiles(pathname -> pathname.isFile() &&
+                Arrays.stream(extensions).anyMatch(extension -> pathname.getName().endsWith("." + extension)));
+        return result == null ? new File[0] : result;
+    }
+
     private void createDirectory(final File directory) throws IOException {
         if (!directory.exists() && !directory.mkdirs()) {
             throw new IOException("Failed to create directory: " + directory.getAbsolutePath());
+        }
+    }
+
+    private void writeFileToStream(final File file, final OutputStream target) throws IOException {
+        try (final FileInputStream fis = new FileInputStream(file)) {
+            final byte[] bytes = new byte[BUFFER_SIZE];
+            int length;
+            while ((length = fis.read(bytes)) >= 0) {
+                target.write(bytes, 0, length);
+            }
         }
     }
 

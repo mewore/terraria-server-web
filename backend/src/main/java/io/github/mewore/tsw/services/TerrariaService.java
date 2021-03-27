@@ -1,12 +1,18 @@
 package io.github.mewore.tsw.services;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,6 +28,8 @@ import io.github.mewore.tsw.models.github.GitHubRelease;
 import io.github.mewore.tsw.models.github.GitHubReleaseAsset;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceCreationModel;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
 import io.github.mewore.tsw.services.util.InputStreamSupplier;
@@ -43,6 +51,9 @@ public class TerrariaService {
 
     private static final String T_MOD_LOADER_GITHUB_REPO = "tModLoader";
 
+    private static final File TERRARIA_WORLD_DIRECTORY =
+            Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "ModLoader", "Worlds").toFile();
+
     private final @NonNull LocalHostService localHostService;
 
     private final @NonNull GithubService githubService;
@@ -52,6 +63,37 @@ public class TerrariaService {
     private final @NonNull FileService fileService;
 
     private final @NonNull SystemService systemService;
+
+    private final @NonNull TerrariaWorldRepository terrariaWorldRepository;
+
+    @PostConstruct
+    void setUp() throws IOException {
+        final HostEntity host = localHostService.getHost();
+        final Function<File, String> fileWithoutExtension =
+                file -> file.getName().substring(0, file.getName().lastIndexOf("."));
+
+        final Map<String, File> wldFiles = Arrays
+                .stream(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "wld"))
+                .collect(Collectors.toUnmodifiableMap(fileWithoutExtension, Function.identity()));
+        final Map<String, File> twldFiles = Arrays
+                .stream(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "twld"))
+                .collect(Collectors.toUnmodifiableMap(fileWithoutExtension, Function.identity()));
+
+        final List<TerrariaWorldEntity> newWorlds = new ArrayList<>();
+        for (final Map.Entry<String, File> twldEntry : twldFiles.entrySet()) {
+            final String worldName = twldEntry.getKey();
+            final File wldFile = wldFiles.get(worldName);
+            if (wldFile != null) {
+                final File twldFile = twldEntry.getValue();
+                final byte[] zipData = fileService.zip(wldFile, twldFile);
+                final TerrariaWorldEntity world = new TerrariaWorldEntity(null, worldName,
+                        Instant.ofEpochMilli(Math.max(wldFile.lastModified(), twldFile.lastModified())), zipData, host);
+                newWorlds.add(world);
+            }
+        }
+
+        terrariaWorldRepository.setHostWorlds(host, newWorlds);
+    }
 
     public List<TModLoaderVersionViewModel> fetchTModLoaderVersions() throws IOException {
         return githubService

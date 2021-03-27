@@ -31,17 +31,20 @@ class HostControllerIT {
 
     @Test
     void testGetHosts() throws Exception {
-        final HostEntity host = HostEntity.builder()
+        final HostEntity host = HostEntity
+                .builder()
                 .id(8L)
                 .uuid(UUID.fromString("f7cda826-a3b6-4d0a-932f-4e384914b1c6"))
                 .name("Host name")
                 .build();
         when(hostService.getAllHosts()).thenReturn(Collections.singletonList(host));
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts"))
+        mockMvc
+                .perform(MockMvcRequestBuilders.get("/api/hosts"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
-                .andExpect(MockMvcResultMatchers.content()
+                .andExpect(MockMvcResultMatchers
+                        .content()
                         .string("[{\"id\":8,\"uuid\":\"f7cda826-a3b6-4d0a-932f-4e384914b1c6\",\"alive\":false," +
                                 "\"name\":\"Host name\",\"url\":null," + "\"terrariaInstanceDirectory\":\"" +
-                                host.getTerrariaInstanceDirectory().toUri().toString() + "\"}]"));
+                                host.getTerrariaInstanceDirectory().toUri().toString() + "\",\"worlds\":[]}]"));
     }
 }

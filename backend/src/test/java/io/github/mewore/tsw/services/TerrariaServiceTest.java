@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.github.mewore.tsw.exceptions.IncorrectUrlException;
@@ -26,6 +28,8 @@ import io.github.mewore.tsw.models.github.GitHubRelease;
 import io.github.mewore.tsw.models.github.GitHubReleaseAsset;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceCreationModel;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
 import io.github.mewore.tsw.services.util.InputStreamSupplier;
@@ -38,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,6 +60,9 @@ class TerrariaServiceTest {
 
     private static final TerrariaInstanceCreationModel INSTANCE_CREATION_MODEL =
             new TerrariaInstanceCreationModel(1, 8, "http://terraria.org/server/terraria-server-1333.zip");
+
+    private static final File TERRARIA_WORLD_DIRECTORY =
+            Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "ModLoader", "Worlds").toFile();
 
     @InjectMocks
     private TerrariaService terrariaService;
@@ -74,8 +82,40 @@ class TerrariaServiceTest {
     @Mock
     private SystemService systemService;
 
+    @Mock
+    private TerrariaWorldRepository terrariaWorldRepository;
+
     @Captor
     private ArgumentCaptor<InputStreamSupplier> inputStreamSupplierCaptor;
+
+    @Captor
+    private ArgumentCaptor<List<TerrariaWorldEntity>> terrariaWorldListCaptor;
+
+    @Test
+    void testSetUp() throws IOException {
+        final HostEntity host = HostEntity.builder().build();
+        when(localHostService.getHost()).thenReturn(host);
+
+        final File wldFile = Mockito.spy(new File("world.wld"));
+        when(wldFile.lastModified()).thenReturn(1L);
+        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "wld")).thenReturn(
+                new File[]{new File("world-without-twld.wld"), wldFile});
+
+        final File twldFile = Mockito.spy(new File("world.twld"));
+        when(twldFile.lastModified()).thenReturn(8L);
+        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "twld")).thenReturn(
+                new File[]{new File("world-without-wld.twld"), twldFile});
+
+        final byte[] zipData = new byte[]{1, 2, 3};
+        when(fileService.zip(wldFile, twldFile)).thenReturn(zipData);
+
+        terrariaService.setUp();
+        verify(terrariaWorldRepository).setHostWorlds(same(host), terrariaWorldListCaptor.capture());
+
+        final TerrariaWorldEntity expectedSavedWorld =
+                new TerrariaWorldEntity(null, "world", Instant.ofEpochMilli(8), zipData, host);
+        assertEquals(Collections.singletonList(expectedSavedWorld), terrariaWorldListCaptor.getValue());
+    }
 
     @Test
     void testFetchTModLoaderVersions() throws IOException {
