@@ -1,15 +1,51 @@
-<mat-card class="tsw-terraria-instance-card">
+<mat-card class="tsw-terraria-instance-card" *ngIf="instance; else newInstanceCard">
     <mat-card-header>
-        <mat-card-title>{{ 'terraria-instance.card.new.title' | translate }}</mat-card-title>
+        <mat-card-title>{{ instance.name }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-        <p>{{ 'terraria-instance.card.new.description' | translate }}</p>
+        <p class="tsw-terraria-instance-uuid">{{ instance.uuid }}</p>
+        <p>
+            {{ 'terraria-instance.card.description.mod-loader-label' | translate
+            }}<a class="tsw-version-link" [href]="instance.modLoaderUrl">{{ instance.modLoaderVersion }}</a>
+        </p>
+        <p>
+            {{ 'terraria-instance.card.description.server-label' | translate
+            }}<a class="tsw-version-link" [href]="instance.terrariaServerUrl">{{ instance.terrariaVersion }}</a>
+        </p>
     </mat-card-content>
     <mat-card-actions>
-        <span [matTooltip]="createDisabledReason ? (createDisabledReason | translate) : ''">
-            <button mat-raised-button (click)="onCreateClicked()" color="primary" [disabled]="!!createDisabledReason">
-                {{ 'terraria-instance.card.new.buttons.create' | translate }}
+        <span [matTooltip]="'general.not-implemented' | translate">
+            <button mat-raised-button color="warn" [disabled]="true">
+                {{ 'terraria-instance.card.buttons.delete' | translate }}
+            </button>
+            <button mat-stroked-button color="primary" [disabled]="true">
+                {{ 'terraria-instance.card.buttons.edit' | translate }}
             </button>
         </span>
     </mat-card-actions>
 </mat-card>
+
+<ng-template #newInstanceCard>
+    <mat-card class="tsw-terraria-instance-card">
+        <mat-card-header>
+            <mat-card-title>{{ 'terraria-instance.card.new.title' | translate }}</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            <p>{{ 'terraria-instance.card.new.description' | translate }}</p>
+        </mat-card-content>
+
+        <mat-card-actions>
+            <span [matTooltip]="createDisabledReason ? (createDisabledReason | translate) : ''">
+                <button
+                    mat-raised-button
+                    (click)="onCreateClicked()"
+                    color="primary"
+                    [disabled]="!!createDisabledReason"
+                >
+                    {{ 'terraria-instance.card.new.buttons.create' | translate }}
+                </button>
+            </span>
+        </mat-card-actions>
+    </mat-card>
+</ng-template>

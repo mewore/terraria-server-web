@@ -11,12 +11,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +31,10 @@ import io.github.mewore.tsw.models.github.GitHubRelease;
 import io.github.mewore.tsw.models.github.GitHubReleaseAsset;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceCreationModel;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.repositories.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
@@ -43,7 +49,7 @@ import lombok.RequiredArgsConstructor;
 public class TerrariaService {
 
     private static final Pattern TERRARIA_SERVER_URL_REGEX =
-            Pattern.compile("^https?://(www\\.)?terraria\\.org/[^?]+/(terraria-server-(\\d{4}).zip)(\\?\\d+)?$");
+            Pattern.compile("^https?://(www\\.)?terraria\\.org/[^?]+/(terraria-server-(\\d+).zip)(\\?\\d+)?$");
 
     private static final String TERRARIA_SERVER_CACHE_DIR = "terraria-servers";
 
@@ -53,6 +59,8 @@ public class TerrariaService {
 
     private static final File TERRARIA_WORLD_DIRECTORY =
             Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "ModLoader", "Worlds").toFile();
+
+    private final Logger logger = LogManager.getLogger(getClass());
 
     private final @NonNull LocalHostService localHostService;
 
@@ -65,6 +73,8 @@ public class TerrariaService {
     private final @NonNull SystemService systemService;
 
     private final @NonNull TerrariaWorldRepository terrariaWorldRepository;
+
+    private final @NonNull TerrariaInstanceRepository terrariaInstanceRepository;
 
     @PostConstruct
     void setUp() throws IOException {
@@ -104,7 +114,7 @@ public class TerrariaService {
     }
 
     @Secured({AuthorityRoles.MANAGE_HOSTS})
-    public void createTerrariaInstance(final TerrariaInstanceCreationModel creationModel)
+    public TerrariaInstanceEntity createTerrariaInstance(final TerrariaInstanceCreationModel creationModel)
             throws IOException, NotFoundException, IncorrectUrlException {
 
         // Validation
@@ -140,8 +150,10 @@ public class TerrariaService {
             default -> throw new UnsupportedOperationException(
                     "Cannot run the Terraria server on the current operating system: " + systemService.getOs());
         }
-        final GitHubReleaseAsset tModLoaderAsset =
-                getTModLoaderAsset(creationModel.getModLoaderReleaseId(), tModLoaderFileOsString);
+        final GitHubRelease tModLoaderRelease =
+                githubService.getRelease(T_MOD_LOADER_GITHUB_USER, T_MOD_LOADER_GITHUB_REPO,
+                        creationModel.getModLoaderReleaseId());
+        final GitHubReleaseAsset tModLoaderAsset = getTModLoaderAsset(tModLoaderRelease, tModLoaderFileOsString);
 
         final UUID instanceUuid = UUID.randomUUID();
         final HostEntity host = localHostService.getHost();
@@ -157,14 +169,24 @@ public class TerrariaService {
         try (final InputStream tModLoaderZipStream = githubService.fetchAsset(tModLoaderAsset)) {
             fileService.unzip(tModLoaderZipStream, instanceDirectory);
         }
+
+        final String serverVersion = String.join(".", serverRawVersion.split(""));
+        final String tModLoaderVersion =
+                tModLoaderRelease.getName().substring(tModLoaderRelease.getName().startsWith("v") ? 1 : 0);
+        final String tModLoaderUrl = Objects.requireNonNull(tModLoaderAsset.getBrowserDownloadUrl());
+
+        final TerrariaInstanceEntity newTerrariaInstance =
+                new TerrariaInstanceEntity(null, instanceUuid, instanceDirectory.toPath(),
+                        creationModel.getInstanceName(), serverVersion, serverZipUrl, tModLoaderVersion, tModLoaderUrl,
+                        TerrariaInstanceState.STOPPED, host);
+        final TerrariaInstanceEntity result = terrariaInstanceRepository.save(newTerrariaInstance);
+
+        logger.info("Created a Terraria instance at {}", instanceDirectory.getAbsolutePath());
+        return result;
     }
 
-    private @NonNull GitHubReleaseAsset getTModLoaderAsset(final long releaseId, final @NonNull String osString)
-            throws NotFoundException, IOException {
-
-        final GitHubRelease tModLoaderRelease =
-                githubService.getRelease(T_MOD_LOADER_GITHUB_USER, T_MOD_LOADER_GITHUB_REPO, releaseId);
-
+    private @NonNull GitHubReleaseAsset getTModLoaderAsset(final @NonNull GitHubRelease tModLoaderRelease,
+            final @NonNull String osString) throws NotFoundException {
         return tModLoaderRelease
                 .getAssets()
                 .stream()

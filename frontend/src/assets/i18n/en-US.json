@@ -63,6 +63,7 @@
     },
     "input": {
         "errors": {
+            "blank": "* Required (and whitespace-only values are not allowed)",
             "required": "* Required",
             "fileExtension:zip": "Must be a file with the '.zip' extension",
             "terrariaUrl": "Must a Terraria URL: http(s)://terraria.org/..."
@@ -79,6 +80,14 @@
     },
     "terraria-instance": {
         "card": {
+            "buttons": {
+                "delete": "Delete",
+                "edit": "Edit"
+            },
+            "description": {
+                "mod-loader-label": "TModLoader: ",
+                "server-label": "Terraria server: "
+            },
             "new": {
                 "title": "New instance",
                 "description": "Create a new Terraria server instance.",
@@ -100,6 +109,10 @@
                 "title": "New Terraria server instance",
                 "tmodloader-version": {
                     "label": "TModLoader version"
+                },
+                "instance-name": {
+                    "label": "Enter the instance name",
+                    "placeholder": "Instance name"
                 },
                 "terraria-server-url": {
                     "label": "Enter the Terraria dedicated server download URL",

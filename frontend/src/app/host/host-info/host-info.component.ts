@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
-import { HostEntity } from 'src/generated/backend';
+import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
 
 @Component({
     selector: 'tsw-host-info',
@@ -49,5 +49,15 @@ export class HostInfoComponent implements AfterViewInit {
 
     get hostStatus(): string {
         return this.host?.alive ? 'running' : 'stopped';
+    }
+
+    get terrariaInstances(): TerrariaInstanceEntity[] {
+        return this.host?.terrariaInstances || [];
+    }
+
+    terrariaInstanceCreated(instance: TerrariaInstanceEntity): void {
+        if (this.host) {
+            this.host.terrariaInstances.push(instance);
+        }
     }
 }

@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.DynamicUpdate;
@@ -19,6 +20,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.lang.Nullable;
 
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,7 +29,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
 @Getter
@@ -82,6 +84,10 @@ public class HostEntity {
     @OneToMany(mappedBy = "host", fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
     private final List<TerrariaWorldEntity> worlds = Collections.emptyList();
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "host")
+    @Fetch(FetchMode.JOIN)
+    private final Set<TerrariaInstanceEntity> terrariaInstances = Collections.emptySet();
 
     public boolean isAlive() {
         return alive && lastHeartbeat.plus(heartbeatDuration.multipliedBy(2)).isAfter(Instant.now());

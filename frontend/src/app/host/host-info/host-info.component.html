@@ -20,7 +20,14 @@
     </div>
     <mat-divider></mat-divider>
     <h3 class="tsw-host-info-title">{{ 'host-info.terraria-instances.title' | translate }}</h3>
-    <div *ngIf="hostIsLocal">
-        <tsw-terraria-instance-card [newInstance]="true" [host]="host"></tsw-terraria-instance-card>
-    </div>
+    <tsw-terraria-instance-card
+        *ngFor="let instance of terrariaInstances"
+        [instance]="instance"
+        [host]="host"
+    ></tsw-terraria-instance-card>
+    <tsw-terraria-instance-card
+        *ngIf="hostIsLocal"
+        [host]="host"
+        (created)="terrariaInstanceCreated($event)"
+    ></tsw-terraria-instance-card>
 </mat-expansion-panel>

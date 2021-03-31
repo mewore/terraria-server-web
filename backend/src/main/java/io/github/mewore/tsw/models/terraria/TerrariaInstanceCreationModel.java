@@ -7,6 +7,8 @@ import lombok.Getter;
 @Getter
 public class TerrariaInstanceCreationModel {
 
+    private final String instanceName;
+
     private final long hostId;
 
     private final long modLoaderReleaseId;

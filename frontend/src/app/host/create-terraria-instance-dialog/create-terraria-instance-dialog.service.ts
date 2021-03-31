@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { HostEntity } from 'src/generated/backend';
+import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
 import {
     CreateTerrariaInstanceDialogComponent,
     CreateTerrariaInstanceDialogInput,
@@ -13,7 +13,7 @@ import {
 export class CreateTerrariaInstanceDialogService {
     constructor(private readonly dialog: MatDialog) {}
 
-    openDialog(host: HostEntity): Promise<void> {
+    openDialog(host: HostEntity): Promise<CreateTerrariaInstanceDialogOutput | undefined> {
         return this.dialog
             .open<
                 CreateTerrariaInstanceDialogComponent,
@@ -21,7 +21,9 @@ export class CreateTerrariaInstanceDialogService {
                 CreateTerrariaInstanceDialogOutput
             >(CreateTerrariaInstanceDialogComponent, {
                 data: host,
-                maxWidth: '40em',
+                maxWidth: '50em',
+                minWidth: '20em',
+                width: '80%',
             })
             .afterClosed()
             .toPromise();

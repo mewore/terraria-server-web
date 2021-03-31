@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
-import { HostEntity } from 'src/generated/backend';
+import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
 import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 
 @Component({
@@ -10,10 +10,13 @@ import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance
 })
 export class TerrariaInstanceCardComponent {
     @Input()
-    newInstance?: boolean;
+    instance?: TerrariaInstanceEntity;
 
     @Input()
     host?: HostEntity;
+
+    @Output()
+    created = new EventEmitter<TerrariaInstanceEntity>();
 
     constructor(
         private readonly createDialogService: CreateTerrariaInstanceDialogService,
@@ -33,10 +36,13 @@ export class TerrariaInstanceCardComponent {
         return undefined;
     }
 
-    onCreateClicked(): void {
+    async onCreateClicked(): Promise<void> {
         if (!this.host) {
             throw new Error('The host is not defined. Cannot create a Terraria instance.');
         }
-        this.createDialogService.openDialog(this.host);
+        const newInstance = await this.createDialogService.openDialog(this.host);
+        if (newInstance) {
+            this.created.emit(newInstance);
+        }
     }
 }

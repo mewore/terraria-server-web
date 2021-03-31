@@ -1,7 +1,11 @@
 package io.github.mewore.tsw.controllers;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -19,11 +23,15 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
 import io.github.mewore.tsw.config.security.AuthorityRoles;
+import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceCreationModel;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.services.TerrariaService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,18 +62,27 @@ class TerrariaControllerIT {
     @WithMockUser(authorities = {AuthorityRoles.MANAGE_HOSTS})
     @Test
     void testCreateTerrariaInstance() throws Exception {
+        final TerrariaInstanceEntity terrariaInstance =
+                new TerrariaInstanceEntity(8L, UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505"),
+                        Path.of("location"), "Terraria Instance", "1.0.0", "https://server.zip", "1.0.0",
+                        "https://modloader.zip", TerrariaInstanceState.STOPPED, HostEntity.builder().id(8L).build());
+        when(terrariaService.createTerrariaInstance(any())).thenReturn(terrariaInstance);
         mockMvc
                 .perform(MockMvcRequestBuilders
                         .post("/api/terraria/instances")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                    "instanceName": "Terraria Instance",
                                     "hostId": 1,
                                     "modLoaderReleaseId": 8,
                                     "terrariaServerArchiveUrl": "server-archive-url"
                                 }
                                 """))
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()));
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+                .andExpect(MockMvcResultMatchers
+                        .content()
+                        .json(new ObjectMapper().writeValueAsString(terrariaInstance), true));
 
         verify(terrariaService).createTerrariaInstance(creationModelCaptor.capture());
         final TerrariaInstanceCreationModel model = creationModelCaptor.getValue();

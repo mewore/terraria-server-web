@@ -17,6 +17,7 @@ import io.github.mewore.tsw.exceptions.IncorrectUrlException;
 import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceCreationModel;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.services.TerrariaService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,8 @@ class TerrariaController {
 
     @Secured({AuthorityRoles.MANAGE_HOSTS})
     @PostMapping(path = "/instances")
-    void createTerrariaInstance(@RequestBody final TerrariaInstanceCreationModel creationModel)
+    TerrariaInstanceEntity createTerrariaInstance(@RequestBody final TerrariaInstanceCreationModel creationModel)
             throws IOException, NotFoundException, IncorrectUrlException {
-        terrariaService.createTerrariaInstance(creationModel);
+        return terrariaService.createTerrariaInstance(creationModel);
     }
 }

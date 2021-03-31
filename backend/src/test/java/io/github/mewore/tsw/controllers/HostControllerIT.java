@@ -41,10 +41,17 @@ class HostControllerIT {
         mockMvc
                 .perform(MockMvcRequestBuilders.get("/api/hosts"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
-                .andExpect(MockMvcResultMatchers
-                        .content()
-                        .string("[{\"id\":8,\"uuid\":\"f7cda826-a3b6-4d0a-932f-4e384914b1c6\",\"alive\":false," +
-                                "\"name\":\"Host name\",\"url\":null," + "\"terrariaInstanceDirectory\":\"" +
-                                host.getTerrariaInstanceDirectory().toUri().toString() + "\",\"worlds\":[]}]"));
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        [{
+                            "id": 8,
+                            "uuid": "f7cda826-a3b6-4d0a-932f-4e384914b1c6",
+                            "alive": false,
+                            "name": "Host name",
+                            "url": null,
+                            "terrariaInstanceDirectory": "%s",
+                            "worlds": [],
+                            "terrariaInstances": []
+                        }]
+                        """.formatted(host.getTerrariaInstanceDirectory().toUri()), true));
     }
 }
