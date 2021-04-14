@@ -33,7 +33,7 @@ CREATE TABLE account (
     CONSTRAINT account_username_ukey UNIQUE (username)
 );
 
-ALTER TABLE account ADD CONSTRAINT account_type_fkey FOREIGN KEY (role_id) REFERENCES account_type(id);
+ALTER TABLE account ADD CONSTRAINT account_type_fkey FOREIGN KEY (type_id) REFERENCES account_type(id);
 
 -- [host]
 
