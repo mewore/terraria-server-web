@@ -62,10 +62,10 @@ class TerrariaServiceTest {
     private static final GitHubRelease T_MOD_LOADER_RELEASE = new GitHubRelease(
             Arrays.asList(T_MOD_LOADER_ASSET_LINUX, makeTModLoaderAsset("tModLoader.Linux.v0.11.8.1.tar.gz"),
                     T_MOD_LOADER_ASSET_WINDOWS, GitHubReleaseAsset.builder().name("no-download-url").build()), 8,
-            "v0.11.8.1", null);
+            "v0.11.8.1", null, "tmodloader-release-url");
 
     private static final TerrariaInstanceCreationModel INSTANCE_CREATION_MODEL =
-            new TerrariaInstanceCreationModel("name", 1, 8, "http://terraria.org/server/terraria-server-1333.zip");
+            new TerrariaInstanceCreationModel("name", 1, 8, "http://terraria.org/server/terraria-server-1003.zip");
 
     private static final File TERRARIA_WORLD_DIRECTORY =
             Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "ModLoader", "Worlds").toFile();
@@ -107,13 +107,13 @@ class TerrariaServiceTest {
 
         final File wldFile = Mockito.spy(new File("world.wld"));
         when(wldFile.lastModified()).thenReturn(1L);
-        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "wld")).thenReturn(
-                new File[]{new File("world-without-twld.wld"), wldFile});
+        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "wld"))
+                .thenReturn(new File[]{new File("world-without-twld.wld"), wldFile});
 
         final File twldFile = Mockito.spy(new File("world.twld"));
         when(twldFile.lastModified()).thenReturn(8L);
-        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "twld")).thenReturn(
-                new File[]{new File("world-without-wld.twld"), twldFile});
+        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "twld"))
+                .thenReturn(new File[]{new File("world-without-wld.twld"), twldFile});
 
         final byte[] zipData = new byte[]{1, 2, 3};
         when(fileService.zip(wldFile, twldFile)).thenReturn(zipData);
@@ -128,8 +128,8 @@ class TerrariaServiceTest {
 
     @Test
     void testFetchTModLoaderVersions() throws IOException {
-        when(githubService.getReleases("tModLoader", "tModLoader")).thenReturn(
-                Collections.singletonList(T_MOD_LOADER_RELEASE));
+        when(githubService.getReleases("tModLoader", "tModLoader"))
+                .thenReturn(Collections.singletonList(T_MOD_LOADER_RELEASE));
 
         final List<TModLoaderVersionViewModel> versions = terrariaService.fetchTModLoaderVersions();
         verify(githubService).getReleases("tModLoader", "tModLoader");
@@ -165,7 +165,7 @@ class TerrariaServiceTest {
         when(githubService.getRelease("tModLoader", "tModLoader", 8L)).thenReturn(T_MOD_LOADER_RELEASE);
 
         final InputStream serverZipStream = new ByteArrayInputStream(new byte[0]);
-        when(fileService.cache(eq(Path.of("terraria-servers", "terraria-server-1333.zip")),
+        when(fileService.cache(eq(Path.of("terraria-servers", "terraria-server-1003.zip")),
                 inputStreamSupplierCaptor.capture(), isNull())).thenReturn(serverZipStream);
 
         final File newInstanceDirectory = new File("new-instance-directory");
@@ -180,12 +180,12 @@ class TerrariaServiceTest {
 
         when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         final TerrariaInstanceEntity createdInstance = terrariaService.createTerrariaInstance(INSTANCE_CREATION_MODEL);
-        verify(fileService).unzip(serverZipStream, newInstanceDirectory, "1333" + File.separator + "Linux");
+        verify(fileService).unzip(serverZipStream, newInstanceDirectory, "1003" + File.separator + "Linux");
         verify(fileService).unzip(tModLoaderStream, newInstanceDirectory);
 
         verify(httpService, never()).requestAsStream(any());
         final InputStream serverHttpStream = new ByteArrayInputStream(new byte[0]);
-        final URL terrariaServerUrl = new URL("http://terraria.org/server/terraria-server-1333.zip");
+        final URL terrariaServerUrl = new URL("http://terraria.org/server/terraria-server-1003.zip");
         when(httpService.requestAsStream(terrariaServerUrl)).thenReturn(serverHttpStream);
         final InputStream suppliedServerStream = inputStreamSupplierCaptor.getValue().supplyStream();
         verify(httpService).requestAsStream(terrariaServerUrl);
@@ -194,10 +194,11 @@ class TerrariaServiceTest {
         assertSame(localHost, createdInstance.getHost());
         assertEquals(newInstanceDirectory.toPath(), createdInstance.getLocation());
         assertSame(INSTANCE_CREATION_MODEL.getInstanceName(), createdInstance.getName());
-        assertEquals("1.3.3.3", createdInstance.getTerrariaVersion());
+        assertEquals("1.0.0.3", createdInstance.getTerrariaVersion());
         assertSame(INSTANCE_CREATION_MODEL.getTerrariaServerArchiveUrl(), createdInstance.getTerrariaServerUrl());
         assertEquals("0.11.8.1", createdInstance.getModLoaderVersion());
-        assertSame(T_MOD_LOADER_ASSET_LINUX.getBrowserDownloadUrl(), createdInstance.getModLoaderUrl());
+        assertSame(T_MOD_LOADER_ASSET_LINUX.getBrowserDownloadUrl(), createdInstance.getModLoaderArchiveUrl());
+        assertEquals("tmodloader-release-url", createdInstance.getModLoaderReleaseUrl());
         assertSame(TerrariaInstanceState.STOPPED, createdInstance.getState());
     }
 
@@ -215,7 +216,7 @@ class TerrariaServiceTest {
         when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         final TerrariaInstanceEntity createdInstance = terrariaService.createTerrariaInstance(INSTANCE_CREATION_MODEL);
-        assertSame(T_MOD_LOADER_ASSET_WINDOWS.getBrowserDownloadUrl(), createdInstance.getModLoaderUrl());
+        assertSame(T_MOD_LOADER_ASSET_WINDOWS.getBrowserDownloadUrl(), createdInstance.getModLoaderArchiveUrl());
     }
 
     private static GitHubReleaseAsset makeTModLoaderAsset(final String fileName) {

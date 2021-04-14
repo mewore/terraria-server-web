@@ -65,7 +65,8 @@ class TerrariaControllerIT {
         final TerrariaInstanceEntity terrariaInstance =
                 new TerrariaInstanceEntity(8L, UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505"),
                         Path.of("location"), "Terraria Instance", "1.0.0", "https://server.zip", "1.0.0",
-                        "https://modloader.zip", TerrariaInstanceState.STOPPED, HostEntity.builder().id(8L).build());
+                        "mod-loader-release-url", "https://modloader.zip", TerrariaInstanceState.STOPPED,
+                        HostEntity.builder().id(8L).build());
         when(terrariaService.createTerrariaInstance(any())).thenReturn(terrariaInstance);
         mockMvc
                 .perform(MockMvcRequestBuilders

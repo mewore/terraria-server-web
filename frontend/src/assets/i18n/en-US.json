@@ -86,7 +86,12 @@
             },
             "description": {
                 "mod-loader-label": "TModLoader: ",
-                "server-label": "Terraria server: "
+                "server-label": "Terraria server: ",
+                "buttons": {
+                    "download": "Download",
+                    "mod-loader-link": "GitHub release page",
+                    "server-link": "Wiki page"
+                }
             },
             "new": {
                 "title": "New instance",

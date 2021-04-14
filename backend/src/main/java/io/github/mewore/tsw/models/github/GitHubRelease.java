@@ -2,6 +2,8 @@ package io.github.mewore.tsw.models.github;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.springframework.lang.Nullable;
 
 import lombok.AccessLevel;
@@ -25,6 +27,10 @@ public class GitHubRelease {
 
     @Nullable
     private String url;
+
+    @Nullable
+    @JsonProperty("html_url")
+    private String htmlUrl;
 }
 
 

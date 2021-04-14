@@ -16,6 +16,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.springframework.lang.Nullable;
+
 import io.github.mewore.tsw.models.HostEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -63,8 +65,13 @@ public class TerrariaInstanceEntity {
     private final @NonNull String modLoaderVersion = "0";
 
     @Builder.Default
+    @Column(length = 1023)
+    @Nullable
+    private final String modLoaderReleaseUrl = "0";
+
+    @Builder.Default
     @Column(nullable = false, length = 1023)
-    private final @NonNull String modLoaderUrl = "0";
+    private final @NonNull String modLoaderArchiveUrl = "0";
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

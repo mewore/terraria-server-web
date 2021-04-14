@@ -5,12 +5,47 @@
     <mat-card-content>
         <p class="tsw-terraria-instance-uuid">{{ instance.uuid }}</p>
         <p>
-            {{ 'terraria-instance.card.description.mod-loader-label' | translate
-            }}<a class="tsw-version-link" [href]="instance.modLoaderUrl">{{ instance.modLoaderVersion }}</a>
+            {{ 'terraria-instance.card.description.mod-loader-label' | translate }}
+            <span class="tsw-version-label">{{ instance.modLoaderVersion }}</span>
+            <a
+                [href]="instance.modLoaderReleaseUrl || 'https://github.com/tModLoader/tModLoader/releases'"
+                target="_blank"
+            >
+                <button
+                    mat-icon-button
+                    [matTooltip]="'terraria-instance.card.description.buttons.mod-loader-link' | translate"
+                >
+                    <mat-icon>link</mat-icon>
+                </button>
+            </a>
+            <a [href]="instance.modLoaderArchiveUrl">
+                <button
+                    mat-icon-button
+                    [matTooltip]="'terraria-instance.card.description.buttons.download' | translate"
+                >
+                    <mat-icon>download</mat-icon>
+                </button>
+            </a>
         </p>
         <p>
-            {{ 'terraria-instance.card.description.server-label' | translate
-            }}<a class="tsw-version-link" [href]="instance.terrariaServerUrl">{{ instance.terrariaVersion }}</a>
+            {{ 'terraria-instance.card.description.server-label' | translate }}
+            <span class="tsw-version-label">{{ instance.terrariaVersion }}</span>
+            <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
+                <button
+                    mat-icon-button
+                    [matTooltip]="'terraria-instance.card.description.buttons.server-link' | translate"
+                >
+                    <mat-icon>link</mat-icon>
+                </button>
+            </a>
+            <a [href]="instance.terrariaServerUrl">
+                <button
+                    mat-icon-button
+                    [matTooltip]="'terraria-instance.card.description.buttons.download' | translate"
+                >
+                    <mat-icon>download</mat-icon>
+                </button>
+            </a>
         </p>
     </mat-card-content>
     <mat-card-actions>

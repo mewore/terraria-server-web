@@ -121,8 +121,8 @@ public class TerrariaService {
         final String serverZipUrl = creationModel.getTerrariaServerArchiveUrl();
         final Matcher serverZipUrlMatcher = TERRARIA_SERVER_URL_REGEX.matcher(serverZipUrl);
         if (!serverZipUrlMatcher.find()) {
-            throw new IncorrectUrlException("The URL " + serverZipUrl + " does not match the regular expression " +
-                    TERRARIA_SERVER_URL_REGEX.toString());
+            throw new IncorrectUrlException(
+                    "The URL " + serverZipUrl + " does not match the regular expression " + TERRARIA_SERVER_URL_REGEX);
         }
 
         // Preparation
@@ -177,8 +177,8 @@ public class TerrariaService {
 
         final TerrariaInstanceEntity newTerrariaInstance =
                 new TerrariaInstanceEntity(null, instanceUuid, instanceDirectory.toPath(),
-                        creationModel.getInstanceName(), serverVersion, serverZipUrl, tModLoaderVersion, tModLoaderUrl,
-                        TerrariaInstanceState.STOPPED, host);
+                        creationModel.getInstanceName(), serverVersion, serverZipUrl, tModLoaderVersion,
+                        tModLoaderRelease.getHtmlUrl(), tModLoaderUrl, TerrariaInstanceState.STOPPED, host);
         final TerrariaInstanceEntity result = terrariaInstanceRepository.save(newTerrariaInstance);
 
         logger.info("Created a Terraria instance at {}", instanceDirectory.getAbsolutePath());

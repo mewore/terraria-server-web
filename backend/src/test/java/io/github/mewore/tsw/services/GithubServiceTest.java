@@ -37,10 +37,10 @@ import static org.mockito.Mockito.when;
 class GithubServiceTest {
 
     private static final GitHubRelease RELEASE_1 =
-            new GitHubRelease(Collections.emptyList(), 1, "Release 1", "file://release-1-url");
+            new GitHubRelease(Collections.emptyList(), 1, "Release 1", "file://release-1-url", "http://release-1-html");
 
     private static final GitHubRelease RELEASE_2 =
-            new GitHubRelease(Collections.emptyList(), 2, "Release 2", "file://release-2-url");
+            new GitHubRelease(Collections.emptyList(), 2, "Release 2", "file://release-2-url", "http://release-2-html");
 
     @InjectMocks
     private GithubService githubService;
