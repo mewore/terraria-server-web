@@ -20,9 +20,13 @@ class AccountRepositoryIT {
     @Autowired
     private AccountRepository accountRepository;
 
+    private static AccountEntity.AccountEntityBuilder makeAccount() {
+        return AccountEntity.builder().username(USERNAME).password(new byte[0]).session(new byte[0]);
+    }
+
     @Test
     void testFindByUsername() {
-        accountRepository.save(AccountEntity.builder().username(USERNAME).build());
+        accountRepository.save(makeAccount().build());
         final Optional<AccountEntity> result = accountRepository.findByUsername(USERNAME);
         assertTrue(result.isPresent(), "The account should exist once saved.");
         assertEquals(USERNAME, result.get().getUsername());
@@ -31,7 +35,7 @@ class AccountRepositoryIT {
     @Test
     void testExistsByUsername() {
         assertFalse(accountRepository.existsByUsername(USERNAME));
-        accountRepository.save(AccountEntity.builder().username(USERNAME).build());
+        accountRepository.save(makeAccount().build());
         assertTrue(accountRepository.existsByUsername(USERNAME));
     }
 }

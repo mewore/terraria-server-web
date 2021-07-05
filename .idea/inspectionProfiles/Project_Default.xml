@@ -14,7 +14,7 @@
       <scope name="Tests" level="INFORMATION" enabled="true">
         <option name="m_includeJavaClasses" value="false" />
         <option name="m_includeLibraryClasses" value="false" />
-        <option name="m_limit" value="15" />
+        <option name="m_limit" value="25" />
       </scope>
       <option name="m_includeJavaClasses" value="false" />
       <option name="m_includeLibraryClasses" value="false" />
@@ -45,6 +45,9 @@
       <option name="m_considerStaticFinalFieldsConstant" value="false" />
       <option name="myCountEnumConstants" value="false" />
       <option name="m_limit" value="25" />
+    </inspection_tool>
+    <inspection_tool class="FieldMayBeFinal" enabled="true" level="WARNING" enabled_by_default="true">
+      <scope name="Models" level="INFORMATION" enabled="true" />
     </inspection_tool>
     <inspection_tool class="FinalClass" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="FinalMethod" enabled="true" level="WARNING" enabled_by_default="true" />
@@ -121,6 +124,11 @@
       <option name="REPORT_PARAMETERS" value="true" />
     </inspection_tool>
     <inspection_tool class="MethodCount" enabled="true" level="WARNING" enabled_by_default="true">
+      <scope name="Models" level="INFORMATION" enabled="true">
+        <option name="m_limit" value="20" />
+        <option name="ignoreGettersAndSetters" value="true" />
+        <option name="ignoreOverridingMethods" value="false" />
+      </scope>
       <option name="m_limit" value="20" />
       <option name="ignoreGettersAndSetters" value="true" />
       <option name="ignoreOverridingMethods" value="false" />
@@ -138,7 +146,10 @@
     <inspection_tool class="NestingDepth" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="5" />
     </inspection_tool>
-    <inspection_tool class="NonCommentSourceStatements" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+    <inspection_tool class="NonCommentSourceStatements" enabled="true" level="WARNING" enabled_by_default="true">
+      <scope name="Tests" level="WARNING" enabled="true">
+        <option name="m_limit" value="50" />
+      </scope>
       <option name="m_limit" value="30" />
     </inspection_tool>
     <inspection_tool class="OverlyLongLambda" enabled="true" level="WARNING" enabled_by_default="true" />

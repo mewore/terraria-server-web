@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
@@ -18,6 +19,7 @@ import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.FileService;
+import io.github.mewore.tsw.services.util.SystemService;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -43,6 +45,8 @@ public class LocalHostService {
 
     private final @NonNull AsyncService asyncService;
 
+    private final @NonNull SystemService systemService;
+
     @Getter
     private UUID hostUuid;
 
@@ -55,11 +59,21 @@ public class LocalHostService {
         heartbeatFuture = asyncService.scheduleAtFixedRate(this::doHeartbeat, Duration.ZERO, HEARTBEAT_DURATION);
     }
 
-    public @NonNull HostEntity getHost() {
-        return hostRepository
-                .findByUuid(hostUuid)
-                .orElseGet(() -> hostRepository.save(
-                        HostEntity.builder().uuid(hostUuid).heartbeatDuration(HEARTBEAT_DURATION).build()));
+    public @NonNull HostEntity getOrCreateHost() {
+        return findHost().orElseGet(this::createHost);
+    }
+
+    private Optional<HostEntity> findHost() {
+        return hostRepository.findByUuid(hostUuid);
+    }
+
+    private @NonNull HostEntity createHost() {
+        final HostEntity newHost = HostEntity.builder()
+                .uuid(hostUuid)
+                .heartbeatDuration(HEARTBEAT_DURATION)
+                .os(systemService.getOs())
+                .build();
+        return hostRepository.save(newHost);
     }
 
     /**
@@ -67,10 +81,15 @@ public class LocalHostService {
      */
     private void doHeartbeat() {
         LOGGER.debug("Heartbeat...");
-        hostRepository.save(getHost().toBuilder()
+        findHost().ifPresentOrElse(this::refreshHost, this::createHost);
+    }
+
+    private void refreshHost(final @NonNull HostEntity host) {
+        hostRepository.save(host.toBuilder()
                 .alive(true)
                 .heartbeatDuration(HEARTBEAT_DURATION)
                 .lastHeartbeat(Instant.now())
+                .os(systemService.getOs())
                 .build());
     }
 
@@ -99,6 +118,6 @@ public class LocalHostService {
     @PreDestroy
     public void preDestroy() {
         heartbeatFuture.cancel(false);
-        hostRepository.save(getHost().toBuilder().alive(false).build());
+        hostRepository.save(getOrCreateHost().toBuilder().alive(false).build());
     }
 }

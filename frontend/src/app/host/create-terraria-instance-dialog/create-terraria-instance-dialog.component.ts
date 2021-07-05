@@ -5,7 +5,7 @@ import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { TswValidators } from 'src/app/core/tsw-validators';
 import {
     HostEntity,
-    TerrariaInstanceCreationModel,
+    TerrariaInstanceDefinitionModel,
     TerrariaInstanceEntity,
     TModLoaderVersionViewModel,
 } from 'src/generated/backend';
@@ -39,7 +39,7 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
         instanceName: this.instanceNameInput,
         terrariaServerArchiveUrl: this.terrariaServerArchiveUrlInput,
         modLoaderReleaseId: this.modLoaderReleaseInput,
-    } as Record<keyof TerrariaInstanceCreationModel, FormControl>);
+    } as Record<keyof TerrariaInstanceDefinitionModel, FormControl>);
 
     constructor(
         private readonly dialog: MatDialogRef<
@@ -69,8 +69,7 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
 
         this.creating = true;
         try {
-            const newInstance = await this.restApi.createTerrariaInstance({
-                hostId: this.data.id,
+            const newInstance = await this.restApi.createTerrariaInstance(this.data.id, {
                 instanceName: this.instanceNameInput.value,
                 terrariaServerArchiveUrl: this.terrariaServerArchiveUrlInput.value,
                 modLoaderReleaseId: this.modLoaderReleaseInput.value,

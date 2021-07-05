@@ -1,5 +1,3 @@
-BEGIN;
-
 -- [hibernate_sequence]
 
 CREATE SEQUENCE IF NOT EXISTS hibernate_sequence
@@ -30,19 +28,19 @@ CREATE TABLE account (
     username varchar(255) NOT NULL,
     type_id int8 NULL,
     CONSTRAINT account_pkey PRIMARY KEY (id),
-    CONSTRAINT account_username_ukey UNIQUE (username)
+    CONSTRAINT account_username_ukey UNIQUE (username),
+    CONSTRAINT account_type_fkey FOREIGN KEY (type_id) REFERENCES account_type(id)
 );
-
-ALTER TABLE account ADD CONSTRAINT account_type_fkey FOREIGN KEY (type_id) REFERENCES account_type(id);
 
 -- [host]
 
 CREATE TABLE host (
     id int8 NOT NULL,
-    name varchar(255),
     alive bool NOT NULL,
     heartbeat_duration int8 NOT NULL,
     last_heartbeat timestamp NOT NULL,
+    "name" varchar(255) NULL,
+    os varchar(255) NOT NULL DEFAULT 'UNKNOWN'::character varying,
     terraria_instance_directory varchar(255) NOT NULL,
     url varchar(255) NULL,
     uuid uuid NOT NULL,
@@ -53,35 +51,35 @@ CREATE TABLE host (
 -- [terraria_world]
 
 CREATE TABLE terraria_world (
-	id int8 NOT NULL,
-	"data" oid NULL,
-	last_modified timestamp NULL,
-	"name" varchar(255) NOT NULL,
-	host_id int8 NOT NULL,
-	CONSTRAINT terraria_world_pkey PRIMARY KEY (id),
-	CONSTRAINT terraria_world_name_host_id_ukey UNIQUE (name, host_id)
+    id int8 NOT NULL,
+    "data" oid NULL,
+    last_modified timestamp NULL,
+    "name" varchar(255) NOT NULL,
+    host_id int8 NOT NULL,
+    CONSTRAINT terraria_world_pkey PRIMARY KEY (id),
+    CONSTRAINT terraria_world_name_host_id_ukey UNIQUE (name, host_id),
+    CONSTRAINT terraria_world_host_fkey FOREIGN KEY (host_id) REFERENCES host(id)
 );
-
-ALTER TABLE terraria_world ADD CONSTRAINT terraria_world_host_fkey FOREIGN KEY (host_id) REFERENCES host(id);
 
 -- [terraria_instance]
 
 CREATE TABLE terraria_instance (
-	id int8 NOT NULL,
-	"location" varchar(1023) NOT NULL,
-	mod_loader_release_url varchar(1023) NOT NULL,
-	mod_loader_archive_url varchar(1023) NOT NULL,
-	mod_loader_version varchar(255) NOT NULL,
-	name varchar(255) NOT NULL,
-	state varchar(255) NOT NULL,
-	terraria_server_url varchar(1023) NOT NULL,
-	terraria_version varchar(255) NOT NULL,
-	uuid uuid NOT NULL,
-	host_id int8 NOT NULL,
-	CONSTRAINT terraria_instance_pkey PRIMARY KEY (id),
-	CONSTRAINT terraria_instance_ukey UNIQUE (host_id, uuid)
+    id int8 NOT NULL,
+    action_execution_start_time timestamp NULL,
+    error varchar(1023) NULL,
+    "location" varchar(1023) NOT NULL,
+    mod_loader_archive_url varchar(1023) NULL,
+    mod_loader_release_id int8 NOT NULL,
+    mod_loader_release_url varchar(1023) NULL,
+    mod_loader_version varchar(255) NULL,
+    "name" varchar(255) NOT NULL,
+    pending_action varchar(255) NULL,
+    state varchar(255) NOT NULL,
+    terraria_server_url varchar(1023) NOT NULL,
+    terraria_version varchar(255) NULL,
+    uuid uuid NOT NULL,
+    host_id int8 NOT NULL,
+    CONSTRAINT terraria_instance_pkey PRIMARY KEY (id),
+    CONSTRAINT terraria_instance_ukey UNIQUE (host_id, uuid),
+    CONSTRAINT terraria_instance_host_fkey FOREIGN KEY (host_id) REFERENCES host(id)
 );
-
-ALTER TABLE terraria_instance ADD CONSTRAINT terraria_instance_host_fkey FOREIGN KEY (host_id) REFERENCES host(id);
-
-COMMIT;

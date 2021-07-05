@@ -46,11 +46,15 @@ class AuthenticationServiceTest {
 
     private static final String SESSION = "e0f245dc-e6e4-4f8a-982b-004cbb04e505";
 
-    private static final AccountTypeEntity ACCOUNT_TYPE = new AccountTypeEntity();
+    private static final AccountTypeEntity ACCOUNT_TYPE = AccountTypeEntity.builder().build();
 
-    private static final AccountEntity EXISTING_ACCOUNT =
-            new AccountEntity(1L, USERNAME, PASSWORD.getBytes(BINARY_CHARSET), SESSION.getBytes(BINARY_CHARSET),
-                    Instant.now(), ACCOUNT_TYPE);
+    private static final AccountEntity EXISTING_ACCOUNT = AccountEntity.builder()
+            .id(1L)
+            .username(USERNAME)
+            .password(PASSWORD.getBytes(BINARY_CHARSET))
+            .session(SESSION.getBytes(BINARY_CHARSET))
+            .type(ACCOUNT_TYPE)
+            .build();
 
     private static final String NEW_USERNAME = "new-username";
 

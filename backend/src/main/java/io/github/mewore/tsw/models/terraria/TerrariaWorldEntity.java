@@ -27,11 +27,11 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.With;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor
-@Builder(access = AccessLevel.PRIVATE)
-@Getter
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @With
+@Getter
 @ToString
 @EqualsAndHashCode
 @Entity
@@ -44,23 +44,19 @@ public class TerrariaWorldEntity {
     @GeneratedValue
     private final Long id = null;
 
-    @Builder.Default
     @Column(nullable = false)
-    private final @NonNull String name = "";
+    private @NonNull String name;
 
-    @Builder.Default
     @Basic(fetch = FetchType.LAZY)
-    @Column
-    private final Instant lastModified = Instant.now();
+    @Column(nullable = false)
+    private @NonNull Instant lastModified;
 
-    @Builder.Default
     @JsonIgnore
     @Lob
     @Basic(fetch = FetchType.LAZY)
-    private final byte[] data = new byte[0];
+    private byte[] data;
 
-    @Builder.Default
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private final @NonNull HostEntity host = HostEntity.builder().build();
+    private @NonNull HostEntity host;
 }

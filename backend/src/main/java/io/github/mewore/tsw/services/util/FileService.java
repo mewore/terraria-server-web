@@ -80,6 +80,10 @@ public class FileService {
         return new FileInputStream(cacheFile);
     }
 
+    public boolean hasFileInCache(final Path cacheLocation) {
+        return CACHE_ROOT.resolve(cacheLocation).toFile().isFile();
+    }
+
     public void unzip(final InputStream zipInputStream, final File destination) throws IOException {
         unzip(zipInputStream, destination, null);
     }

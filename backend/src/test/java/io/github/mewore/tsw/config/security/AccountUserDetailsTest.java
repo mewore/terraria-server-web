@@ -26,7 +26,7 @@ class AccountUserDetailsTest {
 
     @Test
     void testGetAuthorities_emptyRole() {
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(new AccountTypeEntity()), "");
+        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(AccountTypeEntity.builder().build()), "");
         assertEquals(Collections.emptySet(), user.getAuthorities());
     }
 

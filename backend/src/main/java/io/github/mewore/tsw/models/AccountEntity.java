@@ -11,6 +11,7 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.lang.Nullable;
 
 import lombok.AccessLevel;
@@ -21,13 +22,14 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.With;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Getter
 @With
 @Entity
 @Table(name = "account")
+@DynamicUpdate
 public class AccountEntity {
 
     @Builder.Default
@@ -35,18 +37,15 @@ public class AccountEntity {
     @GeneratedValue
     private final Long id = null;
 
-    @Builder.Default
     @Column(nullable = false, unique = true)
-    private final @NonNull @NotBlank String username = "";
+    private @NonNull @NotBlank String username;
 
     @JsonIgnore
-    @Builder.Default
     @Column(nullable = false)
-    private final byte[] password = new byte[0];
+    private byte[] password;
 
-    @Builder.Default
     @Column(nullable = false)
-    private final byte[] session = new byte[0];
+    private byte[] session;
 
     @Builder.Default
     @Column(nullable = false)

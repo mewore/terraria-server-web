@@ -1,8 +1,10 @@
 package io.github.mewore.tsw.repositories.terraria;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import io.github.mewore.tsw.models.HostEntity;
+import io.github.mewore.tsw.models.file.OperatingSystem;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 
@@ -67,15 +70,24 @@ class TerrariaWorldRepositoryIT {
         assertEquals(Arrays.asList(secondWorld, otherHostWorld, newWorld), worldRepository.findAll());
     }
 
-    private HostEntity makeHost() {
-        return hostRepository.saveAndFlush(HostEntity.builder().build());
-    }
-
     private static TerrariaWorldEntity makeWorld(final HostEntity host) {
-        return new TerrariaWorldEntity(null, WORLD_NAME, Instant.now(), new byte[0], host);
+        return makeWorld(host, WORLD_NAME);
     }
 
     private static TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
-        return new TerrariaWorldEntity(null, name, Instant.now(), new byte[0], host);
+        return TerrariaWorldEntity.builder()
+                .name(name)
+                .lastModified(Instant.now())
+                .data(new byte[0])
+                .host(host)
+                .build();
+    }
+
+    private HostEntity makeHost() {
+        return hostRepository.saveAndFlush(HostEntity.builder()
+                .uuid(UUID.randomUUID())
+                .os(OperatingSystem.LINUX)
+                .heartbeatDuration(Duration.ZERO)
+                .build());
     }
 }
