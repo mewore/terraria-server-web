@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
 import io.github.mewore.tsw.config.security.AuthorityRoles;
+import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceDefinitionModel;
 import io.github.mewore.tsw.services.HostService;
 import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Import(TestConfig.class)
 @WebMvcTest(HostController.class)
@@ -40,6 +42,26 @@ class HostControllerIT {
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceDefinitionModel> instanceModelCaptor;
+
+    /**
+     * Test {@link HostController#getHost(long)}}.
+     */
+    @Test
+    void testGetHost() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts/1"))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()));
+        verify(hostService, only()).getHost(1);
+    }
+
+    /**
+     * Test {@link HostController#getHost(long)}}.
+     */
+    @Test
+    void testGetHost_notFound() throws Exception {
+        when(hostService.getHost(1L)).thenThrow(new NotFoundException(""));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts/1"))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+    }
 
     /**
      * Test {@link HostController#getHosts()}.

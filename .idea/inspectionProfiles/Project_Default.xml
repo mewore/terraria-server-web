@@ -54,7 +54,7 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="15">
+          <list size="19">
             <item index="0" class="java.lang.String" itemvalue="mat-button" />
             <item index="1" class="java.lang.String" itemvalue="[mat-dialog-close]" />
             <item index="2" class="java.lang.String" itemvalue="mat-raised-button" />
@@ -70,6 +70,10 @@
             <item index="12" class="java.lang.String" itemvalue="*ngif" />
             <item index="13" class="java.lang.String" itemvalue="[mattooltip]" />
             <item index="14" class="java.lang.String" itemvalue="[href]" />
+            <item index="15" class="java.lang.String" itemvalue="[routerlink]" />
+            <item index="16" class="java.lang.String" itemvalue="[class.disabled]" />
+            <item index="17" class="java.lang.String" itemvalue="mat-line" />
+            <item index="18" class="java.lang.String" itemvalue="mat-subheader" />
           </list>
         </value>
       </option>
@@ -78,7 +82,7 @@
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="35">
+          <list size="38">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -114,6 +118,9 @@
             <item index="32" class="java.lang.String" itemvalue="mat-select" />
             <item index="33" class="java.lang.String" itemvalue="mat-option" />
             <item index="34" class="java.lang.String" itemvalue="tsw-terraria-world-card" />
+            <item index="35" class="java.lang.String" itemvalue="mat-list-item" />
+            <item index="36" class="java.lang.String" itemvalue="mat-list" />
+            <item index="37" class="java.lang.String" itemvalue="tsw-host-list-item" />
           </list>
         </value>
       </option>

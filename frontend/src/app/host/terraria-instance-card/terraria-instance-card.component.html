@@ -1,6 +1,6 @@
 <mat-card class="tsw-terraria-instance-card" *ngIf="instance; else newInstanceCard">
     <mat-card-header>
-        <mat-card-title>{{ instance.name }}</mat-card-title>
+        <mat-card-title>{{ instance?.name }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
         <p class="tsw-terraria-instance-uuid">{{ instance.uuid }}</p>
@@ -8,7 +8,7 @@
             {{ 'terraria-instance.card.description.mod-loader-label' | translate }}
             <span class="tsw-version-label">{{ instance.modLoaderVersion }}</span>
             <a
-                [href]="instance.modLoaderReleaseUrl || 'https://github.com/tModLoader/tModLoader/releases'"
+                [href]="instance?.modLoaderReleaseUrl || 'https://github.com/tModLoader/tModLoader/releases'"
                 target="_blank"
             >
                 <button
@@ -18,7 +18,7 @@
                     <mat-icon>link</mat-icon>
                 </button>
             </a>
-            <a [href]="instance.modLoaderArchiveUrl">
+            <a [href]="instance?.modLoaderArchiveUrl">
                 <button
                     mat-icon-button
                     [matTooltip]="'terraria-instance.card.description.buttons.download' | translate"
@@ -29,7 +29,7 @@
         </p>
         <p>
             {{ 'terraria-instance.card.description.server-label' | translate }}
-            <span class="tsw-version-label">{{ instance.terrariaVersion }}</span>
+            <span class="tsw-version-label">{{ instance?.terrariaVersion }}</span>
             <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
                 <button
                     mat-icon-button
@@ -38,7 +38,7 @@
                     <mat-icon>link</mat-icon>
                 </button>
             </a>
-            <a [href]="instance.terrariaServerUrl">
+            <a [href]="instance?.terrariaServerUrl">
                 <button
                     mat-icon-button
                     [matTooltip]="'terraria-instance.card.description.buttons.download' | translate"
