@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HostInfoComponent } from './host-info.component';
+import { HostInfoPageComponent } from './host-info-page.component';
 
 describe('HostInfoComponent', () => {
-    let component: HostInfoComponent;
-    let fixture: ComponentFixture<HostInfoComponent>;
+    let component: HostInfoPageComponent;
+    let fixture: ComponentFixture<HostInfoPageComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [HostInfoComponent],
+            declarations: [HostInfoPageComponent],
         }).compileComponents();
     });
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(HostInfoComponent);
+        fixture = TestBed.createComponent(HostInfoPageComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

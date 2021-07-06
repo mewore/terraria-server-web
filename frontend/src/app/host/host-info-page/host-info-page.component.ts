@@ -1,30 +1,23 @@
 import { AfterViewInit, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { MatExpansionPanel } from '@angular/material/expansion';
+import { ActivatedRoute } from '@angular/router';
+import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
 
 @Component({
-    selector: 'tsw-host-info',
-    templateUrl: './host-info.component.html',
-    styleUrls: ['./host-info.component.sass'],
+    selector: 'tsw-host-info-page',
+    templateUrl: './host-info-page.component.html',
+    styleUrls: ['./host-info-page.component.sass'],
 })
-export class HostInfoComponent implements AfterViewInit {
-    @ViewChild(MatExpansionPanel)
-    panel?: MatExpansionPanel;
-
-    @Input()
+export class HostInfoPageComponent implements OnInit {
     host?: HostEntity;
 
-    @Input()
-    hostIsLocal?: boolean;
+    constructor(private readonly restApi: RestApiService, private readonly activatedRoute: ActivatedRoute) {}
 
-    constructor() {}
-
-    ngAfterViewInit(): void {
-        if (this.hostIsLocal && this.panel) {
-            // TODO: Open the panel without the "expression changed after it has been checked" error and without
-            // `setTimeout`
-            setTimeout(() => this.panel?.open());
-        }
+    ngOnInit(): void {
+        this.activatedRoute.paramMap.subscribe(async (paramMap) => {
+            this.host = await this.restApi.getHost(parseInt(paramMap.get('hostId') || ''));
+        });
     }
 
     get loading(): boolean {

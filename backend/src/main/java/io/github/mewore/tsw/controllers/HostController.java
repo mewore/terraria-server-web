@@ -32,8 +32,13 @@ public class HostController {
 
     private final HostService hostService;
 
+    @GetMapping(path = "/{hostId}")
+    HostEntity getHost(@PathVariable final long hostId) throws NotFoundException {
+        return hostService.getHost(hostId);
+    }
+
     @GetMapping
-    public List<HostEntity> getHosts() {
+    List<HostEntity> getHosts() {
         return hostService.getAllHosts();
     }
 

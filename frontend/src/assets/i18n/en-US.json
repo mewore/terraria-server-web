@@ -45,6 +45,7 @@
     },
     "host-info": {
         "no-name": "[No name]",
+        "name-loading": "[Loading]",
         "status": {
             "running": "Running",
             "stopped": "Stopped"
@@ -56,10 +57,18 @@
             "title": "Terraria worlds"
         }
     },
+    "host-list-item": {
+        "description": "Terraria worlds: {{ worldCount }} | Terraria instances: {{ instanceCount }}",
+        "status": {
+            "loading": "Loading...",
+            "offline": "Offline",
+            "online": "Online"
+        }
+    },
     "host-list-page": {
         "local-host-title": "Local host",
         "other-hosts-title": "Other hosts",
-        "no-hosts-placeholder": "No hosts"
+        "no-other-hosts-placeholder": "No other hosts"
     },
     "input": {
         "errors": {

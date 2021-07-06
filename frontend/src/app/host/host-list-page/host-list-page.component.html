@@ -1,17 +1,18 @@
-<mat-accordion>
-    <h3 class="tsw-host-list-header">{{ 'host-list-page.local-host-title' | translate }}</h3>
-    <tsw-host-info [host]="localHost" [hostIsLocal]="true"></tsw-host-info>
+<mat-list class="host-list">
+    <div mat-subheader>{{ 'host-list-page.local-host-title' | translate }}</div>
+    <tsw-host-list-item [host]="localHost"></tsw-host-list-item>
+    <mat-divider></mat-divider>
+    <div mat-subheader>{{ 'host-list-page.other-hosts-title' | translate }}</div>
 
-    <h3 class="tsw-host-list-header">{{ 'host-list-page.other-hosts-title' | translate }}</h3>
     <mat-spinner
         *ngIf="loading; else otherHostsContainer"
         type="indeterminate"
         class="host-loading-spinner"
     ></mat-spinner>
     <ng-template #otherHostsContainer>
-        <tsw-host-info *ngFor="let otherHost of otherHosts" [host]="otherHost"></tsw-host-info>
-        <p *ngIf="!otherHosts?.length" class="no-hosts-placeholder">
-            {{ 'host-list-page.no-hosts-placeholder' | translate }}
-        </p>
+        <tsw-host-list-item *ngFor="let otherHost of otherHosts" [host]="otherHost"></tsw-host-list-item>
+        <div *ngIf="!otherHosts?.length" class="no-other-hosts-placeholder">
+            {{ 'host-list-page.no-other-hosts-placeholder' | translate }}
+        </div>
     </ng-template>
-</mat-accordion>
+</mat-list>

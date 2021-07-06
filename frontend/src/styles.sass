@@ -1,4 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
 
+$link: #27e
+$link-hover: #44f
+$link-visited: #93e
+
+a
+  transition: color 200ms linear
+  color: $link
+  text-decoration: none
+  &:visited
+    color: $link-visited
+  &:hover
+    color: $link-hover
+    text-decoration: underline
+
 .tsw-invisible
   visibility: hidden
