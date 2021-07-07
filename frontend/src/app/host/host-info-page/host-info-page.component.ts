@@ -16,7 +16,11 @@ export class HostInfoPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.activatedRoute.paramMap.subscribe(async (paramMap) => {
-            this.host = await this.restApi.getHost(parseInt(paramMap.get('hostId') || ''));
+            const hostIdParam = paramMap.get('hostId');
+            if (!hostIdParam) {
+                throw new Error('The [hostId] parameter is not set!');
+            }
+            this.host = await this.restApi.getHost(parseInt(hostIdParam, 10));
         });
     }
 

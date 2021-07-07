@@ -27,7 +27,7 @@ else
   echo "There are no changed Gradle project files so the 'clean' task will not be performed."
 fi
 
-# See if the full build with test and packaging into a jar works
+# See if the full build with test+lint and packaging into a jar works
 ./gradlew jar
 RESULT=$?
 
