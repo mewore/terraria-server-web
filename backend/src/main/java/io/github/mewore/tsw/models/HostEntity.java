@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -90,7 +89,7 @@ public class HostEntity {
 
     @OneToMany(mappedBy = "host", fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
-    private final List<TerrariaWorldEntity> worlds = Collections.emptyList();
+    private final Set<TerrariaWorldEntity> worlds = Collections.emptySet();
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "host")
     @Fetch(FetchMode.JOIN)
