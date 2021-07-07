@@ -1,5 +1,6 @@
 <mat-list-item>
     <mat-icon
+        class="unclickable-icon"
         [class.loading]="!host"
         [class.offline]="host?.alive === false"
         [class.online]="host?.alive"
@@ -8,7 +9,7 @@
     >
         monitor
     </mat-icon>
-    <a [class.disabled]="!host" [routerLink]="host ? [host?.id] : undefined" class="host-link" mat-line>
+    <a [class.disabled]="!host" [routerLink]="host ? ['/', 'hosts', host?.id] : undefined" class="host-link" mat-line>
         <span *ngIf="host; else loadingName">{{ host?.name || ('host-info.no-name' | translate) }}</span>
         <ng-template #loadingName>{{ 'host-info.name-loading' | translate }}</ng-template>
     </a>

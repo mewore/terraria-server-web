@@ -1,20 +1,26 @@
-<span *ngIf="loading; else hostTitle">{{ 'loading' | translate }}</span>
-<ng-template #hostTitle>{{ hostName || ('host-info.no-name' | translate) }}</ng-template>
-<mat-divider></mat-divider>
-{{ hostUuid }}
-<mat-icon [class]="'tsw-host-status-' + hostStatus" [matTooltip]="'host-info.status.' + hostStatus | translate">
-    {{ hostIcon }}
-</mat-icon>
-<mat-divider></mat-divider>
-<h3 class="tsw-host-info-title">{{ 'host-info.terraria-worlds.title' | translate }}</h3>
-<div *ngIf="host?.worlds">
-    <tsw-terraria-world-card *ngFor="let world of host?.worlds" [world]="world"></tsw-terraria-world-card>
+<mat-list class="tsw-host-info">
+    <div mat-subheader>Host</div>
+    <tsw-host-list-item [host]="host"></tsw-host-list-item>
+
+    <mat-divider></mat-divider>
+</mat-list>
+<div *ngIf="host; else loading" class="tsw-sublist-container">
+    <mat-list>
+        <div mat-subheader>Instances</div>
+        <tsw-terraria-instance-list-item
+            *ngFor="let instance of host?.instances"
+            [instance]="instance"
+        ></tsw-terraria-instance-list-item>
+        <tsw-new-item-button
+            (press)="terrariaInstanceCreationRequested()"
+            [requiredPermissions]="['ableToManageHosts']"
+        ></tsw-new-item-button>
+    </mat-list>
+    <mat-list>
+        <div mat-subheader>Worlds</div>
+        <tsw-terraria-world-list-item *ngFor="let world of host?.worlds" [world]="world"></tsw-terraria-world-list-item>
+    </mat-list>
 </div>
-<mat-divider></mat-divider>
-<h3 class="tsw-host-info-title">{{ 'host-info.terraria-instances.title' | translate }}</h3>
-<tsw-terraria-instance-card
-    *ngFor="let instance of terrariaInstances"
-    [host]="host"
-    [instance]="instance"
-></tsw-terraria-instance-card>
-<tsw-terraria-instance-card (created)="terrariaInstanceCreated($event)" [host]="host"></tsw-terraria-instance-card>
+<ng-template #loading>
+    <mat-spinner class="tsw-centered"></mat-spinner>
+</ng-template>

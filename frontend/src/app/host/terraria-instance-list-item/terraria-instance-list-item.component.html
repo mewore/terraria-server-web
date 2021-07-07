@@ -1,0 +1,49 @@
+<mat-list-item>
+    <mat-icon
+        [class.loading]="!instance"
+        [matTooltipDisabled]="!!instance"
+        [matTooltip]="'terraria.instance.list-item.status.loading' | translate"
+        class="unclickable-icon"
+        mat-list-icon
+    >
+        fit_screen
+    </mat-icon>
+
+    <div *ngIf="instance" class="tsw-name" mat-line>{{ instance.name }}</div>
+
+    <div mat-line>
+        {{ 'terraria.instance.list-item.description.mod-loader-label' | translate }}
+        <a
+            [href]="instance?.modLoaderReleaseUrl || 'https://github.com/tModLoader/tModLoader/releases'"
+            class="tsw-version-label"
+            target="_blank"
+        >
+            {{ instance?.modLoaderVersion != undefined ? instance?.modLoaderVersion : '?' }}
+        </a>
+        <a *ngIf="instance?.modLoaderArchiveUrl" [href]="instance?.modLoaderArchiveUrl">
+            ({{ 'terraria.instance.list-item.description.buttons.download' | translate }})
+        </a>
+    </div>
+    <div mat-line>
+        {{ 'terraria.instance.list-item.description.server-label' | translate }}
+        <a class="tsw-version-label" href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
+            {{ instance?.terrariaVersion != undefined ? instance?.terrariaVersion : '?' }}
+        </a>
+        <a *ngIf="instance?.terrariaServerUrl" [href]="instance?.terrariaServerUrl">
+            ({{ 'terraria.instance.list-item.description.buttons.download' | translate }})
+        </a>
+    </div>
+
+    <span [matTooltip]="'general.not-implemented' | translate">
+        <button
+            [disabled]="true"
+            [matTooltip]="'terraria.instance.list-item.buttons.delete' | translate"
+            mat-icon-button
+        >
+            <mat-icon>delete</mat-icon>
+        </button>
+        <button [disabled]="true" [matTooltip]="'terraria.instance.list-item.buttons.edit' | translate" mat-icon-button>
+            <mat-icon>edit</mat-icon>
+        </button>
+    </span>
+</mat-list-item>

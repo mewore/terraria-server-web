@@ -2,11 +2,11 @@ import { Component, Input, OnInit } from '@angular/core';
 import { TerrariaWorldEntity } from 'src/generated/backend';
 
 @Component({
-    selector: 'tsw-terraria-world-card',
-    templateUrl: './terraria-world-card.component.html',
-    styleUrls: ['./terraria-world-card.component.sass'],
+    selector: 'tsw-terraria-world-list-item',
+    templateUrl: './terraria-world-list-item.component.html',
+    styleUrls: ['./terraria-world-list-item.component.sass'],
 })
-export class TerrariaWorldCardComponent implements OnInit {
+export class TerrariaWorldListItemComponent implements OnInit {
     @Input()
     world?: TerrariaWorldEntity;
 

@@ -82,6 +82,7 @@ public class LocalHostService {
     private void doHeartbeat() {
         LOGGER.debug("Heartbeat...");
         findHost().ifPresentOrElse(this::refreshHost, this::createHost);
+        LOGGER.debug("Heartbeat.");
     }
 
     private void refreshHost(final @NonNull HostEntity host) {

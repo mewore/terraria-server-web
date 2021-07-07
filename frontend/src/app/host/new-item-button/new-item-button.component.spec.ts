@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TerrariaInstanceCardComponent } from './terraria-instance-card.component';
+import { NewItemButtonComponent } from './new-item-button.component';
 
-describe('TerrariaInstanceCardComponent', () => {
-    let component: TerrariaInstanceCardComponent;
-    let fixture: ComponentFixture<TerrariaInstanceCardComponent>;
+describe('NewItemButtonComponent', () => {
+    let component: NewItemButtonComponent;
+    let fixture: ComponentFixture<NewItemButtonComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TerrariaInstanceCardComponent],
+            declarations: [NewItemButtonComponent],
         }).compileComponents();
     });
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(TerrariaInstanceCardComponent);
+        fixture = TestBed.createComponent(NewItemButtonComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

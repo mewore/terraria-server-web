@@ -94,7 +94,7 @@ public class HostEntity {
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "host")
     @Fetch(FetchMode.JOIN)
-    private final Set<TerrariaInstanceEntity> terrariaInstances = Collections.emptySet();
+    private final Set<TerrariaInstanceEntity> instances = Collections.emptySet();
 
     public boolean isAlive() {
         return alive && lastHeartbeat.plus(heartbeatDuration.multipliedBy(2)).isAfter(Instant.now());

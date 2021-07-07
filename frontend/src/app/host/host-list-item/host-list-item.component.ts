@@ -15,16 +15,9 @@ export class HostListItemComponent {
 
     get descriptionData(): {[key: string]: number | string} {
         return {
-            instanceCount: this.host?.terrariaInstances.length ?? '?',
+            instanceCount: this.host?.instances.length ?? '?',
             worldCount: this.host?.worlds.length ?? '?',
         };
-    }
-
-    get iconColor(): string {
-        if (!this.host) {
-            return '';
-        }
-        return this.host.alive ? 'primary' : 'warn';
     }
 
     get iconTooltip(): string {

@@ -3,6 +3,7 @@ import { MatExpansionPanel } from '@angular/material/expansion';
 import { ActivatedRoute } from '@angular/router';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
+import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 
 @Component({
     selector: 'tsw-host-info-page',
@@ -12,7 +13,11 @@ import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
 export class HostInfoPageComponent implements OnInit {
     host?: HostEntity;
 
-    constructor(private readonly restApi: RestApiService, private readonly activatedRoute: ActivatedRoute) {}
+    constructor(
+        private readonly restApi: RestApiService,
+        private readonly activatedRoute: ActivatedRoute,
+        private readonly createDialogService: CreateTerrariaInstanceDialogService
+    ) {}
 
     ngOnInit(): void {
         this.activatedRoute.paramMap.subscribe(async (paramMap) => {
@@ -32,29 +37,13 @@ export class HostInfoPageComponent implements OnInit {
         return !this.loading;
     }
 
-    get hostUuid(): string | undefined {
-        return this.host?.uuid;
-    }
-
-    get hostName(): string | undefined {
-        return this.host?.name;
-    }
-
-    get hostIcon(): string | undefined {
-        return this.host?.alive ? 'play_circle_filled' : 'stop';
-    }
-
-    get hostStatus(): string {
-        return this.host?.alive ? 'running' : 'stopped';
-    }
-
-    get terrariaInstances(): TerrariaInstanceEntity[] {
-        return this.host?.terrariaInstances || [];
-    }
-
-    terrariaInstanceCreated(instance: TerrariaInstanceEntity): void {
-        if (this.host) {
-            this.host.terrariaInstances.push(instance);
+    async terrariaInstanceCreationRequested(): Promise<void> {
+        if (!this.host) {
+            throw new Error('The host is not defined. Cannot create a Terraria instance.');
+        }
+        const newInstance = await this.createDialogService.openDialog(this.host);
+        if (newInstance) {
+            this.host.instances.push(newInstance);
         }
     }
 }

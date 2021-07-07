@@ -1,0 +1,35 @@
+<mat-list-item>
+    <mat-icon
+        [class.loading]="!world"
+        [matTooltipDisabled]="!!world"
+        [matTooltip]="'terraria.world.list-item.status.loading' | translate"
+        class="unclickable-icon"
+        mat-list-icon
+    >public
+    </mat-icon
+    >
+
+    <div *ngIf="world" mat-line>{{ world?.name }}</div>
+    <div *ngIf="world" class="world-last-modified" mat-line>
+        <span
+            [matTooltip]="
+                'terraria.world.list-item.last-modified-tooltip'
+                    | translate: { lastModified: lastModifiedDetailedString }
+            "
+        >{{ lastModifiedString }}</span
+        >
+    </div>
+
+    <span [matTooltip]="'general.not-implemented' | translate">
+        <button [disabled]="true" [matTooltip]="'terraria.world.list-item.buttons.delete' | translate" mat-icon-button>
+            <mat-icon>delete</mat-icon>
+        </button>
+        <button
+            [disabled]="true"
+            [matTooltip]="'terraria.world.list-item.buttons.download' | translate"
+            mat-icon-button
+        >
+            <mat-icon>download</mat-icon>
+        </button>
+    </span>
+</mat-list-item>

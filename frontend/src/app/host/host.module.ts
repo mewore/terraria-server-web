@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
+import { MatRippleModule } from '@angular/material/core';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,8 +19,9 @@ import { HostInfoPageComponent } from './host-info-page/host-info-page.component
 import { HostListItemComponent } from './host-list-item/host-list-item.component';
 import { HostListPageComponent } from './host-list-page/host-list-page.component';
 import { HostRoutingModule } from './host-routing.module';
-import { TerrariaInstanceCardComponent } from './terraria-instance-card/terraria-instance-card.component';
-import { TerrariaWorldCardComponent } from './terraria-world-card/terraria-world-card.component';
+import { NewItemButtonComponent } from './new-item-button/new-item-button.component';
+import { TerrariaInstanceListItemComponent } from './terraria-instance-list-item/terraria-instance-list-item.component';
+import { TerrariaWorldListItemComponent } from './terraria-world-list-item/terraria-world-list-item.component';
 
 @NgModule({
     declarations: [
@@ -28,17 +29,18 @@ import { TerrariaWorldCardComponent } from './terraria-world-card/terraria-world
         HostInfoPageComponent,
         HostListItemComponent,
         HostListPageComponent,
-        TerrariaInstanceCardComponent,
-        TerrariaWorldCardComponent,
+        TerrariaInstanceListItemComponent,
+        TerrariaWorldListItemComponent,
+        NewItemButtonComponent,
     ],
     imports: [
         CommonModule,
         HostRoutingModule,
         MatButtonModule,
-        MatCardModule,
         MatDialogModule,
         MatDividerModule,
         MatFormFieldModule,
+        MatRippleModule,
         MatIconModule,
         MatInputModule,
         MatListModule,

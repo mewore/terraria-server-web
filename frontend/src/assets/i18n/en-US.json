@@ -78,6 +78,9 @@
             "terrariaUrl": "Must a Terraria URL: http(s)://terraria.org/..."
         }
     },
+    "list": {
+        "new-item": "New"
+    },
     "loading": "Loading",
     "log-out": {
         "dialog": {
@@ -87,63 +90,57 @@
             "title": "Log out"
         }
     },
-    "terraria-instance": {
-        "card": {
-            "buttons": {
-                "delete": "Delete",
-                "edit": "Edit"
-            },
-            "description": {
-                "mod-loader-label": "TModLoader: ",
-                "server-label": "Terraria server: ",
-                "buttons": {
-                    "download": "Download",
-                    "mod-loader-link": "GitHub release page",
-                    "server-link": "Wiki page"
+    "no-permission": {
+        "ableToManageAccounts": "You do not have the permission to manage accounts.",
+        "ableToManageHosts": "You do not have the permission to manage hosts.",
+        "ableToManageTerraria": "You do not have the permission to manage Terraria instances/worlds.",
+        "not-logged-in": "You are not logged in."
+    },
+    "terraria": {
+        "instance": {
+            "dialog": {
+                "create": {
+                    "buttons": {
+                        "create": "Create"
+                    },
+                    "title": "New Terraria server instance",
+                    "tmodloader-version": {
+                        "label": "TModLoader version"
+                    },
+                    "instance-name": {
+                        "label": "Enter the instance name",
+                        "placeholder": "Instance name"
+                    },
+                    "terraria-server-url": {
+                        "label": "Enter the Terraria dedicated server download URL",
+                        "placeholder": "Terraria dedicated server download URL",
+                        "help-text": "Pick a server download link from the terraria.gamepedia.com wiki."
+                    }
                 }
             },
-            "new": {
-                "title": "New instance",
-                "description": "Create a new Terraria server instance.",
+            "list-item": {
                 "buttons": {
-                    "create": "Create"
+                    "delete": "Delete",
+                    "edit": "Edit"
                 },
-                "disabled-tooltips": {
-                    "no-host": "The host is not defined. Maybe it has not been loaded yet.",
-                    "not-logged-in": "Must be logged in (and have the permission to manage hosts).",
-                    "no-manage-hosts-permission": "Must have the permission to manage hosts."
+                "description": {
+                    "mod-loader-label": "TModLoader: ",
+                    "server-label": "Terraria server: ",
+                    "buttons": {
+                        "download": "Download",
+                        "mod-loader-link": "GitHub release page",
+                        "server-link": "Wiki page"
+                    }
                 }
             }
         },
-        "dialogs": {
-            "create": {
+        "world": {
+            "list-item": {
+                "last-modified-tooltip": "Last modified: {{ lastModified }}",
                 "buttons": {
-                    "create": "Create"
-                },
-                "title": "New Terraria server instance",
-                "tmodloader-version": {
-                    "label": "TModLoader version"
-                },
-                "instance-name": {
-                    "label": "Enter the instance name",
-                    "placeholder": "Instance name"
-                },
-                "terraria-server-url": {
-                    "label": "Enter the Terraria dedicated server download URL",
-                    "placeholder": "Terraria dedicated server download URL",
-                    "help-text": "Pick a server download link from the terraria.gamepedia.com wiki."
+                    "delete": "Delete",
+                    "download": "Download"
                 }
-            }
-        }
-    },
-    "terraria-world": {
-        "card": {
-            "last-modified": {
-                "tooltip": "Last modified: {{ lastModified }}"
-            },
-            "buttons": {
-                "delete": "Delete",
-                "download": "Download"
             }
         }
     }
