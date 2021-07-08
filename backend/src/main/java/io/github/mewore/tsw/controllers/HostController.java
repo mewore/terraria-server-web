@@ -18,8 +18,12 @@ import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceDefinitionModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.HostService;
 import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -28,18 +32,27 @@ import lombok.RequiredArgsConstructor;
 @ResponseBody
 public class HostController {
 
+    private final TerrariaInstanceRepository terrariaInstanceRepository;
+
+    private final TerrariaWorldRepository terrariaWorldRepository;
+
     private final TerrariaInstanceService terrariaInstanceService;
 
     private final HostService hostService;
+
+    @GetMapping
+    List<HostEntity> getHosts() {
+        return hostService.getAllHosts();
+    }
 
     @GetMapping(path = "/{hostId}")
     HostEntity getHost(@PathVariable final long hostId) throws NotFoundException {
         return hostService.getHost(hostId);
     }
 
-    @GetMapping
-    List<HostEntity> getHosts() {
-        return hostService.getAllHosts();
+    @GetMapping(path = "/{hostId}/instances")
+    List<@NonNull TerrariaInstanceEntity> getHostInstances(@PathVariable final long hostId) {
+        return terrariaInstanceRepository.findByHostIdOrderByIdAsc(hostId);
     }
 
     @Secured({AuthorityRoles.MANAGE_HOSTS})
@@ -47,5 +60,10 @@ public class HostController {
     TerrariaInstanceEntity createTerrariaInstance(@PathVariable final long hostId,
             @RequestBody final @Valid TerrariaInstanceDefinitionModel creationModel) throws NotFoundException {
         return terrariaInstanceService.defineTerrariaInstance(hostId, creationModel);
+    }
+
+    @GetMapping(path = "/{hostId}/worlds")
+    List<@NonNull TerrariaWorldEntity> getHostWorlds(@PathVariable final long hostId) {
+        return terrariaWorldRepository.findByHostIdOrderByIdAsc(hostId);
     }
 }

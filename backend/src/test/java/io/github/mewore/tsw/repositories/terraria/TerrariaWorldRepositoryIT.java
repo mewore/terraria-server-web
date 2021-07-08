@@ -18,6 +18,7 @@ import io.github.mewore.tsw.repositories.HostRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 class TerrariaWorldRepositoryIT {
@@ -43,6 +44,22 @@ class TerrariaWorldRepositoryIT {
 
         final List<TerrariaWorldEntity> hostWorlds = worldRepository.findByHost(host);
         assertEquals(Arrays.asList(firstWorld, secondWorld), hostWorlds);
+    }
+
+    @Test
+    void testFindByHostIdOrderByIdAsc() {
+        final HostEntity host = hostRepository.saveAndFlush(makeHost());
+        final TerrariaWorldEntity firstWorld = worldRepository.saveAndFlush(makeWorld(host, "first"));
+        final TerrariaWorldEntity secondWorld = worldRepository.saveAndFlush(makeWorld(host, "second"));
+        final TerrariaWorldEntity thirdWorld = worldRepository.saveAndFlush(makeWorld(host, "third"));
+
+        final List<TerrariaWorldEntity> result = worldRepository.findByHostIdOrderByIdAsc(host.getId());
+        assertEquals(Arrays.asList(firstWorld, secondWorld, thirdWorld), result);
+    }
+
+    @Test
+    void testFindByHostIdOrderByIdAsc_nonExistentHost() {
+        assertTrue(worldRepository.findByHostIdOrderByIdAsc(0).isEmpty());
     }
 
     @Test

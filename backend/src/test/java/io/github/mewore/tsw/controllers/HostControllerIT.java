@@ -18,6 +18,8 @@ import io.github.mewore.tsw.config.TestConfig;
 import io.github.mewore.tsw.config.security.AuthorityRoles;
 import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceDefinitionModel;
+import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.HostService;
 import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
 
@@ -35,6 +37,12 @@ class HostControllerIT {
     private MockMvc mockMvc;
 
     @MockBean
+    private TerrariaInstanceRepository terrariaInstanceRepository;
+
+    @MockBean
+    private TerrariaWorldRepository terrariaWorldRepository;
+
+    @MockBean
     private HostService hostService;
 
     @MockBean
@@ -42,6 +50,16 @@ class HostControllerIT {
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceDefinitionModel> instanceModelCaptor;
+
+    /**
+     * Test {@link HostController#getHosts()}.
+     */
+    @Test
+    void testGetHosts() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts"))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()));
+        verify(hostService, only()).getAllHosts();
+    }
 
     /**
      * Test {@link HostController#getHost(long)}}.
@@ -64,13 +82,13 @@ class HostControllerIT {
     }
 
     /**
-     * Test {@link HostController#getHosts()}.
+     * Test {@link HostController#getHostInstances(long)}.
      */
     @Test
-    void testGetHosts() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts"))
+    void testGetHostInstances() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts/1/instances"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()));
-        verify(hostService, only()).getAllHosts();
+        verify(terrariaInstanceRepository, only()).findByHostIdOrderByIdAsc(1);
     }
 
     /**
@@ -108,5 +126,15 @@ class HostControllerIT {
                             "terrariaServerArchiveUrl": "server-archive-url"
                         }
                         """)).andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN.value()));
+    }
+
+    /**
+     * Test {@link HostController#getHostWorlds(long)}.
+     */
+    @Test
+    void testGetHostWorlds() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/hosts/1/worlds"))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()));
+        verify(terrariaWorldRepository, only()).findByHostIdOrderByIdAsc(1);
     }
 }

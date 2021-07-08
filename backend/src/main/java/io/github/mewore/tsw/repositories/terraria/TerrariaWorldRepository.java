@@ -17,11 +17,12 @@ public interface TerrariaWorldRepository extends JpaRepository<TerrariaWorldEnti
 
     List<TerrariaWorldEntity> findByHost(final HostEntity host);
 
+    List<TerrariaWorldEntity> findByHostIdOrderByIdAsc(final long hostId);
+
     @Transactional
     default void setHostWorlds(final HostEntity host, final List<TerrariaWorldEntity> newWorlds) {
 
-        final Map<String, TerrariaWorldEntity> currentWorlds = findByHost(host)
-                .stream()
+        final Map<String, TerrariaWorldEntity> currentWorlds = findByHost(host).stream()
                 .collect(Collectors.toUnmodifiableMap(TerrariaWorldEntity::getName, Function.identity()));
 
         final List<TerrariaWorldEntity> worldsToSave = newWorlds.stream().map(world -> {

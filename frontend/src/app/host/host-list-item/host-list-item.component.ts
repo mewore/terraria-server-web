@@ -13,13 +13,6 @@ export class HostListItemComponent {
 
     constructor(private readonly translateService: TranslateService) {}
 
-    get descriptionData(): {[key: string]: number | string} {
-        return {
-            instanceCount: this.host?.instances.length ?? '?',
-            worldCount: this.host?.worlds.length ?? '?',
-        };
-    }
-
     get iconTooltip(): string {
         if (!this.host) {
             return this.translate('status.loading');

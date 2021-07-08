@@ -13,7 +13,5 @@
         <span *ngIf="host; else loadingName">{{ host?.name || ('host-info.no-name' | translate) }}</span>
         <ng-template #loadingName>{{ 'host-info.name-loading' | translate }}</ng-template>
     </a>
-    <div mat-line>
-        {{ 'host-list-item.description' | translate: descriptionData }}
-    </div>
+    <div class="tsw-uuid" mat-line>{{ host?.uuid }}</div>
 </mat-list-item>
