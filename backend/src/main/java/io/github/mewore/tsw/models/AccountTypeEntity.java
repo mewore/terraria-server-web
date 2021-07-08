@@ -11,31 +11,28 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.With;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder(toBuilder = true)
+@Builder
 @Getter
-@With
 @Entity
 @Table(name = "account_type")
 public class AccountTypeEntity {
 
-    @Builder.Default
     @Id
     @GeneratedValue
-    private final Long id = null;
+    private Long id;
 
     @Builder.Default
     @Column(nullable = false)
-    private final boolean ableToManageAccounts = false;
+    private boolean ableToManageAccounts = false;
 
     @Builder.Default
     @Column(nullable = false)
-    private final boolean ableToManageHosts = false;
+    private boolean ableToManageHosts = false;
 
     @Builder.Default
     @Column(nullable = false)
-    private final boolean ableToManageTerraria = false;
+    private boolean ableToManageTerraria = false;
 }

@@ -39,7 +39,7 @@ public class AuthenticationService implements UserDetailsService {
     private final PasswordEncoder encoder;
 
     public @NonNull SessionViewModel logIn(final @NonNull LoginModel loginModel) throws InvalidCredentialsException {
-        final AccountEntity account = accountRepository.findByUsername(loginModel.getUsername())
+        AccountEntity account = accountRepository.findByUsername(loginModel.getUsername())
                 .orElseThrow(() -> InvalidCredentialsException.forUsername(loginModel.getUsername()));
 
         if (!encoder.matches(loginModel.getPassword(), new String(account.getPassword(), BINARY_CHARSET))) {
@@ -48,9 +48,10 @@ public class AuthenticationService implements UserDetailsService {
 
         final UUID token = UUID.randomUUID();
         final byte[] encodedToken = encode(token.toString());
-        final AccountEntity savedAccount = accountRepository.save(
-                account.toBuilder().session(encodedToken).sessionExpiration(getNewSessionExpiration()).build());
-        return new SessionViewModel(token, savedAccount.getType());
+        account.setSession(encodedToken);
+        account.setSessionExpiration(getNewSessionExpiration());
+        account = accountRepository.save(account);
+        return new SessionViewModel(token, account.getType());
     }
 
     public @NonNull SessionViewModel signUp(final @NonNull SignupModel signupModel) throws InvalidUsernameException {
@@ -73,7 +74,8 @@ public class AuthenticationService implements UserDetailsService {
 
     public void logOut(@Nullable final Authentication authentication) throws InvalidCredentialsException {
         final AccountEntity account = getAuthenticatedAccount(authentication);
-        accountRepository.save(account.withSessionExpiration(Instant.now()));
+        account.setSessionExpiration(Instant.now());
+        accountRepository.save(account);
     }
 
     public AccountTypeEntity getAuthenticatedAccountType(@Nullable final Authentication authentication)

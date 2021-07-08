@@ -86,12 +86,11 @@ public class LocalHostService {
     }
 
     private void refreshHost(final @NonNull HostEntity host) {
-        hostRepository.save(host.toBuilder()
-                .alive(true)
-                .heartbeatDuration(HEARTBEAT_DURATION)
-                .lastHeartbeat(Instant.now())
-                .os(systemService.getOs())
-                .build());
+        host.setAlive(true);
+        host.setHeartbeatDuration(HEARTBEAT_DURATION);
+        host.setLastHeartbeat(Instant.now());
+        host.setOs(systemService.getOs());
+        hostRepository.save(host);
     }
 
     @Nullable
@@ -119,6 +118,9 @@ public class LocalHostService {
     @PreDestroy
     public void preDestroy() {
         heartbeatFuture.cancel(false);
-        hostRepository.save(getOrCreateHost().toBuilder().alive(false).build());
+        findHost().ifPresent(host -> {
+            host.setAlive(false);
+            hostRepository.save(host);
+        });
     }
 }

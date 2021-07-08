@@ -197,7 +197,7 @@ class TerrariaInstanceServiceTest {
 
         verify(terrariaInstanceRepository, times(2)).save(instanceCaptor.capture());
 
-        assertSame(TerrariaInstanceState.VALID, instanceCaptor.getAllValues().get(0).getState());
+        assertSame(preparedInstance, instanceCaptor.getAllValues().get(0));
         assertSame(preparedInstance, instanceCaptor.getAllValues().get(1));
 
         assertSame(instance.getHost(), preparedInstance.getHost());

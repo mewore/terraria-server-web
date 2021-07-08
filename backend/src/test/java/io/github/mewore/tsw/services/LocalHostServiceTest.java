@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
@@ -45,14 +46,6 @@ class LocalHostServiceTest {
     private static final UUID HOST_UUID = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505");
 
     private static final String HOST_URL = "host-url";
-
-    private static final HostEntity EXISTING_HOST = HostEntity.builder()
-            .uuid(HOST_UUID)
-            .url(HOST_URL)
-            .alive(false)
-            .heartbeatDuration(Duration.ZERO)
-            .os(OperatingSystem.UNKNOWN)
-            .build();
 
     @InjectMocks
     private LocalHostService localHostService;
@@ -119,15 +112,13 @@ class LocalHostServiceTest {
         verify(hostRepository, never()).findByUuid(any());
     }
 
-    @Test
-    void testGetOrCreateHost() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
-        when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
-        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
-
-        localHostService.setUp();
-        assertSame(EXISTING_HOST, localHostService.getOrCreateHost());
-        verify(hostRepository).findByUuid(HOST_UUID);
+    private static HostEntity.HostEntityBuilder makeHost() {
+        return HostEntity.builder()
+                .uuid(HOST_UUID)
+                .url(HOST_URL)
+                .alive(false)
+                .heartbeatDuration(Duration.ZERO)
+                .os(OperatingSystem.UNKNOWN);
     }
 
     @Test
@@ -161,15 +152,16 @@ class LocalHostServiceTest {
         assertEquals(HOST_URL, hostCaptor.getValue().getUrl());
     }
 
-    private Runnable prepareHeartbeat() throws IOException {
+    @Test
+    void testGetOrCreateHost() throws IOException {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
-        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(EXISTING_HOST));
-        when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
+        final HostEntity host = mock(HostEntity.class);
+        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(host));
 
         localHostService.setUp();
-        verify(asyncService, only()).scheduleAtFixedRate(heartbeatCaptor.capture(), any(), any());
-        return heartbeatCaptor.getValue();
+        assertSame(host, localHostService.getOrCreateHost());
+        verify(hostRepository).findByUuid(HOST_UUID);
     }
 
     @Test
@@ -180,9 +172,7 @@ class LocalHostServiceTest {
                 .uuid(HOST_UUID)
                 .os(OperatingSystem.UNKNOWN)
                 .alive(true)
-                .heartbeatDuration(Duration.ofDays(1000))
-                .lastHeartbeat(Instant.MAX)
-                .build()));
+                .heartbeatDuration(Duration.ofDays(1000)).lastHeartbeat(Instant.MAX).build()));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
         localHostService.setUp();
@@ -190,5 +180,16 @@ class LocalHostServiceTest {
         verify(future, only()).cancel(false);
         verify(hostRepository).save(hostCaptor.capture());
         assertFalse(hostCaptor.getValue().isAlive());
+    }
+
+    private Runnable prepareHeartbeat() throws IOException {
+        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
+        when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(makeHost().build()));
+        when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
+
+        localHostService.setUp();
+        verify(asyncService, only()).scheduleAtFixedRate(heartbeatCaptor.capture(), any(), any());
+        return heartbeatCaptor.getValue();
     }
 }

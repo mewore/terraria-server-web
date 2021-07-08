@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.lang.Nullable;
 
@@ -26,63 +25,54 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.With;
+import lombok.Setter;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder(toBuilder = true)
-@With
+@Builder
 @Getter
+@Setter
 @Entity
 @Table(name = "terraria_instance", uniqueConstraints = {@UniqueConstraint(columnNames = {"host_id", "uuid"})})
-@DynamicInsert
 @DynamicUpdate
 public class TerrariaInstanceEntity {
 
-    @Builder.Default
     @Id
     @GeneratedValue
-    private final Long id = null;
+    private Long id;
 
     @Builder.Default
     @Column(nullable = false, updatable = false)
-    private final @NonNull UUID uuid = UUID.randomUUID();
+    private @NonNull UUID uuid = UUID.randomUUID();
 
-    @Builder.Default
     @Column
     @Nullable
-    private final String terrariaVersion = null;
+    private String terrariaVersion;
 
-    @Builder.Default
     @Column
     @Nullable
-    private final String modLoaderVersion = null;
+    private String modLoaderVersion;
 
-    @Builder.Default
     @Column(length = 1023)
     @Nullable
-    private final String modLoaderReleaseUrl = null;
+    private String modLoaderReleaseUrl;
 
-    @Builder.Default
     @Column(length = 1023)
     @Nullable
-    private final String modLoaderArchiveUrl = null;
+    private String modLoaderArchiveUrl;
 
-    @Builder.Default
     @Column(length = 1023)
     @Nullable
-    private final String error = null;
+    private String error;
 
-    @Builder.Default
     @Column
     @Enumerated(EnumType.STRING)
     @Nullable
-    private final TerrariaInstanceAction pendingAction = null;
+    private TerrariaInstanceAction pendingAction;
 
-    @Builder.Default
     @Column
     @Nullable
-    private final Instant actionExecutionStartTime = null;
+    private Instant actionExecutionStartTime;
 
     @Column(nullable = false, length = 1023)
     private @NonNull Path location;

@@ -24,57 +24,62 @@ class AccountUserDetailsTest {
         assertEquals(Collections.emptySet(), user.getAuthorities());
     }
 
+    private static AccountEntity.AccountEntityBuilder makeAccount() {
+        return AccountEntity.builder().username("username");
+    }
+
     @Test
     void testGetAuthorities_emptyRole() {
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(AccountTypeEntity.builder().build()), "");
+        final UserDetails user =
+                new AccountUserDetails(makeAccount().type(AccountTypeEntity.builder().build()).build(), "");
         assertEquals(Collections.emptySet(), user.getAuthorities());
     }
 
     @Test
     void testGetAuthorities_manageAccountsRole() {
         final AccountTypeEntity typeWithManageUsers = AccountTypeEntity.builder().ableToManageAccounts(true).build();
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(typeWithManageUsers), "");
+        final UserDetails user = new AccountUserDetails(makeAccount().type(typeWithManageUsers).build(), "");
         assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_ACCOUNTS")), user.getAuthorities());
     }
 
     @Test
     void testGetAuthorities_manageHostsRole() {
         final AccountTypeEntity typeWithManageHosts = AccountTypeEntity.builder().ableToManageHosts(true).build();
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(typeWithManageHosts), "");
+        final UserDetails user = new AccountUserDetails(makeAccount().type(typeWithManageHosts).build(), "");
         assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_HOSTS")), user.getAuthorities());
     }
 
     @Test
     void testGetAuthorities_createTerrariaInstances() {
         final AccountTypeEntity typeWithManageHosts = AccountTypeEntity.builder().ableToManageTerraria(true).build();
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withType(typeWithManageHosts), "");
+        final UserDetails user = new AccountUserDetails(makeAccount().type(typeWithManageHosts).build(), "");
         assertEquals(Collections.singleton(new SimpleGrantedAuthority("ROLE_MANAGE_TERRARIA")), user.getAuthorities());
     }
 
     @Test
     void testIsAccountNonExpired() {
-        assertTrue(new AccountUserDetails(ACCOUNT, "").isAccountNonExpired());
+        assertTrue(new AccountUserDetails(makeAccount().build(), "").isAccountNonExpired());
     }
 
     @Test
     void testIsAccountNonLocked() {
-        assertTrue(new AccountUserDetails(ACCOUNT, "").isAccountNonLocked());
+        assertTrue(new AccountUserDetails(makeAccount().build(), "").isAccountNonLocked());
     }
 
     @Test
     void testIsCredentialsNonExpired_notExpired() {
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withSessionExpiration(Instant.MAX), "");
+        final UserDetails user = new AccountUserDetails(makeAccount().sessionExpiration(Instant.MAX).build(), "");
         assertTrue(user.isCredentialsNonExpired());
-    }
-
-    @Test
-    void testIsCredentialsNonExpired_expired() {
-        final UserDetails user = new AccountUserDetails(ACCOUNT.withSessionExpiration(Instant.MIN), "");
-        assertFalse(user.isCredentialsNonExpired());
     }
 
     @Test
     void testIsEnabled() {
         assertTrue(new AccountUserDetails(ACCOUNT, "").isEnabled());
+    }
+
+    @Test
+    void testIsCredentialsNonExpired_expired() {
+        final UserDetails user = new AccountUserDetails(makeAccount().sessionExpiration(Instant.MIN).build(), "");
+        assertFalse(user.isCredentialsNonExpired());
     }
 }

@@ -39,15 +39,13 @@ import lombok.With;
 @DynamicUpdate
 public class TerrariaWorldEntity {
 
-    @Builder.Default
     @Id
     @GeneratedValue
-    private final Long id = null;
+    private Long id;
 
     @Column(nullable = false)
     private @NonNull String name;
 
-    @Basic(fetch = FetchType.LAZY)
     @Column(nullable = false)
     private @NonNull Instant lastModified;
 

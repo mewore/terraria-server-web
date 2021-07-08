@@ -20,22 +20,21 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.With;
+import lombok.Setter;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder(toBuilder = true)
+@Builder
 @Getter
-@With
+@Setter
 @Entity
 @Table(name = "account")
 @DynamicUpdate
 public class AccountEntity {
 
-    @Builder.Default
     @Id
     @GeneratedValue
-    private final Long id = null;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private @NonNull @NotBlank String username;
@@ -49,10 +48,9 @@ public class AccountEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private final @NonNull Instant sessionExpiration = Instant.now();
+    private @NonNull Instant sessionExpiration = Instant.now();
 
-    @Builder.Default
     @ManyToOne
     @Nullable
-    private final AccountTypeEntity type = null;
+    private AccountTypeEntity type;
 }

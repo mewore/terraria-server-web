@@ -13,7 +13,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.lang.Nullable;
 
@@ -24,14 +23,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder(toBuilder = true)
+@Builder
 @Getter
+@Setter
 @Entity
 @Table(name = "host")
-@DynamicInsert
 @DynamicUpdate
 public class HostEntity {
 
@@ -40,10 +40,9 @@ public class HostEntity {
 
     private static final int DEFAULT_PORT = 8080;
 
-    @Builder.Default
     @Id
     @GeneratedValue
-    private final Long id = null;
+    private Long id;
 
     @Column(nullable = false, unique = true, updatable = false)
     private @NonNull UUID uuid;

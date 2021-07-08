@@ -48,14 +48,6 @@ class AuthenticationServiceTest {
 
     private static final AccountTypeEntity ACCOUNT_TYPE = AccountTypeEntity.builder().build();
 
-    private static final AccountEntity EXISTING_ACCOUNT = AccountEntity.builder()
-            .id(1L)
-            .username(USERNAME)
-            .password(PASSWORD.getBytes(BINARY_CHARSET))
-            .session(SESSION.getBytes(BINARY_CHARSET))
-            .type(ACCOUNT_TYPE)
-            .build();
-
     private static final String NEW_USERNAME = "new-username";
 
     private static final String INCORRECT_PASSWORD = "incorrect-password";
@@ -75,15 +67,13 @@ class AuthenticationServiceTest {
     @Mock
     private Authentication authentication;
 
-    @Test
-    void testLogIn() throws InvalidCredentialsException {
-        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
-        when(accountRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        final SessionViewModel session = authenticationService.logIn(new LoginModel(USERNAME, PASSWORD));
-        verify(accountRepository).save(accountCaptor.capture());
-        assertEquals(session.getToken().toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
-        assertSame(ACCOUNT_TYPE, session.getRole());
+    private static AccountEntity.AccountEntityBuilder makeAccount() {
+        return AccountEntity.builder()
+                .id(1L)
+                .username(USERNAME)
+                .password(PASSWORD.getBytes(BINARY_CHARSET))
+                .session(SESSION.getBytes(BINARY_CHARSET))
+                .type(ACCOUNT_TYPE);
     }
 
     @Test
@@ -94,10 +84,14 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void testLogIn_incorrectPassword() {
-        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
-        assertThrows(InvalidCredentialsException.class,
-                () -> authenticationService.logIn(new LoginModel(USERNAME, INCORRECT_PASSWORD)));
+    void testLogIn() throws InvalidCredentialsException {
+        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(makeAccount().build()));
+        when(accountRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        final SessionViewModel session = authenticationService.logIn(new LoginModel(USERNAME, PASSWORD));
+        verify(accountRepository).save(accountCaptor.capture());
+        assertEquals(session.getToken().toString(), new String(accountCaptor.getValue().getSession(), BINARY_CHARSET));
+        assertSame(ACCOUNT_TYPE, session.getRole());
     }
 
     @Test
@@ -120,10 +114,17 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    void testLogIn_incorrectPassword() {
+        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(makeAccount().build()));
+        assertThrows(InvalidCredentialsException.class,
+                () -> authenticationService.logIn(new LoginModel(USERNAME, INCORRECT_PASSWORD)));
+    }
+
+    @Test
     void testLogOut() throws InvalidCredentialsException {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(USERNAME);
-        final AccountEntity accountWithValidSession = EXISTING_ACCOUNT.withSessionExpiration(Instant.MAX);
+        final AccountEntity accountWithValidSession = makeAccount().sessionExpiration(Instant.MAX).build();
         assertTrue(accountWithValidSession.getSessionExpiration().isAfter(Instant.now()),
                 "The session of the user should not have expired yet.");
         when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(accountWithValidSession));
@@ -138,18 +139,8 @@ class AuthenticationServiceTest {
     void testGetAuthenticatedAccountType() throws InvalidCredentialsException {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(USERNAME);
-        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
+        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(makeAccount().build()));
         assertSame(ACCOUNT_TYPE, authenticationService.getAuthenticatedAccountType(authentication));
-    }
-
-    @Test
-    void testGetAuthenticatedAccount() throws InvalidCredentialsException {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getName()).thenReturn(USERNAME);
-        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
-
-        final AccountEntity result = authenticationService.getAuthenticatedAccount(authentication);
-        assertSame(EXISTING_ACCOUNT, result);
     }
 
     @Test
@@ -175,11 +166,14 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void testLoadUserByUsername() {
-        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(EXISTING_ACCOUNT));
-        final UserDetails result = authenticationService.loadUserByUsername(USERNAME);
-        assertEquals(result.getUsername(), USERNAME);
-        assertEquals(result.getPassword(), SESSION);
+    void testGetAuthenticatedAccount() throws InvalidCredentialsException {
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn(USERNAME);
+        final AccountEntity account = makeAccount().build();
+        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(account));
+
+        final AccountEntity result = authenticationService.getAuthenticatedAccount(authentication);
+        assertSame(account, result);
     }
 
     @Test
@@ -187,6 +181,14 @@ class AuthenticationServiceTest {
         when(accountRepository.findByUsername(NEW_USERNAME)).thenReturn(Optional.empty());
         assertThrows(UsernameNotFoundException.class, () -> authenticationService.loadUserByUsername(NEW_USERNAME),
                 "Could not find an account with username 'new-username'");
+    }
+
+    @Test
+    void testLoadUserByUsername() {
+        when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(makeAccount().build()));
+        final UserDetails result = authenticationService.loadUserByUsername(USERNAME);
+        assertEquals(result.getUsername(), USERNAME);
+        assertEquals(result.getPassword(), SESSION);
     }
 
     private static class IdentityPasswordEncoder implements PasswordEncoder {

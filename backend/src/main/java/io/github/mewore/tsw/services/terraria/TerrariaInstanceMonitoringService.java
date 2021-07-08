@@ -54,29 +54,28 @@ public class TerrariaInstanceMonitoringService {
         }
 
         try {
-            final TerrariaInstanceEntity instanceWithStartTime =
-                    terrariaInstanceRepository.save(instance.withActionExecutionStartTime(Instant.now()));
+            instance.setActionExecutionStartTime(Instant.now());
+            final TerrariaInstanceEntity instanceWithStartTime = terrariaInstanceRepository.save(instance);
             final TerrariaInstanceEntity updated;
             // SET_UP is the only possible action at the moment
             updated = terrariaInstanceService.setUpTerrariaInstance(instanceWithStartTime);
             logger.info("Updated Terraria instance {}: [{}] -[{}]-> [{}]", instance.getUuid(), instance.getState(),
                     instance.getPendingAction(), updated.getState());
         } catch (final InvalidInstanceException e) {
-            logger.info("Marking Terraria instance " + instance.getUuid() + " as invalid", e);
-            terrariaInstanceRepository.save(instance.toBuilder()
-                    .pendingAction(null)
-                    .actionExecutionStartTime(null)
-                    .state(TerrariaInstanceState.INVALID)
-                    .error(e.getMessage())
-                    .build());
+            applyExceptionToInstance(instance, e, TerrariaInstanceState.INVALID);
         } catch (final IOException | RuntimeException e) {
-            logger.error("Marking Terraria instance " + instance.getUuid() + " as broken", e);
-            terrariaInstanceRepository.save(instance.toBuilder()
-                    .pendingAction(null)
-                    .actionExecutionStartTime(null)
-                    .state(TerrariaInstanceState.BROKEN)
-                    .error(e.getMessage())
-                    .build());
+            applyExceptionToInstance(instance, e, TerrariaInstanceState.BROKEN);
         }
+    }
+
+    private void applyExceptionToInstance(final TerrariaInstanceEntity instance,
+            final Exception exception,
+            final TerrariaInstanceState newState) {
+        logger.error("Marking Terraria instance " + instance.getUuid() + " as " + newState, exception);
+        instance.setPendingAction(null);
+        instance.setActionExecutionStartTime(null);
+        instance.setState(newState);
+        instance.setError(exception.getMessage());
+        terrariaInstanceRepository.save(instance);
     }
 }

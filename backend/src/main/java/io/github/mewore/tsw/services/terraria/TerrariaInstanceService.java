@@ -123,25 +123,25 @@ public class TerrariaInstanceService {
     }
 
     @Synchronized
-    TerrariaInstanceEntity setUpTerrariaInstance(final TerrariaInstanceEntity definedInstance)
+    TerrariaInstanceEntity setUpTerrariaInstance(TerrariaInstanceEntity instance)
             throws IOException, InvalidInstanceException {
 
         // Validation
-        final Matcher serverZipUrlMatcher = TERRARIA_SERVER_URL_REGEX.matcher(definedInstance.getTerrariaServerUrl());
+        final String serverUrl = instance.getTerrariaServerUrl();
+        final Matcher serverZipUrlMatcher = TERRARIA_SERVER_URL_REGEX.matcher(serverUrl);
         if (!serverZipUrlMatcher.find()) {
             throw new InvalidInstanceException(
-                    "The URL " + definedInstance.getTerrariaServerUrl() + " does not match the regular expression " +
-                            TERRARIA_SERVER_URL_REGEX);
+                    "The URL " + serverUrl + " does not match the regular expression " + TERRARIA_SERVER_URL_REGEX);
         }
 
         // Preparation
-        final @NonNull String tModLoaderFileOsString = getTModLoaderFileOsString(definedInstance.getHost());
-        final @NonNull String serverZipSubdirectory = getServerZipSubdirectory(definedInstance.getHost());
+        final @NonNull String tModLoaderFileOsString = getTModLoaderFileOsString(instance.getHost());
+        final @NonNull String serverZipSubdirectory = getServerZipSubdirectory(instance.getHost());
         final GitHubRelease tModLoaderRelease;
         final GitHubReleaseAsset tModLoaderAsset;
         try {
             tModLoaderRelease = githubService.getRelease(T_MOD_LOADER_GITHUB_USER, T_MOD_LOADER_GITHUB_REPO,
-                    definedInstance.getModLoaderReleaseId());
+                    instance.getModLoaderReleaseId());
             tModLoaderAsset = getTModLoaderAsset(tModLoaderRelease, tModLoaderFileOsString);
         } catch (final NotFoundException e) {
             throw new InvalidInstanceException(e.getMessage(), e);
@@ -153,26 +153,19 @@ public class TerrariaInstanceService {
         final Path serverZipCacheLocation = Path.of(TERRARIA_SERVER_CACHE_DIR, serverZipName);
         if (!fileService.hasFileInCache(serverZipCacheLocation)) {
             try {
-                httpService.checkUrl(new URL(definedInstance.getTerrariaServerUrl()));
+                httpService.checkUrl(new URL(serverUrl));
             } catch (final HttpClientErrorException e) {
-                throw new InvalidInstanceException(String.format("The response at URL %s is HTTP code %d: %s",
-                        definedInstance.getTerrariaServerUrl(), e.getRawStatusCode(), e.getStatusText()), e);
+                throw new InvalidInstanceException(
+                        String.format("The response at URL %s is HTTP code %d: %s", serverUrl, e.getRawStatusCode(),
+                                e.getStatusText()), e);
             }
         }
 
-        final TerrariaInstanceEntity validatedInstance = terrariaInstanceRepository.save(definedInstance.toBuilder()
-                .terrariaVersion(String.join(".", serverRawVersion.split("")))
-                .modLoaderVersion(
-                        tModLoaderRelease.getName().substring(tModLoaderRelease.getName().startsWith("v") ? 1 : 0))
-                .modLoaderArchiveUrl(Objects.requireNonNull(tModLoaderAsset.getBrowserDownloadUrl()))
-                .modLoaderReleaseUrl(tModLoaderRelease.getHtmlUrl())
-                .state(TerrariaInstanceState.VALID)
-                .build());
+        instance = markInstanceAsValid(instance, serverRawVersion, tModLoaderRelease, tModLoaderAsset);
 
         // Creation
-        final File instanceDirectory = fileService.reserveDirectory(validatedInstance.getLocation());
-        final InputStreamSupplier serverFetcher =
-                () -> httpService.requestAsStream(new URL(definedInstance.getTerrariaServerUrl()));
+        final File instanceDirectory = fileService.reserveDirectory(instance.getLocation());
+        final InputStreamSupplier serverFetcher = () -> httpService.requestAsStream(new URL(serverUrl));
         try (final InputStream serverZipStream = fileService.cache(serverZipCacheLocation, serverFetcher, null)) {
             fileService.unzip(serverZipStream, instanceDirectory,
                     Path.of(serverRawVersion, serverZipSubdirectory).toString());
@@ -182,11 +175,30 @@ public class TerrariaInstanceService {
             fileService.unzip(tModLoaderZipStream, instanceDirectory);
         }
 
-        final TerrariaInstanceEntity result = terrariaInstanceRepository.save(
-                validatedInstance.toBuilder().state(TerrariaInstanceState.READY).pendingAction(null).build());
+        instance = markInstanceAsReady(instance);
 
         logger.info("Created a Terraria instance at {}", instanceDirectory.getAbsolutePath());
-        return result;
+        return instance;
+    }
+
+    private TerrariaInstanceEntity markInstanceAsValid(final TerrariaInstanceEntity instance,
+            final String serverRawVersion,
+            final GitHubRelease tModLoaderRelease,
+            final GitHubReleaseAsset tModLoaderAsset) throws NullPointerException {
+
+        instance.setTerrariaVersion(String.join(".", serverRawVersion.split("")));
+        instance.setModLoaderVersion(
+                tModLoaderRelease.getName().substring(tModLoaderRelease.getName().startsWith("v") ? 1 : 0));
+        instance.setModLoaderArchiveUrl(Objects.requireNonNull(tModLoaderAsset.getBrowserDownloadUrl()));
+        instance.setModLoaderReleaseUrl(tModLoaderRelease.getHtmlUrl());
+        instance.setState(TerrariaInstanceState.VALID);
+        return terrariaInstanceRepository.save(instance);
+    }
+
+    private TerrariaInstanceEntity markInstanceAsReady(final TerrariaInstanceEntity instance) {
+        instance.setState(TerrariaInstanceState.READY);
+        instance.setPendingAction(null);
+        return terrariaInstanceRepository.save(instance);
     }
 
     private @NonNull GitHubReleaseAsset getTModLoaderAsset(final @NonNull GitHubRelease tModLoaderRelease,
