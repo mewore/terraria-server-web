@@ -6,7 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-import org.springframework.lang.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,7 +24,6 @@ import io.github.mewore.tsw.models.auth.LoginModel;
 import io.github.mewore.tsw.models.auth.SessionViewModel;
 import io.github.mewore.tsw.models.auth.SignupModel;
 import io.github.mewore.tsw.repositories.AccountRepository;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -72,18 +72,18 @@ public class AuthenticationService implements UserDetailsService {
         return new SessionViewModel(sessionToken, savedAccount.getType());
     }
 
-    public void logOut(@Nullable final Authentication authentication) throws InvalidCredentialsException {
+    public void logOut(final @Nullable Authentication authentication) throws InvalidCredentialsException {
         final AccountEntity account = getAuthenticatedAccount(authentication);
         account.setSessionExpiration(Instant.now());
         accountRepository.save(account);
     }
 
-    public AccountTypeEntity getAuthenticatedAccountType(@Nullable final Authentication authentication)
+    public @Nullable AccountTypeEntity getAuthenticatedAccountType(final @Nullable Authentication authentication)
             throws InvalidCredentialsException {
         return getAuthenticatedAccount(authentication).getType();
     }
 
-    public AccountEntity getAuthenticatedAccount(@Nullable final Authentication authentication)
+    public AccountEntity getAuthenticatedAccount(final @Nullable Authentication authentication)
             throws InvalidCredentialsException {
 
         if (authentication == null || !authentication.isAuthenticated()) {

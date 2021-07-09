@@ -34,7 +34,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
+    public void addViewControllers(final ViewControllerRegistry registry) {
         registry.addViewController("/swagger-ui/").setViewName("forward:" + "/swagger-ui/index.html");
     }
 }

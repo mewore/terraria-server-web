@@ -2,6 +2,7 @@ package io.github.mewore.tsw.controllers;
 
 import javax.validation.Valid;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,12 +31,12 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping({AuthConfigConstants.AUTH_LOGIN_ENDPOINT})
-    public SessionViewModel logIn(@RequestBody @Valid final LoginModel loginModel) throws InvalidCredentialsException {
+    public SessionViewModel logIn(@RequestBody final @Valid LoginModel loginModel) throws InvalidCredentialsException {
         return authenticationService.logIn(loginModel);
     }
 
     @PostMapping({AuthConfigConstants.AUTH_SIGN_UP_ENDPOINT})
-    public SessionViewModel signUp(@RequestBody @Valid final SignupModel signupModel) throws InvalidUsernameException {
+    public SessionViewModel signUp(@RequestBody final @Valid SignupModel signupModel) throws InvalidUsernameException {
         return authenticationService.signUp(signupModel);
     }
 
@@ -47,7 +48,7 @@ public class AuthenticationController {
 
     @Operation(security = {@SecurityRequirement(name = AuthConfigConstants.AUTH_SECURITY_REQUIREMENT)})
     @PostMapping({AuthConfigConstants.AUTH_PING_ENDPOINT})
-    public AccountTypeEntity ping() throws InvalidCredentialsException {
+    public @Nullable AccountTypeEntity ping() throws InvalidCredentialsException {
         return authenticationService.getAuthenticatedAccountType(
                 SecurityContextHolder.getContext().getAuthentication());
     }

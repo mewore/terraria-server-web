@@ -3,6 +3,7 @@ package io.github.mewore.tsw.config;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.resource.PathResourceResolver;
@@ -21,7 +22,7 @@ class AngularUiResourceResolver extends PathResourceResolver {
     private final String[] nonUiPaths = new String[0];
 
     @Override
-    protected Resource getResource(@NonNull final String resourcePath, @NonNull final Resource location)
+    protected @Nullable Resource getResource(@NonNull final String resourcePath, @NonNull final Resource location)
             throws IOException {
 
         // Paths that are reserved for other kinds of resources. By this point, the controllers corresponding to

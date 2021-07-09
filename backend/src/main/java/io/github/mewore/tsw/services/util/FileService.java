@@ -18,7 +18,8 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.lang.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -33,19 +34,19 @@ public class FileService {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    public boolean fileExists(final Path filePath) {
+    public boolean fileExists(final @NonNull Path filePath) {
         return Files.exists(filePath);
     }
 
-    public String readFile(final Path filePath) throws IOException {
+    public String readFile(final @NonNull Path filePath) throws IOException {
         return Files.lines(filePath).collect(Collectors.joining(System.lineSeparator()));
     }
 
-    public void makeFile(final Path filePath, final String content) throws IOException {
+    public void makeFile(final @NonNull Path filePath, final @NonNull String content) throws IOException {
         Files.writeString(filePath, content);
     }
 
-    public File reserveDirectory(final Path directoryPath) throws IOException {
+    public File reserveDirectory(final @NonNull Path directoryPath) throws IOException {
         final File directory = directoryPath.toFile();
         if (directory.exists()) {
             throw new IllegalStateException("The directory " + directory.getAbsolutePath() + " already exists");
@@ -64,19 +65,22 @@ public class FileService {
      * @return A stream of the data from the cached file.
      * @throws IOException If reading the file or creating/reading the input stream fails.
      */
-    public InputStream cache(final Path cacheLocation,
-            final InputStreamSupplier streamSupplier,
-            @Nullable final Long expectedSize) throws IOException {
+    public InputStream cache(final @NonNull Path cacheLocation,
+            final @NonNull InputStreamSupplier streamSupplier,
+            final @Nullable Long expectedSize) throws IOException {
         final File cacheFile = CACHE_ROOT.resolve(cacheLocation).toFile();
-        if (!cacheFile.exists() || (expectedSize != null && cacheFile.length() != expectedSize)) {
-            logger.info("{} cache file: {}", cacheFile.exists() ? "Overwriting" : "Creating",
-                    cacheFile.getAbsolutePath());
-            createDirectory(cacheFile.getParentFile());
-            try (final InputStream stream = streamSupplier.supplyStream()) {
-                flushStreamToFile(stream, cacheFile);
-            }
+        if (cacheFile.exists() && (expectedSize == null || cacheFile.length() == expectedSize)) {
+            logger.debug("Loading from cache: " + cacheFile.getAbsolutePath());
+            return new FileInputStream(cacheFile);
         }
-        logger.debug("Loading from cache: " + cacheFile.getAbsolutePath());
+        logger.info("{} cache file: {}", cacheFile.exists() ? "Overwriting" : "Creating", cacheFile.getAbsolutePath());
+        final @Nullable File parentFile = cacheFile.getParentFile();
+        if (parentFile != null) {
+            createDirectory(parentFile);
+        }
+        try (final InputStream stream = streamSupplier.supplyStream()) {
+            flushStreamToFile(stream, cacheFile);
+        }
         return new FileInputStream(cacheFile);
     }
 
@@ -84,12 +88,13 @@ public class FileService {
         return CACHE_ROOT.resolve(cacheLocation).toFile().isFile();
     }
 
-    public void unzip(final InputStream zipInputStream, final File destination) throws IOException {
+    public void unzip(final @NonNull InputStream zipInputStream, final @NonNull File destination) throws IOException {
         unzip(zipInputStream, destination, null);
     }
 
-    public void unzip(final InputStream zipInputStream, final File destination, @Nullable final String prefix)
-            throws IOException {
+    public void unzip(final @NonNull InputStream zipInputStream,
+            final @NonNull File destination,
+            final @Nullable String prefix) throws IOException {
 
         createDirectory(destination);
         try (final ZipInputStream zipStream = new ZipInputStream(zipInputStream)) {
@@ -104,7 +109,10 @@ public class FileService {
                     if (entry.isDirectory()) {
                         createDirectory(target);
                     } else {
-                        createDirectory(target.getParentFile());
+                        final @Nullable File parentFile = target.getParentFile();
+                        if (parentFile != null) {
+                            createDirectory(parentFile);
+                        }
                         flushStreamToFile(zipStream, target);
                     }
                 }
@@ -125,19 +133,19 @@ public class FileService {
         return outputStream.toByteArray();
     }
 
-    public File[] listFiles(final File directory, final String... extensions) {
+    public File[] listFiles(final @NonNull File directory, final @NonNull String... extensions) {
         final File[] result = directory.listFiles(pathname -> pathname.isFile() &&
                 Arrays.stream(extensions).anyMatch(extension -> pathname.getName().endsWith("." + extension)));
         return result == null ? new File[0] : result;
     }
 
-    private void createDirectory(final File directory) throws IOException {
+    private void createDirectory(final @NonNull File directory) throws IOException {
         if (!directory.exists() && !directory.mkdirs()) {
             throw new IOException("Failed to create directory: " + directory.getAbsolutePath());
         }
     }
 
-    private void writeFileToStream(final File file, final OutputStream target) throws IOException {
+    private void writeFileToStream(final @NonNull File file, final @NonNull OutputStream target) throws IOException {
         try (final FileInputStream fis = new FileInputStream(file)) {
             final byte[] bytes = new byte[BUFFER_SIZE];
             int length;

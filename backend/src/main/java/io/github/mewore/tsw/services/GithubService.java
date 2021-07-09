@@ -4,16 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
 import io.github.mewore.tsw.exceptions.NotFoundException;
@@ -22,7 +21,6 @@ import io.github.mewore.tsw.models.github.GitHubReleaseAsset;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
 import io.github.mewore.tsw.services.util.InputStreamSupplier;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -33,29 +31,27 @@ public class GithubService {
 
     private static final String GITHUB_API_URL = "https://api.github.com";
 
-    private static final Duration RELEASE_CACHE_DURATION = Duration.ofHours(1);
+    private final Map<String, GitHubCacheItem> cache = new HashMap<>();
 
-    private final @NonNull Map<@NonNull String, @NonNull Instant> cacheExpirationMap = new HashMap<>();
+    private final HttpService httpService;
 
-    private final @NonNull Map<@NonNull String, @NonNull List<@NonNull GitHubRelease>> cache = new HashMap<>();
-
-    private final @NonNull HttpService httpService;
-
-    private final @NonNull FileService fileService;
+    private final FileService fileService;
 
     public @NonNull List<@NonNull GitHubRelease> getReleases(final String author, final String repository)
             throws IOException {
 
         final String cacheKey = author + "/" + repository;
-        if (Instant.now().isBefore(cacheExpirationMap.getOrDefault(cacheKey, Instant.MIN))) {
-            return cache.get(cacheKey);
+        {
+            final @Nullable GitHubCacheItem cacheItem = cache.get(cacheKey);
+            if (cacheItem != null && cacheItem.isValid()) {
+                return cacheItem.getReleases();
+            }
         }
 
         final URL url = new URL(String.format("%s/repos/%s/%s/releases", GITHUB_API_URL, author, repository));
         final List<GitHubRelease> releases = Collections.unmodifiableList(httpService.get(url, new TypeReference<>() {
         }));
-        cache.put(cacheKey, releases);
-        cacheExpirationMap.put(cacheKey, Instant.now().plus(RELEASE_CACHE_DURATION));
+        cache.put(cacheKey, new GitHubCacheItem(releases));
         return releases;
     }
 
@@ -70,10 +66,15 @@ public class GithubService {
     }
 
     public @NonNull InputStream fetchAsset(final GitHubReleaseAsset asset) throws IOException {
+        final String downloadUrl = asset.getBrowserDownloadUrl();
+        final InputStreamSupplier downloadSupplier = () -> {
+            if (downloadUrl == null) {
+                throw new NullPointerException("The asset with ID " + asset.getId() + " does not have a download URL");
+            }
+            return httpService.requestAsStream(new URL(downloadUrl));
+        };
+
         final Path cacheFile = Path.of(CACHE_DIRECTORY_NAME, asset.getId() + "-" + asset.getName());
-        final InputStreamSupplier downloadSupplier = () -> httpService.requestAsStream(
-                new URL(Objects.requireNonNull(asset.getBrowserDownloadUrl(),
-                        "The asset with ID " + asset.getId() + " does not have a download URL")));
         return fileService.cache(cacheFile, downloadSupplier, asset.getSize());
     }
 }

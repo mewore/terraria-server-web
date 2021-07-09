@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.springframework.lang.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,12 +25,10 @@ public class GitHubRelease {
 
     private @NonNull String name;
 
-    @Nullable
-    private String url;
+    private @Nullable String url;
 
-    @Nullable
     @JsonProperty("html_url")
-    private String htmlUrl;
+    private @Nullable String htmlUrl;
 }
 
 

@@ -3,9 +3,8 @@ package io.github.mewore.tsw.config.security;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -40,14 +39,17 @@ public class AccountUserDetails implements UserDetails {
             return Collections.emptySet();
         }
 
-        return Stream.<String>builder()
-                .add(role.isAbleToManageAccounts() ? AuthorityRoles.MANAGE_ACCOUNTS : null)
-                .add(role.isAbleToManageHosts() ? AuthorityRoles.MANAGE_HOSTS : null)
-                .add(role.isAbleToManageTerraria() ? AuthorityRoles.MANAGE_TERRARIA : null)
-                .build()
-                .filter(Objects::nonNull)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toUnmodifiableSet());
+        final Set<GrantedAuthority> result = new HashSet<>();
+        if (role.isAbleToManageAccounts()) {
+            result.add(new SimpleGrantedAuthority(AuthorityRoles.MANAGE_ACCOUNTS));
+        }
+        if (role.isAbleToManageHosts()) {
+            result.add(new SimpleGrantedAuthority(AuthorityRoles.MANAGE_HOSTS));
+        }
+        if (role.isAbleToManageTerraria()) {
+            result.add(new SimpleGrantedAuthority(AuthorityRoles.MANAGE_TERRARIA));
+        }
+        return result;
     }
 
     @Override

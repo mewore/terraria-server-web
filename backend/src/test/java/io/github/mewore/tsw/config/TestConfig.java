@@ -1,5 +1,6 @@
 package io.github.mewore.tsw.config;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,7 +38,8 @@ public class TestConfig {
     @Component
     private static class TestAuthenticationProvider extends DaoAuthenticationProvider {
 
-        public TestAuthenticationProvider() {
+        @PostConstruct
+        void setUp() {
             setUserDetailsService(new InMemoryUserDetailsManager());
         }
     }
