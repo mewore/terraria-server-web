@@ -1,5 +1,7 @@
 package io.github.mewore.tsw.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -32,6 +34,9 @@ import static org.mockito.Mockito.when;
 @Import(TestConfig.class)
 @WebMvcTest(HostController.class)
 class HostControllerIT {
+
+    private static final TerrariaInstanceDefinitionModel INSTANCE_DEFINITION_MODEL =
+            new TerrariaInstanceDefinitionModel("Terraria Instance", 8, "server-archive-url");
 
     @Autowired
     private MockMvc mockMvc;
@@ -99,13 +104,8 @@ class HostControllerIT {
     void testCreateTerrariaInstance() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/hosts/1/instances")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "instanceName": "Terraria Instance",
-                            "modLoaderReleaseId": 8,
-                            "terrariaServerArchiveUrl": "server-archive-url"
-                        }
-                        """)).andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+                .content(new ObjectMapper().writer().writeValueAsString(INSTANCE_DEFINITION_MODEL)))
+                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
         verify(terrariaInstanceService, only()).defineTerrariaInstance(eq(1L), instanceModelCaptor.capture());
 
         final TerrariaInstanceDefinitionModel model = instanceModelCaptor.getValue();
@@ -119,13 +119,8 @@ class HostControllerIT {
     void testCreateTerrariaInstance_noPermissions() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/hosts/1/instances")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "instanceName": "Terraria Instance",
-                            "modLoaderReleaseId": 8,
-                            "terrariaServerArchiveUrl": "server-archive-url"
-                        }
-                        """)).andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN.value()));
+                .content(new ObjectMapper().writer().writeValueAsString(INSTANCE_DEFINITION_MODEL)))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN.value()));
     }
 
     /**

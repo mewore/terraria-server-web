@@ -9,9 +9,7 @@ import lombok.Getter;
 @Getter
 public class LoginModel {
 
-    @NotBlank
-    private final String username;
+    private final @NotBlank String username;
 
-    @NotBlank
-    private final String password;
+    private final @NotBlank String password;
 }

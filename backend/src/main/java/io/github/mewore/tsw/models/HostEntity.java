@@ -12,9 +12,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicUpdate;
-import org.springframework.lang.Nullable;
 
 import io.github.mewore.tsw.models.file.OperatingSystem;
 import lombok.AccessLevel;
@@ -66,13 +66,11 @@ public class HostEntity {
     @Enumerated(EnumType.STRING)
     private @NonNull OperatingSystem os;
 
-    @Nullable
     @Column
-    private String name;
+    private @Nullable String name;
 
-    @Nullable
     @Column
-    private String url;
+    private @Nullable String url;
 
     @Builder.Default
     @Column(nullable = false)

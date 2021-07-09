@@ -3,17 +3,14 @@ package io.github.mewore.tsw.services.terraria;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -36,16 +33,12 @@ import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
 import io.github.mewore.tsw.services.util.InputStreamSupplier;
 import lombok.AccessLevel;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Service
 public class TerrariaInstanceService {
-
-    private static final Pattern TERRARIA_SERVER_URL_REGEX =
-            Pattern.compile("^https?://(www\\.)?terraria\\.org/[^?]+/(terraria-server-(\\d+).zip)(\\?\\d+)?$");
 
     private static final String TERRARIA_SERVER_CACHE_DIR = "terraria-servers";
 
@@ -55,38 +48,50 @@ public class TerrariaInstanceService {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final @NonNull GithubService githubService;
+    private final GithubService githubService;
 
-    private final @NonNull HttpService httpService;
+    private final HttpService httpService;
 
-    private final @NonNull FileService fileService;
+    private final FileService fileService;
 
-    private final @NonNull TerrariaInstanceRepository terrariaInstanceRepository;
+    private final TerrariaInstanceRepository terrariaInstanceRepository;
 
-    private final @NonNull HostRepository hostRepository;
+    private final HostRepository hostRepository;
 
     private static @NonNull String getTModLoaderFileOsString(final HostEntity host) throws InvalidInstanceException {
-        final String tModLoaderFileOsString;
         switch (host.getOs()) {
-            case WINDOWS -> tModLoaderFileOsString = "Windows";
-            case MAC -> tModLoaderFileOsString = "Mac";
-            case LINUX -> tModLoaderFileOsString = "Linux";
-            default -> throw new InvalidInstanceException(
-                    String.format("TModLoader is not supported for the [%s] operating system", host.getOs()));
+            case WINDOWS: {
+                return "Windows";
+            }
+            case MAC: {
+                return "Mac";
+            }
+            case LINUX: {
+                return "Linux";
+            }
+            default: {
+                throw new InvalidInstanceException(
+                        String.format("TModLoader is not supported for the [%s] operating system", host.getOs()));
+            }
         }
-        return tModLoaderFileOsString;
     }
 
     private static @NonNull String getServerZipSubdirectory(final HostEntity host) throws InvalidInstanceException {
-        final String serverZipSubdirectory;
         switch (host.getOs()) {
-            case WINDOWS -> serverZipSubdirectory = "Windows";
-            case MAC -> serverZipSubdirectory = "Mac";
-            case LINUX -> serverZipSubdirectory = "Linux";
-            default -> throw new InvalidInstanceException(
-                    String.format("Cannot run the Terraria server on the [%s] operating system", host.getOs()));
+            case WINDOWS: {
+                return "Windows";
+            }
+            case MAC: {
+                return "Mac";
+            }
+            case LINUX: {
+                return "Linux";
+            }
+            default: {
+                throw new InvalidInstanceException(
+                        String.format("Cannot run the Terraria server on the [%s] operating system", host.getOs()));
+            }
         }
-        return serverZipSubdirectory;
     }
 
     public List<TModLoaderVersionViewModel> fetchTModLoaderVersions() throws IOException {
@@ -127,12 +132,7 @@ public class TerrariaInstanceService {
             throws IOException, InvalidInstanceException {
 
         // Validation
-        final String serverUrl = instance.getTerrariaServerUrl();
-        final Matcher serverZipUrlMatcher = TERRARIA_SERVER_URL_REGEX.matcher(serverUrl);
-        if (!serverZipUrlMatcher.find()) {
-            throw new InvalidInstanceException(
-                    "The URL " + serverUrl + " does not match the regular expression " + TERRARIA_SERVER_URL_REGEX);
-        }
+        final TerrariaServerInfo serverInfo = TerrariaServerInfo.fromInstance(instance);
 
         // Preparation
         final @NonNull String tModLoaderFileOsString = getTModLoaderFileOsString(instance.getHost());
@@ -147,28 +147,25 @@ public class TerrariaInstanceService {
             throw new InvalidInstanceException(e.getMessage(), e);
         }
 
-        final String serverZipName = serverZipUrlMatcher.group(2);
-        final String serverRawVersion = serverZipUrlMatcher.group(3);
-
-        final Path serverZipCacheLocation = Path.of(TERRARIA_SERVER_CACHE_DIR, serverZipName);
+        final Path serverZipCacheLocation = Path.of(TERRARIA_SERVER_CACHE_DIR, serverInfo.getZipName());
         if (!fileService.hasFileInCache(serverZipCacheLocation)) {
             try {
-                httpService.checkUrl(new URL(serverUrl));
+                httpService.checkUrl(serverInfo.getUrl());
             } catch (final HttpClientErrorException e) {
                 throw new InvalidInstanceException(
-                        String.format("The response at URL %s is HTTP code %d: %s", serverUrl, e.getRawStatusCode(),
-                                e.getStatusText()), e);
+                        String.format("The response at URL %s is HTTP code %d: %s", serverInfo.getUrl(),
+                                e.getRawStatusCode(), e.getStatusText()), e);
             }
         }
 
-        instance = markInstanceAsValid(instance, serverRawVersion, tModLoaderRelease, tModLoaderAsset);
+        instance = markInstanceAsValid(instance, serverInfo, tModLoaderRelease, tModLoaderAsset);
 
         // Creation
         final File instanceDirectory = fileService.reserveDirectory(instance.getLocation());
-        final InputStreamSupplier serverFetcher = () -> httpService.requestAsStream(new URL(serverUrl));
+        final InputStreamSupplier serverFetcher = () -> httpService.requestAsStream(serverInfo.getUrl());
         try (final InputStream serverZipStream = fileService.cache(serverZipCacheLocation, serverFetcher, null)) {
             fileService.unzip(serverZipStream, instanceDirectory,
-                    Path.of(serverRawVersion, serverZipSubdirectory).toString());
+                    Path.of(serverInfo.getRawVersion(), serverZipSubdirectory).toString());
         }
 
         try (final InputStream tModLoaderZipStream = githubService.fetchAsset(tModLoaderAsset)) {
@@ -182,14 +179,13 @@ public class TerrariaInstanceService {
     }
 
     private TerrariaInstanceEntity markInstanceAsValid(final TerrariaInstanceEntity instance,
-            final String serverRawVersion,
+            final TerrariaServerInfo serverInfo,
             final GitHubRelease tModLoaderRelease,
             final GitHubReleaseAsset tModLoaderAsset) throws NullPointerException {
 
-        instance.setTerrariaVersion(String.join(".", serverRawVersion.split("")));
-        instance.setModLoaderVersion(
-                tModLoaderRelease.getName().substring(tModLoaderRelease.getName().startsWith("v") ? 1 : 0));
-        instance.setModLoaderArchiveUrl(Objects.requireNonNull(tModLoaderAsset.getBrowserDownloadUrl()));
+        instance.setTerrariaVersion(serverInfo.getFormattedVersion());
+        instance.setModLoaderVersion(tModLoaderRelease.getName().substring(1));
+        instance.setModLoaderArchiveUrl(tModLoaderAsset.getBrowserDownloadUrl());
         instance.setModLoaderReleaseUrl(tModLoaderRelease.getHtmlUrl());
         instance.setState(TerrariaInstanceState.VALID);
         return terrariaInstanceRepository.save(instance);
@@ -205,9 +201,11 @@ public class TerrariaInstanceService {
             final @NonNull String osString) throws NotFoundException {
         return tModLoaderRelease.getAssets()
                 .stream()
-                .filter(asset -> asset.getBrowserDownloadUrl() != null &&
-                        asset.getBrowserDownloadUrl().endsWith(".zip") &&
-                        asset.getBrowserDownloadUrl().contains("." + osString + "."))
+                .filter(asset -> {
+                    final String downloadUrl = asset.getBrowserDownloadUrl();
+                    return downloadUrl != null && downloadUrl.endsWith(".zip") &&
+                            downloadUrl.contains("." + osString + ".");
+                })
                 .findAny()
                 .orElseThrow(() -> new NotFoundException(
                         "Could not find a " + osString + " archive of the TModLoader release " +

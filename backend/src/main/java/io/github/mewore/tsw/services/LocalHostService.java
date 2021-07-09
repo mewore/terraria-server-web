@@ -12,7 +12,8 @@ import java.util.concurrent.Future;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.lang.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
 import io.github.mewore.tsw.models.HostEntity;
@@ -22,7 +23,6 @@ import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.SystemService;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -39,13 +39,13 @@ public class LocalHostService {
 
     private static final Path UUID_FILE_PATH = Path.of(".tsw_host_uuid");
 
-    private final @NonNull HostRepository hostRepository;
+    private final HostRepository hostRepository;
 
-    private final @NonNull FileService fileService;
+    private final FileService fileService;
 
-    private final @NonNull AsyncService asyncService;
+    private final AsyncService asyncService;
 
-    private final @NonNull SystemService systemService;
+    private final SystemService systemService;
 
     @Getter
     private UUID hostUuid;
@@ -93,8 +93,7 @@ public class LocalHostService {
         hostRepository.save(host);
     }
 
-    @Nullable
-    private static UUID getUuid(final FileService fileService) throws IOException {
+    private static @Nullable UUID getUuid(final FileService fileService) throws IOException {
         if (!fileService.fileExists(UUID_FILE_PATH)) {
             return null;
         }

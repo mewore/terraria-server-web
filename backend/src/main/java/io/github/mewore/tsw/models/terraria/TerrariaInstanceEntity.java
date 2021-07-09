@@ -15,8 +15,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.DynamicUpdate;
-import org.springframework.lang.Nullable;
 
 import io.github.mewore.tsw.models.HostEntity;
 import lombok.AccessLevel;
@@ -46,33 +46,26 @@ public class TerrariaInstanceEntity {
     private @NonNull UUID uuid = UUID.randomUUID();
 
     @Column
-    @Nullable
-    private String terrariaVersion;
+    private @Nullable String terrariaVersion;
 
     @Column
-    @Nullable
-    private String modLoaderVersion;
+    private @Nullable String modLoaderVersion;
 
     @Column(length = 1023)
-    @Nullable
-    private String modLoaderReleaseUrl;
+    private @Nullable String modLoaderReleaseUrl;
 
     @Column(length = 1023)
-    @Nullable
-    private String modLoaderArchiveUrl;
+    private @Nullable String modLoaderArchiveUrl;
 
     @Column(length = 1023)
-    @Nullable
-    private String error;
+    private @Nullable String error;
 
     @Column
     @Enumerated(EnumType.STRING)
-    @Nullable
-    private TerrariaInstanceAction pendingAction;
+    private @Nullable TerrariaInstanceAction pendingAction;
 
     @Column
-    @Nullable
-    private Instant actionExecutionStartTime;
+    private @Nullable Instant actionExecutionStartTime;
 
     @Column(nullable = false, length = 1023)
     private @NonNull Path location;

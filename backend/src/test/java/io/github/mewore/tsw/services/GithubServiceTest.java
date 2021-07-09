@@ -120,4 +120,17 @@ class GithubServiceTest {
         verify(httpService).requestAsStream(assetUrl);
         assertSame(httpStream, suppliedStream);
     }
+
+    @Test
+    void testFetchAsset_notInCache_noUrl() throws IOException {
+        final GitHubReleaseAsset asset = GitHubReleaseAsset.builder().id(5).name("name").build();
+        when(fileService.cache(any(), any(), any())).thenReturn(new ByteArrayInputStream(new byte[0]));
+        githubService.fetchAsset(asset);
+
+        verify(fileService).cache(any(), inputStreamSupplierCaptor.capture(), any());
+        final Exception exception =
+                assertThrows(NullPointerException.class, () -> inputStreamSupplierCaptor.getValue().supplyStream());
+
+        assertEquals(exception.getMessage(), "The asset with ID 5 does not have a download URL");
+    }
 }

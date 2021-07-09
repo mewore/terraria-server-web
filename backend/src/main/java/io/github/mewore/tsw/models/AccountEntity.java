@@ -11,8 +11,8 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.DynamicUpdate;
-import org.springframework.lang.Nullable;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,6 +51,5 @@ public class AccountEntity {
     private @NonNull Instant sessionExpiration = Instant.now();
 
     @ManyToOne
-    @Nullable
-    private AccountTypeEntity type;
+    private @Nullable AccountTypeEntity type;
 }

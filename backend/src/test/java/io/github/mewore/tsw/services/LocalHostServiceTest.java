@@ -37,11 +37,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class LocalHostServiceTest {
 
-    private static final String UUID_FILE_CONTENTS = """
-
-            e0f245dc-e6e4-4f8a-982b-004cbb04e505
-
-            """;
+    private static final String UUID_FILE_CONTENTS = "\n\n e0f245dc-e6e4-4f8a-982b-004cbb04e505 \n\n";
 
     private static final UUID HOST_UUID = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505");
 

@@ -46,7 +46,8 @@ public class TerrariaInstanceMonitoringService {
                 .ifPresent(this::updateInstance);
     }
 
-    private void updateInstance(final TerrariaInstanceEntity instance) {
+    private void updateInstance(TerrariaInstanceEntity instance) {
+        final TerrariaInstanceState originalState = instance.getState();
         final TerrariaInstanceAction action = instance.getPendingAction();
         if (action == null) {
             logger.warn("Tried to update the Terraria instance {} which has no pending action!", instance.getUuid());
@@ -55,12 +56,11 @@ public class TerrariaInstanceMonitoringService {
 
         try {
             instance.setActionExecutionStartTime(Instant.now());
-            final TerrariaInstanceEntity instanceWithStartTime = terrariaInstanceRepository.save(instance);
-            final TerrariaInstanceEntity updated;
+            instance = terrariaInstanceRepository.save(instance);
             // SET_UP is the only possible action at the moment
-            updated = terrariaInstanceService.setUpTerrariaInstance(instanceWithStartTime);
-            logger.info("Updated Terraria instance {}: [{}] -[{}]-> [{}]", instance.getUuid(), instance.getState(),
-                    instance.getPendingAction(), updated.getState());
+            instance = terrariaInstanceService.setUpTerrariaInstance(instance);
+            logger.info("Updated Terraria instance {}: [{}] -[{}]-> [{}]", instance.getUuid(), originalState, action,
+                    instance.getState());
         } catch (final InvalidInstanceException e) {
             applyExceptionToInstance(instance, e, TerrariaInstanceState.INVALID);
         } catch (final IOException | RuntimeException e) {
@@ -71,7 +71,7 @@ public class TerrariaInstanceMonitoringService {
     private void applyExceptionToInstance(final TerrariaInstanceEntity instance,
             final Exception exception,
             final TerrariaInstanceState newState) {
-        logger.error("Marking Terraria instance " + instance.getUuid() + " as " + newState, exception);
+        logger.warn("Marking Terraria instance " + instance.getUuid() + " as " + newState, exception);
         instance.setPendingAction(null);
         instance.setActionExecutionStartTime(null);
         instance.setState(newState);

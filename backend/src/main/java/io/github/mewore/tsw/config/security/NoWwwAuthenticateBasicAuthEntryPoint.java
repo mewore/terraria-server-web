@@ -3,6 +3,7 @@ package io.github.mewore.tsw.config.security;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -14,6 +15,6 @@ public class NoWwwAuthenticateBasicAuthEntryPoint implements AuthenticationEntry
             final HttpServletResponse response,
             final AuthenticationException authException) throws IOException {
 
-        response.sendError(401, authException.getMessage());
+        response.sendError(401, Optional.ofNullable(authException.getMessage()).orElse(""));
     }
 }
