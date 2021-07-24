@@ -13,12 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class AsyncService {
 
-    public Future<?> scheduleAtFixedRate(final Runnable command,
-            final Duration initialDelay,
-            final Duration period) {
+    public Future<?> scheduleAtFixedRate(final Runnable command, final Duration initialDelay, final Duration period) {
 
         return new ScheduledThreadPoolExecutor(1).scheduleAtFixedRate(command, initialDelay.toMillis(),
                 period.toMillis(), TimeUnit.MILLISECONDS);
     }
 
+    public void runInThread(final Runnable target) {
+        final Thread thread = new Thread(target);
+        thread.start();
+    }
 }

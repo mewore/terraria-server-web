@@ -12,9 +12,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import io.github.mewore.tsw.models.HostEntity;
+import io.github.mewore.tsw.models.file.FileDataEntity;
 import io.github.mewore.tsw.models.file.OperatingSystem;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
+import io.github.mewore.tsw.repositories.file.FileDataRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,6 +37,9 @@ class TerrariaWorldRepositoryIT {
     @Autowired
     private HostRepository hostRepository;
 
+    @Autowired
+    private FileDataRepository fileDataRepository;
+
     @Test
     void testFindByHost() {
         final HostEntity host = makeHost();
@@ -44,6 +49,19 @@ class TerrariaWorldRepositoryIT {
 
         final List<TerrariaWorldEntity> hostWorlds = worldRepository.findByHost(host);
         assertEquals(Arrays.asList(firstWorld, secondWorld), hostWorlds);
+    }
+
+    @Test
+    void testFindByHostWithData() {
+        final HostEntity host = makeHost();
+        final TerrariaWorldEntity world = makeWorld(host, WORLD_NAME);
+        final FileDataEntity data = fileDataRepository.save(
+                FileDataEntity.builder().name("a").content(new byte[]{1}).build());
+        world.setData(data);
+        worldRepository.saveAndFlush(world);
+
+        final List<TerrariaWorldEntity> hostWorlds = worldRepository.findByHostWithData(host);
+        assertEquals(data.getContent(), hostWorlds.get(0).getData().getContent());
     }
 
     @Test
@@ -71,7 +89,11 @@ class TerrariaWorldRepositoryIT {
 
     @Test
     void testSave_bigWorld() {
-        worldRepository.saveAndFlush(makeWorld(makeHost()).withData(new byte[1024]));
+        final TerrariaWorldEntity bigWorld = makeWorld(makeHost());
+        final FileDataEntity data = fileDataRepository.save(
+                FileDataEntity.builder().name(WORLD_NAME + ".zip").content(new byte[1024]).build());
+        bigWorld.setData(data);
+        worldRepository.saveAndFlush(bigWorld);
     }
 
     @Test
@@ -87,17 +109,14 @@ class TerrariaWorldRepositoryIT {
         assertEquals(Arrays.asList(secondWorld, otherHostWorld, newWorld), worldRepository.findAll());
     }
 
-    private static TerrariaWorldEntity makeWorld(final HostEntity host) {
+    private TerrariaWorldEntity makeWorld(final HostEntity host) {
         return makeWorld(host, WORLD_NAME);
     }
 
-    private static TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
-        return TerrariaWorldEntity.builder()
-                .name(name)
-                .lastModified(Instant.now())
-                .data(new byte[0])
-                .host(host)
-                .build();
+    private TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
+        final FileDataEntity data = fileDataRepository.save(
+                FileDataEntity.builder().name(name + ".zip").content(new byte[0]).build());
+        return TerrariaWorldEntity.builder().name(name).lastModified(Instant.now()).data(data).host(host).build();
     }
 
     private HostEntity makeHost() {

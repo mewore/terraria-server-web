@@ -18,7 +18,7 @@
       </scope>
       <option name="m_includeJavaClasses" value="false" />
       <option name="m_includeLibraryClasses" value="false" />
-      <option name="m_limit" value="15" />
+      <option name="m_limit" value="20" />
     </inspection_tool>
     <inspection_tool class="ClassInheritanceDepth" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="2" />
@@ -44,7 +44,7 @@
       <option name="m_countConstantFields" value="false" />
       <option name="m_considerStaticFinalFieldsConstant" value="false" />
       <option name="myCountEnumConstants" value="false" />
-      <option name="m_limit" value="25" />
+      <option name="m_limit" value="35" />
     </inspection_tool>
     <inspection_tool class="FieldMayBeFinal" enabled="true" level="WARNING" enabled_by_default="true">
       <scope name="Models" level="INFORMATION" enabled="true" />
@@ -140,6 +140,11 @@
         <option name="ignoreGettersAndSetters" value="true" />
         <option name="ignoreOverridingMethods" value="false" />
       </scope>
+      <scope name="Tests" level="WARNING" enabled="true">
+        <option name="m_limit" value="50" />
+        <option name="ignoreGettersAndSetters" value="true" />
+        <option name="ignoreOverridingMethods" value="false" />
+      </scope>
       <option name="m_limit" value="20" />
       <option name="ignoreGettersAndSetters" value="true" />
       <option name="ignoreOverridingMethods" value="false" />
@@ -149,7 +154,6 @@
       <option name="m_includeLibraryClasses" value="false" />
       <option name="m_limit" value="10" />
     </inspection_tool>
-    <inspection_tool class="MethodWithMultipleLoops" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="MissortedModifiers" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_requireAnnotationsFirst" value="true" />
       <option name="typeUseWithType" value="true" />
@@ -167,10 +171,6 @@
     <inspection_tool class="ParametersPerConstructor" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ParametersPerMethod" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="5" />
-    </inspection_tool>
-    <inspection_tool class="ThreeNegationsPerMethod" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="m_ignoreInEquals" value="true" />
-      <option name="ignoreInAssert" value="false" />
     </inspection_tool>
     <inspection_tool class="ThrownExceptionsPerMethod" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="3" />

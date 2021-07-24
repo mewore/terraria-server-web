@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
-import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
+import io.github.mewore.tsw.services.terraria.TerrariaInstancePreparationService;
 
 import static org.mockito.Mockito.when;
 
@@ -27,13 +27,13 @@ class TerrariaControllerIT {
     private MockMvc mockMvc;
 
     @MockBean
-    private TerrariaInstanceService terrariaInstanceService;
+    private TerrariaInstancePreparationService terrariaInstancePreparationService;
 
     @Test
     void testGetTModLoaderVersions() throws Exception {
         final List<TModLoaderVersionViewModel> versions =
                 Collections.singletonList(new TModLoaderVersionViewModel(1, "v0.11.8.1"));
-        when(terrariaInstanceService.fetchTModLoaderVersions()).thenReturn(versions);
+        when(terrariaInstancePreparationService.fetchTModLoaderVersions()).thenReturn(versions);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/terraria/tmodloader/versions"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
                 .andExpect(MockMvcResultMatchers.content().string("[{\"releaseId\":1,\"version\":\"v0.11.8.1\"}]"));

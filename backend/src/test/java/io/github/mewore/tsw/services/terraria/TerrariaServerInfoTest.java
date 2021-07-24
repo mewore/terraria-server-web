@@ -4,18 +4,15 @@ import org.junit.jupiter.api.Test;
 
 import io.github.mewore.tsw.exceptions.InvalidInstanceException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class TerrariaServerInfoTest {
 
     private static TerrariaInstanceEntity makeInstanceWithUrl(final String url) {
-        final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
-        when(instance.getTerrariaServerUrl()).thenReturn(url);
-        return instance;
+        return TerrariaInstanceFactory.makeInstanceBuilder().terrariaServerUrl(url).build();
     }
 
     @Test

@@ -55,8 +55,14 @@ public class LocalHostService {
     @PostConstruct
     void setUp() throws IOException {
         final UUID existingUuid = getUuid(fileService);
-        hostUuid = existingUuid != null ? existingUuid : makeNewUuid(fileService);
-        heartbeatFuture = asyncService.scheduleAtFixedRate(this::doHeartbeat, Duration.ZERO, HEARTBEAT_DURATION);
+        if (existingUuid == null) {
+            hostUuid = makeNewUuid();
+            createHost();
+        } else {
+            hostUuid = existingUuid;
+            doHeartbeat();
+        }
+        heartbeatFuture = asyncService.scheduleAtFixedRate(this::doHeartbeat, HEARTBEAT_DURATION, HEARTBEAT_DURATION);
     }
 
     public @NonNull HostEntity getOrCreateHost() {
@@ -80,9 +86,9 @@ public class LocalHostService {
      * Let the other hosts know that this host is alive.
      */
     private void doHeartbeat() {
-        LOGGER.debug("Heartbeat...");
+        LOGGER.debug("Performing a heartbeat...");
         findHost().ifPresentOrElse(this::refreshHost, this::createHost);
-        LOGGER.debug("Heartbeat.");
+        LOGGER.debug("Heartbeat done.");
     }
 
     private void refreshHost(final @NonNull HostEntity host) {
@@ -108,7 +114,7 @@ public class LocalHostService {
         }
     }
 
-    private static @NonNull UUID makeNewUuid(final FileService fileService) throws IOException {
+    private @NonNull UUID makeNewUuid() throws IOException {
         final UUID uuid = UUID.randomUUID();
         fileService.makeFile(UUID_FILE_PATH, uuid.toString());
         return uuid;

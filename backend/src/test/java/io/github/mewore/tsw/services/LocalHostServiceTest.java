@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,23 +79,31 @@ class LocalHostServiceTest {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
+        when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
+        when(hostRepository.findByUuid(eq(HOST_UUID))).thenReturn(Optional.empty());
 
         localHostService.setUp();
         verify(asyncService, only()).scheduleAtFixedRate(any(), heartbeatDelayCaptor.capture(),
                 heartbeatPeriodCaptor.capture());
-        assertEquals(Duration.ZERO, heartbeatDelayCaptor.getValue());
+        assertEquals(Duration.ofMinutes(1), heartbeatDelayCaptor.getValue());
         assertEquals(Duration.ofMinutes(1), heartbeatPeriodCaptor.getValue());
         assertEquals(HOST_UUID, localHostService.getHostUuid());
+        verify(hostRepository).findByUuid(HOST_UUID);
+        verify(hostRepository).save(any());
     }
 
     @Test
     void testSetUp_noUuidFile() throws IOException {
         when(fileService.fileExists(any())).thenReturn(false);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
+        when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
 
         localHostService.setUp();
         verify(fileService).makeFile(any(), any());
         verify(hostRepository, never()).findByUuid(any());
+        verify(hostRepository).save(any());
     }
 
     @Test
@@ -102,10 +111,13 @@ class LocalHostServiceTest {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn("Invalid UUID string");
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
+        when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
 
         localHostService.setUp();
         verify(fileService).makeFile(any(), any());
         verify(hostRepository, never()).findByUuid(any());
+        verify(hostRepository).save(any());
     }
 
     private static HostEntity.HostEntityBuilder makeHost() {
@@ -128,7 +140,7 @@ class LocalHostServiceTest {
         localHostService.setUp();
         final HostEntity createdHost = localHostService.getOrCreateHost();
 
-        verify(hostRepository).save(hostCaptor.capture());
+        verify(hostRepository, times(2)).save(hostCaptor.capture());
         assertSame(hostCaptor.getValue(), createdHost);
         assertEquals(HOST_UUID, createdHost.getUuid());
         assertTrue(createdHost.isAlive());
@@ -137,12 +149,12 @@ class LocalHostServiceTest {
 
     @Test
     void testHeartbeat() throws IOException {
-        final Runnable heartbeat = prepareHeartbeat();
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
+        final Runnable heartbeat = prepareHeartbeat();
 
         heartbeat.run();
-        verify(hostRepository).save(hostCaptor.capture());
+        verify(hostRepository, times(2)).save(hostCaptor.capture());
         assertTrue(hostCaptor.getValue().isAlive());
         assertEquals(HOST_UUID, hostCaptor.getValue().getUuid());
         assertEquals(HOST_URL, hostCaptor.getValue().getUrl());
@@ -157,24 +169,27 @@ class LocalHostServiceTest {
 
         localHostService.setUp();
         assertSame(host, localHostService.getOrCreateHost());
-        verify(hostRepository).findByUuid(HOST_UUID);
+        verify(hostRepository, times(2)).findByUuid(HOST_UUID);
     }
 
     @Test
     void testPreDestroy() throws IOException {
         when(fileService.fileExists(any())).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
+        when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
         when(hostRepository.findByUuid(eq(HOST_UUID))).thenReturn(Optional.of(HostEntity.builder()
                 .uuid(HOST_UUID)
                 .os(OperatingSystem.UNKNOWN)
                 .alive(true)
-                .heartbeatDuration(Duration.ofDays(1000)).lastHeartbeat(Instant.MAX).build()));
+                .heartbeatDuration(Duration.ofDays(1000))
+                .lastHeartbeat(Instant.MAX)
+                .build()));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
 
         localHostService.setUp();
         localHostService.preDestroy();
         verify(future, only()).cancel(false);
-        verify(hostRepository).save(hostCaptor.capture());
+        verify(hostRepository, times(2)).save(hostCaptor.capture());
         assertFalse(hostCaptor.getValue().isAlive());
     }
 

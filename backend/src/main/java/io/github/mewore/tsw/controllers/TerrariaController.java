@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.mewore.tsw.config.ConfigConstants;
 import io.github.mewore.tsw.models.terraria.TModLoaderVersionViewModel;
-import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
+import io.github.mewore.tsw.services.terraria.TerrariaInstancePreparationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -20,10 +20,10 @@ import lombok.RequiredArgsConstructor;
 @ResponseBody
 class TerrariaController {
 
-    private final TerrariaInstanceService terrariaInstanceService;
+    private final TerrariaInstancePreparationService terrariaInstancePreparationService;
 
     @GetMapping(path = "/tmodloader/versions")
     List<TModLoaderVersionViewModel> getTModLoaderVersions() throws IOException {
-        return terrariaInstanceService.fetchTModLoaderVersions();
+        return terrariaInstancePreparationService.fetchTModLoaderVersions();
     }
 }

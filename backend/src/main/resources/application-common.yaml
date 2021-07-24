@@ -2,7 +2,7 @@ spring:
   jpa:
     open-in-view: false
     # Set `show-sql`/`format_sql`/`generate_statistics` to true locally if debugging is necessary
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         format_sql: false

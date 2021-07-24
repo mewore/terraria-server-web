@@ -22,7 +22,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.HostService;
-import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
+import io.github.mewore.tsw.services.terraria.TerrariaInstancePreparationService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -36,7 +36,7 @@ public class HostController {
 
     private final TerrariaWorldRepository terrariaWorldRepository;
 
-    private final TerrariaInstanceService terrariaInstanceService;
+    private final TerrariaInstancePreparationService terrariaInstancePreparationService;
 
     private final HostService hostService;
 
@@ -59,7 +59,7 @@ public class HostController {
     @PostMapping(path = "/{hostId}/instances")
     TerrariaInstanceEntity createTerrariaInstance(@PathVariable final long hostId,
             @RequestBody final @Valid TerrariaInstanceDefinitionModel creationModel) throws NotFoundException {
-        return terrariaInstanceService.defineTerrariaInstance(hostId, creationModel);
+        return terrariaInstancePreparationService.defineTerrariaInstance(hostId, creationModel);
     }
 
     @GetMapping(path = "/{hostId}/worlds")

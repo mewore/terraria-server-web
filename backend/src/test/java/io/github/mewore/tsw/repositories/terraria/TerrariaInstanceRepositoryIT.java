@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.repositories.terraria;
 
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +15,7 @@ import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.file.OperatingSystem;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.repositories.HostRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,14 +45,7 @@ class TerrariaInstanceRepositoryIT {
 
     private static TerrariaInstanceEntity.TerrariaInstanceEntityBuilder makeInstance(final HostEntity host,
             final UUID uuid) {
-        return TerrariaInstanceEntity.builder()
-                .uuid(uuid)
-                .location(Path.of("/"))
-                .name("instance")
-                .terrariaServerUrl("server-url")
-                .modLoaderReleaseId(1L)
-                .state(TerrariaInstanceState.VALID)
-                .host(host);
+        return TerrariaInstanceFactory.makeInstanceBuilder().uuid(uuid).host(host);
     }
 
     @Test
@@ -74,7 +66,7 @@ class TerrariaInstanceRepositoryIT {
     }
 
     @Test
-    void testFindOneByHostAndPendingActionNotNull() {
+    void testFindTopByHostAndPendingActionNotNull() {
         final HostEntity host = hostRepository.saveAndFlush(makeHost().build());
         final TerrariaInstanceEntity instanceWithAction = instanceRepository.saveAndFlush(
                 makeInstance(host, "a").pendingAction(TerrariaInstanceAction.SET_UP).build());
@@ -84,7 +76,8 @@ class TerrariaInstanceRepositoryIT {
         instanceRepository.saveAndFlush(
                 makeInstance(otherHost, "a").pendingAction(TerrariaInstanceAction.SET_UP).build());
 
-        final Optional<TerrariaInstanceEntity> result = instanceRepository.findOneByHostAndPendingActionNotNull(host);
+        final Optional<TerrariaInstanceEntity> result = instanceRepository.findTopByHostUuidAndPendingActionNotNull(
+                host.getUuid());
         assertTrue(result.isPresent());
         assertSame(instanceWithAction, result.get());
     }

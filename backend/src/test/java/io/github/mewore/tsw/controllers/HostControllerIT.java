@@ -23,7 +23,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceDefinitionModel;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.HostService;
-import io.github.mewore.tsw.services.terraria.TerrariaInstanceService;
+import io.github.mewore.tsw.services.terraria.TerrariaInstancePreparationService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
@@ -51,7 +51,7 @@ class HostControllerIT {
     private HostService hostService;
 
     @MockBean
-    private TerrariaInstanceService terrariaInstanceService;
+    private TerrariaInstancePreparationService terrariaInstancePreparationService;
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceDefinitionModel> instanceModelCaptor;
@@ -106,7 +106,8 @@ class HostControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writer().writeValueAsString(INSTANCE_DEFINITION_MODEL)))
                 .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
-        verify(terrariaInstanceService, only()).defineTerrariaInstance(eq(1L), instanceModelCaptor.capture());
+        verify(terrariaInstancePreparationService, only()).defineTerrariaInstance(eq(1L),
+                instanceModelCaptor.capture());
 
         final TerrariaInstanceDefinitionModel model = instanceModelCaptor.getValue();
         assertEquals("Terraria Instance", model.getInstanceName());

@@ -19,6 +19,7 @@ import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
 import io.github.mewore.tsw.services.util.SystemService;
+import io.github.mewore.tsw.services.util.process.TmuxService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -27,8 +28,8 @@ import static org.mockito.Mockito.when;
 @TestConfiguration
 public class TestConfig {
 
-    private static final File TERRARIA_WORLD_DIRECTORY =
-            Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "ModLoader", "Worlds").toFile();
+    private static final Path WORLD_DIRECTORY = Path.of(System.getProperty("user.home"), ".local", "share", "Terraria",
+            "ModLoader", "Worlds");
 
     @Bean
     AuthenticationProvider authenticationProvider() {
@@ -48,6 +49,7 @@ public class TestConfig {
         final File file = mock(File.class);
         when(file.getName()).thenReturn(name);
         when(file.lastModified()).thenReturn(lastModified);
+        when(file.exists()).thenReturn(true);
         return file;
     }
 
@@ -68,10 +70,11 @@ public class TestConfig {
         final FileService fileService = mock(FileService.class);
 
         final File wldFile = makeFile("world.wld", 1);
-        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "wld")).thenReturn(new File[]{wldFile});
+        when(fileService.listFilesWithExtensions(WORLD_DIRECTORY.toFile(), "wld")).thenReturn(new File[]{wldFile});
 
         final File twldFile = makeFile("world.twld", 8);
-        when(fileService.listFiles(TERRARIA_WORLD_DIRECTORY, "twld")).thenReturn(new File[]{twldFile});
+        when(fileService.pathToFile(WORLD_DIRECTORY.resolve("world.wld"))).thenReturn(wldFile);
+        when(fileService.pathToFile(WORLD_DIRECTORY.resolve("world.twld"))).thenReturn(twldFile);
 
         when(fileService.zip(wldFile, twldFile)).thenReturn(new byte[0]);
         return fileService;
@@ -81,6 +84,12 @@ public class TestConfig {
     @Primary
     public HttpService mockHttpService() {
         return mock(HttpService.class);
+    }
+
+    @Bean
+    @Primary
+    public TmuxService mockTmuxService() {
+        return mock(TmuxService.class);
     }
 
     @Bean

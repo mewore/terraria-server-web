@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -22,9 +23,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
 /**
  * A wrapper of Java NIO filesystem operations for easier mocking.
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Service
 public class FileService {
 
@@ -34,16 +39,63 @@ public class FileService {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
+    private final AsyncService asyncService;
+
     public boolean fileExists(final @NonNull Path filePath) {
         return Files.exists(filePath);
+    }
+
+    public boolean deleteRecursively(final Path target) {
+        final File targetFile = target.toFile();
+        if (!targetFile.exists()) {
+            logger.warn(targetFile.getAbsolutePath() + " already does not exist. Skipping deleting it.");
+            return true;
+        }
+        return deleteRecursively(target.toFile());
+    }
+
+    private boolean deleteRecursively(final File target) {
+        boolean result = true;
+        final File @Nullable [] allContents = target.listFiles();
+        if (allContents != null) {
+            for (final File file : allContents) {
+                result = result && deleteRecursively(file);
+            }
+        }
+        if (result && !target.delete()) {
+            logger.error("Failed to delete '" + target + "'. Aborting recursive deletion.");
+            result = false;
+        }
+        return result;
     }
 
     public String readFile(final @NonNull Path filePath) throws IOException {
         return Files.lines(filePath).collect(Collectors.joining(System.lineSeparator()));
     }
 
+    public FileTail tail(final File file, final long startPosition, final FileTailEventConsumer eventConsumer) {
+        final FileTail tail = new FileTail(file, startPosition, eventConsumer);
+        asyncService.runInThread(tail);
+        return tail;
+    }
+
     public void makeFile(final @NonNull Path filePath, final @NonNull String content) throws IOException {
         Files.writeString(filePath, content);
+    }
+
+    public boolean makeFilesInDirectoryExecutable(final @NonNull File directory, final @NonNull Pattern fileNamePattern)
+            throws IOException {
+
+        final File @Nullable [] files = directory.listFiles((dir, name) -> fileNamePattern.matcher(name).matches());
+        if (files == null || files.length == 0) {
+            return false;
+        }
+        for (final File file : files) {
+            if (!file.setExecutable(true)) {
+                throw new IOException("Failed to make file executable: " + file.getAbsolutePath());
+            }
+        }
+        return true;
     }
 
     public File reserveDirectory(final @NonNull Path directoryPath) throws IOException {
@@ -122,6 +174,10 @@ public class FileService {
         }
     }
 
+    public File pathToFile(final Path path) {
+        return path.toFile();
+    }
+
     public byte[] zip(final File... files) throws IOException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (final ZipOutputStream zipOut = new ZipOutputStream(outputStream)) {
@@ -133,7 +189,7 @@ public class FileService {
         return outputStream.toByteArray();
     }
 
-    public File[] listFiles(final @NonNull File directory, final @NonNull String... extensions) {
+    public File[] listFilesWithExtensions(final @NonNull File directory, final @NonNull String... extensions) {
         final File[] result = directory.listFiles(pathname -> pathname.isFile() &&
                 Arrays.stream(extensions).anyMatch(extension -> pathname.getName().endsWith("." + extension)));
         return result == null ? new File[0] : result;
