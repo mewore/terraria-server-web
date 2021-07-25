@@ -45,13 +45,6 @@ pipeline {
                     minimumComplexityCoverage: '70',
                     minimumLineCoverage: '80',
                     minimumMethodCoverage: '80',
-                    // Build failure at:
-                    buildOverBuild: true,
-                    deltaBranchCoverage: '50',
-                    deltaClassCoverage: '60',
-                    deltaComplexityCoverage: '50',
-                    deltaLineCoverage: '60',
-                    deltaMethodCoverage: '60',
                 ])
             }
         }
