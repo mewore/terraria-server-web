@@ -23,9 +23,6 @@
     <inspection_tool class="ClassInheritanceDepth" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="2" />
     </inspection_tool>
-    <inspection_tool class="ClassNestingDepth" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="m_limit" value="1" />
-    </inspection_tool>
     <inspection_tool class="ConstructorCount" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreDeprecatedConstructors" value="false" />
       <option name="m_limit" value="5" />
@@ -34,7 +31,6 @@
       <option name="m_limit" value="10" />
     </inspection_tool>
     <inspection_tool class="DeprecatedIsStillUsed" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="EditorConfigKeyCorrectness" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="FieldCount" enabled="true" level="WEAK WARNING" enabled_by_default="true">
       <scope name="Tests" level="INFORMATION" enabled="true">
         <option name="m_countConstantFields" value="false" />
@@ -55,30 +51,17 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="23">
-            <item index="0" class="java.lang.String" itemvalue="mat-button" />
-            <item index="1" class="java.lang.String" itemvalue="[mat-dialog-close]" />
-            <item index="2" class="java.lang.String" itemvalue="mat-raised-button" />
-            <item index="3" class="java.lang.String" itemvalue="(click)" />
-            <item index="4" class="java.lang.String" itemvalue="[disabled]" />
-            <item index="5" class="java.lang.String" itemvalue="color" />
-            <item index="6" class="java.lang.String" itemvalue="matinput" />
-            <item index="7" class="java.lang.String" itemvalue="[formcontrol]" />
-            <item index="8" class="java.lang.String" itemvalue="[placeholder]" />
-            <item index="9" class="java.lang.String" itemvalue="[class]" />
-            <item index="10" class="java.lang.String" itemvalue="mat-stroked-button" />
-            <item index="11" class="java.lang.String" itemvalue="mat-icon-button" />
-            <item index="12" class="java.lang.String" itemvalue="*ngif" />
-            <item index="13" class="java.lang.String" itemvalue="[mattooltip]" />
-            <item index="14" class="java.lang.String" itemvalue="[href]" />
-            <item index="15" class="java.lang.String" itemvalue="[routerlink]" />
-            <item index="16" class="java.lang.String" itemvalue="[class.disabled]" />
-            <item index="17" class="java.lang.String" itemvalue="mat-line" />
-            <item index="18" class="java.lang.String" itemvalue="mat-subheader" />
-            <item index="19" class="java.lang.String" itemvalue="[class.tsw-inactive]" />
-            <item index="20" class="java.lang.String" itemvalue="*ngfor" />
-            <item index="21" class="java.lang.String" itemvalue="[mattooltipdisabled]" />
-            <item index="22" class="java.lang.String" itemvalue="[color]" />
+          <list size="10">
+            <item index="0" class="java.lang.String" itemvalue="[mattooltip]" />
+            <item index="1" class="java.lang.String" itemvalue="[disabled]" />
+            <item index="2" class="java.lang.String" itemvalue="mat-icon-button" />
+            <item index="3" class="java.lang.String" itemvalue="*ngif" />
+            <item index="4" class="java.lang.String" itemvalue="mat-line" />
+            <item index="5" class="java.lang.String" itemvalue="[href]" />
+            <item index="6" class="java.lang.String" itemvalue="[class.disabled]" />
+            <item index="7" class="java.lang.String" itemvalue="[routerlink]" />
+            <item index="8" class="java.lang.String" itemvalue="[class.tsw-inactive]" />
+            <item index="9" class="java.lang.String" itemvalue="mat-subheader" />
           </list>
         </value>
       </option>
@@ -143,21 +126,6 @@
       <option name="REPORT_VARIABLES" value="true" />
       <option name="REPORT_PARAMETERS" value="true" />
     </inspection_tool>
-    <inspection_tool class="MethodCount" enabled="true" level="WARNING" enabled_by_default="true">
-      <scope name="Models" level="INFORMATION" enabled="true">
-        <option name="m_limit" value="20" />
-        <option name="ignoreGettersAndSetters" value="true" />
-        <option name="ignoreOverridingMethods" value="false" />
-      </scope>
-      <scope name="Tests" level="WARNING" enabled="true">
-        <option name="m_limit" value="50" />
-        <option name="ignoreGettersAndSetters" value="true" />
-        <option name="ignoreOverridingMethods" value="false" />
-      </scope>
-      <option name="m_limit" value="20" />
-      <option name="ignoreGettersAndSetters" value="true" />
-      <option name="ignoreOverridingMethods" value="false" />
-    </inspection_tool>
     <inspection_tool class="MethodCoupling" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_includeJavaClasses" value="false" />
       <option name="m_includeLibraryClasses" value="false" />
@@ -167,16 +135,6 @@
       <option name="m_requireAnnotationsFirst" value="true" />
       <option name="typeUseWithType" value="true" />
     </inspection_tool>
-    <inspection_tool class="NestingDepth" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="m_limit" value="5" />
-    </inspection_tool>
-    <inspection_tool class="NonCommentSourceStatements" enabled="true" level="WARNING" enabled_by_default="true">
-      <scope name="Tests" level="WARNING" enabled="true">
-        <option name="m_limit" value="50" />
-      </scope>
-      <option name="m_limit" value="30" />
-    </inspection_tool>
-    <inspection_tool class="OverlyLongLambda" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ParametersPerConstructor" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ParametersPerMethod" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="5" />

@@ -1,5 +1,8 @@
 @import "../../../variables.sass"
 
+:host
+    overflow-y: auto
+
 .tsw-host-info
     max-width: 50em
     margin: 0 auto
@@ -9,8 +12,9 @@
     flex-wrap: wrap
     justify-content: center
     mat-list
-        max-width: 30em
+        max-width: 50em
         flex: 1
+        flex-basis: 30em
 
 .tsw-centered
     margin: 0 auto

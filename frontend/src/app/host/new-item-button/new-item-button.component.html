@@ -1,12 +1,21 @@
 <span [matTooltip]="createDisabledReason || ''">
-    <mat-list-item (click)="clicked()" [disabled]="!!createDisabledReason" class="mat-list-option" mat-ripple>
+    <mat-list-item
+        (click)="clicked()"
+        (keyup.enter)="clicked()"
+        (keyup.space)="clicked()"
+        [disabled]="!!createDisabledReason"
+        [tabindex]="createDisabledReason ? -1 : 0"
+        class="mat-list-option"
+        mat-ripple
+    >
         <mat-icon
             [class.tsw-inactive]="!!createDisabledReason"
             [color]="createDisabledReason ? undefined : 'primary'"
             class="unclickable-icon"
             mat-list-icon
-        >add_circle</mat-icon
         >
+            add_circle
+        </mat-icon>
         <div [class.tsw-inactive]="!!createDisabledReason" mat-line>{{ 'list.new-item' | translate }}</div>
     </mat-list-item>
 </span>
