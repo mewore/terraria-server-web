@@ -12,13 +12,11 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import io.github.mewore.tsw.config.security.AuthorityRoles;
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
 import io.github.mewore.tsw.exceptions.InvalidInstanceException;
 import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.HostEntity;
@@ -30,7 +28,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceDefinitionModel;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.HostRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.GithubService;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
@@ -61,9 +58,7 @@ public class TerrariaInstancePreparationService {
 
     private final HostRepository hostRepository;
 
-    private final TerrariaInstanceRepository terrariaInstanceRepository;
-
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final TerrariaInstanceService terrariaInstanceService;
 
     private static @NonNull String getTModLoaderFileOsString(final HostEntity host) throws InvalidInstanceException {
         switch (host.getOs()) {
@@ -128,7 +123,7 @@ public class TerrariaInstancePreparationService {
                 .host(host)
                 .build();
 
-        final TerrariaInstanceEntity result = saveInstance(newTerrariaInstance);
+        final TerrariaInstanceEntity result = terrariaInstanceService.saveInstance(newTerrariaInstance);
 
         logger.info("Defined a Terraria instance at {}", instanceDirectory);
         return result;
@@ -184,7 +179,7 @@ public class TerrariaInstancePreparationService {
         }
 
         instance.setState(TerrariaInstanceState.IDLE);
-        instance = saveInstance(instance);
+        instance = terrariaInstanceService.saveInstance(instance);
 
         logger.info("Created a Terraria instance at {}", instanceDirectory.getAbsolutePath());
         return instance;
@@ -200,7 +195,7 @@ public class TerrariaInstancePreparationService {
         instance.setModLoaderArchiveUrl(tModLoaderAsset.getBrowserDownloadUrl());
         instance.setModLoaderReleaseUrl(tModLoaderRelease.getHtmlUrl());
         instance.setState(TerrariaInstanceState.VALID);
-        return saveInstance(instance);
+        return terrariaInstanceService.saveInstance(instance);
     }
 
     private @NonNull GitHubReleaseAsset getTModLoaderAsset(final @NonNull GitHubRelease tModLoaderRelease,
@@ -216,18 +211,5 @@ public class TerrariaInstancePreparationService {
                 .orElseThrow(() -> new NotFoundException(
                         "Could not find a " + osString + " archive of the TModLoader release " +
                                 tModLoaderRelease.getId()));
-    }
-
-    // TODO: Create TerrariaInstanceService with this method after this has been committed
-    public TerrariaInstanceEntity saveInstance(final TerrariaInstanceEntity instance) {
-        final TerrariaInstanceEntity result = terrariaInstanceRepository.save(instance);
-        applicationEventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(result));
-        return result;
-    }
-
-    public void ensureInstanceHasNoOutputFile(final TerrariaInstanceEntity instance) {
-        if (instance.getOutputFile().exists() && !instance.getOutputFile().delete()) {
-            throw new IllegalStateException("Failed to delete file " + instance.getOutputFile().getAbsolutePath());
-        }
     }
 }

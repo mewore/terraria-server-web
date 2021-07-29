@@ -29,23 +29,25 @@ public class TerrariaInstanceInputService {
     private final TmuxService tmuxService;
 
     public TerrariaInstanceEntity sendBreakToInstance(final TerrariaInstanceEntity instance,
-            final TerrariaInstanceState expectedResultingState,
-            final Duration timeout) throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
-        return sendInputToInstance(instance, CTRL_C, expectedResultingState, timeout, false);
-    }
-
-    public TerrariaInstanceEntity sendInputToInstance(final TerrariaInstanceEntity instance,
-            final String input,
-            final TerrariaInstanceState expectedResultingState,
-            final Duration timeout) throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
-        return sendInputToInstance(instance, input, expectedResultingState, timeout, false);
-    }
-
-    public TerrariaInstanceEntity sendInputToInstance(final TerrariaInstanceEntity instance,
-            final String input,
-            final TerrariaInstanceState expectedResultingState,
             final Duration timeout,
-            final boolean obfuscateInput)
+            final TerrariaInstanceState... expectedResultingStates)
+            throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
+        return sendInputToInstance(instance, CTRL_C, timeout, false, expectedResultingStates);
+    }
+
+    public TerrariaInstanceEntity sendInputToInstance(final TerrariaInstanceEntity instance,
+            final String input,
+            final Duration timeout,
+            final TerrariaInstanceState... expectedResultingStates)
+            throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
+        return sendInputToInstance(instance, input, timeout, false, expectedResultingStates);
+    }
+
+    public TerrariaInstanceEntity sendInputToInstance(final TerrariaInstanceEntity instance,
+            final String input,
+            final Duration timeout,
+            final boolean obfuscateInput,
+            final TerrariaInstanceState... expectedResultingStates)
             throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
         final String fullInput = input + "\n";
         final TerrariaInstanceEventEntity instanceEvent = TerrariaInstanceEventEntity.builder()
@@ -62,8 +64,8 @@ public class TerrariaInstanceInputService {
             } else {
                 tmuxService.sendInput(instance.getUuid().toString(), fullInput);
             }
-            return terrariaInstanceEventService.waitForInstanceState(instance, subscription, expectedResultingState,
-                    timeout);
+            return terrariaInstanceEventService.waitForInstanceState(instance, subscription, timeout,
+                    expectedResultingStates);
         }
     }
 }

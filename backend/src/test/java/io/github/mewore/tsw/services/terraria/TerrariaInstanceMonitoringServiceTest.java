@@ -54,6 +54,9 @@ class TerrariaInstanceMonitoringServiceTest {
     private LocalHostService localHostService;
 
     @Mock
+    private TerrariaInstanceService terrariaInstanceService;
+
+    @Mock
     private TerrariaInstancePreparationService terrariaInstancePreparationService;
 
     @Mock
@@ -123,7 +126,7 @@ class TerrariaInstanceMonitoringServiceTest {
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         assertNull(instance.getPendingAction());
         assertNull(instance.getCurrentAction());
         assertNull(instance.getActionExecutionStartTime());
@@ -221,7 +224,7 @@ class TerrariaInstanceMonitoringServiceTest {
         runCheckInstances();
         assertNull(instance.getError());
         assertNull(instance.getPendingAction());
-        verify(terrariaInstancePreparationService).saveInstance(instance);
+        verify(terrariaInstanceService).saveInstance(instance);
     }
 
     private TerrariaInstanceEntity preparePendingAction(final TerrariaInstanceState state,
@@ -230,7 +233,7 @@ class TerrariaInstanceMonitoringServiceTest {
         final TerrariaInstanceEntity instance = makeInstance().state(state).pendingAction(action).build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(instance)).thenReturn(instance);
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
         return instance;
     }
 
@@ -256,12 +259,12 @@ class TerrariaInstanceMonitoringServiceTest {
                 .build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(instance)).thenReturn(instance);
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
         when(terrariaInstancePreparationService.setUpInstance(any())).thenThrow(new InvalidInstanceException("error"));
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         final TerrariaInstanceEntity finalSavedInstance = instanceCaptor.getValue();
         assertNull(finalSavedInstance.getPendingAction());
         assertNull(finalSavedInstance.getCurrentAction());
@@ -285,13 +288,12 @@ class TerrariaInstanceMonitoringServiceTest {
                 .build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(any())).thenAnswer(
-                invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(terrariaInstancePreparationService.setUpInstance(any())).thenThrow(new IllegalArgumentException("error"));
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         final TerrariaInstanceEntity finalSavedInstance = instanceCaptor.getValue();
         assertSame(TerrariaInstanceState.DEFINED, finalSavedInstance.getState());
         assertEquals("error", finalSavedInstance.getError());
@@ -312,13 +314,12 @@ class TerrariaInstanceMonitoringServiceTest {
                 .build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(any())).thenAnswer(
-                invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(terrariaInstancePreparationService.setUpInstance(any())).thenThrow(new IOException("error"));
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         final TerrariaInstanceEntity finalSavedInstance = instanceCaptor.getValue();
         assertSame(TerrariaInstanceState.BROKEN, finalSavedInstance.getState());
         assertEquals("java.io.IOException: error", finalSavedInstance.getError());
@@ -336,13 +337,12 @@ class TerrariaInstanceMonitoringServiceTest {
                 .build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(any())).thenAnswer(
-                invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(terrariaInstancePreparationService.setUpInstance(any())).thenThrow(new RuntimeException("error"));
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         assertSame(TerrariaInstanceState.BROKEN, instanceCaptor.getValue().getState());
         assertEquals("error", instanceCaptor.getValue().getError());
 
@@ -359,13 +359,12 @@ class TerrariaInstanceMonitoringServiceTest {
                 .build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(any())).thenAnswer(
-                invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(terrariaInstancePreparationService.setUpInstance(any())).thenThrow(new RuntimeException());
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         assertSame(TerrariaInstanceState.BROKEN, instanceCaptor.getValue().getState());
         assertEquals("RuntimeException", instanceCaptor.getValue().getError());
 
@@ -384,13 +383,12 @@ class TerrariaInstanceMonitoringServiceTest {
                 .build();
         when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
                 Optional.of(instance));
-        when(terrariaInstancePreparationService.saveInstance(any())).thenAnswer(
-                invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         doThrow(new InterruptedException("error")).when(terrariaInstanceExecutionService).deleteInstance(any());
 
         runCheckInstances();
 
-        verify(terrariaInstancePreparationService, times(2)).saveInstance(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
         assertSame(TerrariaInstanceState.BROKEN, instanceCaptor.getValue().getState());
         assertEquals("error", instanceCaptor.getValue().getError());
 

@@ -4,15 +4,19 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -100,14 +104,17 @@ public class TerrariaInstanceEventService implements ApplicationListener<Terrari
 
     public TerrariaInstanceEntity waitForInstanceState(final TerrariaInstanceEntity instance,
             final Subscription<TerrariaInstanceEntity> subscription,
-            final TerrariaInstanceState desiredState,
-            final Duration timeout) throws IllegalStateException, InterruptedException {
+            final Duration timeout,
+            final TerrariaInstanceState... desiredStates) throws IllegalStateException, InterruptedException {
+        final Set<TerrariaInstanceState> stateSet = Set.of(desiredStates);
         final @Nullable TerrariaInstanceEntity result = subscription.waitFor(
-                newInstance -> newInstance.getState() == desiredState, timeout);
+                newInstance -> stateSet.contains(newInstance.getState()), timeout);
         if (result == null) {
             throw new IllegalStateException(String.format(
-                    "The instance %s did not reach the state %s within a timeout of %s; instead, its state is %s.",
-                    instance.getUuid(), desiredState, timeout, instance.getState()));
+                    "The instance %s did not reach the state(s) %s within a timeout of %s; instead, its state is %s.",
+                    instance.getUuid(),
+                    Arrays.stream(desiredStates).map(Objects::toString).collect(Collectors.joining("/")), timeout,
+                    instance.getState()));
         }
         return result;
     }

@@ -7,7 +7,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Max;
@@ -53,6 +52,7 @@ public class TerrariaInstanceEntity {
 
     private static final String T_MOD_LOADER_SERVER_NAME_WINDOWS = "tModLoaderServer.exe";
 
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue
     private Long id;
@@ -151,7 +151,6 @@ public class TerrariaInstanceEntity {
      */
     @Setter(AccessLevel.PRIVATE)
     @Builder.Default
-    @JsonIgnore
     @Column(nullable = false)
     @ColumnDefault("'{}'")
     private @NonNull Map<Integer, String> options = Collections.emptyMap();
@@ -166,13 +165,12 @@ public class TerrariaInstanceEntity {
      * The mods that are currently loaded in this instance if it is running.
      */
     @Builder.Default
-    @JsonIgnore
     @Column(nullable = false)
     @ColumnDefault("'[]'")
     private @NonNull Set<String> loadedMods = Collections.emptySet();
 
     @JsonIgnore
-    @OneToOne
+    @ManyToOne
     private @Nullable TerrariaWorldEntity world;
 
     @JsonIgnore
@@ -188,33 +186,39 @@ public class TerrariaInstanceEntity {
     }
 
     public void setState(final TerrariaInstanceState newState) {
-        if (newState == state) {
+        if (newState == getState()) {
             return;
         }
         state = newState;
-        options = pendingOptions;
-        pendingOptions = Collections.emptyMap();
+        setOptions(getPendingOptions());
+        setPendingOptions(Collections.emptyMap());
         if (!newState.isActive()) {
-            options = Collections.emptyMap();
-            loadedMods = Collections.emptySet();
-            world = null;
+            setOptions(Collections.emptyMap());
+            setLoadedMods(Collections.emptySet());
+            setWorld(null);
         }
     }
 
     public void startAction() {
-        currentAction = pendingAction;
-        pendingAction = null;
-        actionExecutionStartTime = Instant.now();
+        setCurrentAction(getPendingAction());
+        setPendingAction(null);
+        setActionExecutionStartTime(Instant.now());
     }
 
     public void completeAction() {
-        currentAction = null;
-        actionExecutionStartTime = null;
+        setCurrentAction(null);
+        setActionExecutionStartTime(null);
     }
 
     public void acknowledgeMenuOption(final int key, final String value) {
-        final Map<Integer, String> newPendingOptions = new HashMap<>(pendingOptions);
+        final Map<Integer, String> newPendingOptions = new HashMap<>(getPendingOptions());
         newPendingOptions.put(key, value);
-        pendingOptions = Collections.unmodifiableMap(newPendingOptions);
+        setPendingOptions(Collections.unmodifiableMap(newPendingOptions));
+    }
+
+    @SuppressWarnings("unused")
+    public @Nullable Long getWorldId() {
+        final @Nullable TerrariaWorldEntity world = getWorld();
+        return world == null ? null : world.getId();
     }
 }

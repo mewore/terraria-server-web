@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { TerrariaInstanceEntity } from 'src/generated/backend';
+import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
 
 @Component({
     selector: 'tsw-terraria-instance-list-item',
@@ -7,6 +7,9 @@ import { TerrariaInstanceEntity } from 'src/generated/backend';
     styleUrls: ['./terraria-instance-list-item.component.sass'],
 })
 export class TerrariaInstanceListItemComponent implements OnInit {
+    @Input()
+    host?: HostEntity;
+
     @Input()
     instance?: TerrariaInstanceEntity;
 

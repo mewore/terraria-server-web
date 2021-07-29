@@ -9,7 +9,15 @@
         fit_screen
     </mat-icon>
 
-    <div *ngIf="instance" class="tsw-name" mat-line>{{ instance.name }}</div>
+    <a
+        [class.disabled]="!instance || !host"
+        [routerLink]="(instance && host) ? ['/', 'hosts', host.id, 'instances', instance.id] : undefined"
+        class="tsw-name"
+        mat-line
+    >
+        <span *ngIf="instance; else loadingName">{{ instance?.name || ('host-info.no-name' | translate) }}</span>
+        <ng-template #loadingName>{{ 'host-info.name-loading' | translate }}</ng-template>
+    </a>
 
     <div mat-line>
         {{ 'terraria.instance.list-item.description.mod-loader-label' | translate }}

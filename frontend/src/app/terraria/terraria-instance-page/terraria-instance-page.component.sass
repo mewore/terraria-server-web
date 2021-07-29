@@ -1,0 +1,38 @@
+:host
+    display: flex
+    height: 100%
+    flex-direction: column
+
+.log-panel
+    flex: 1
+    overflow: auto
+    padding: 3px
+    .input
+        font-weight: bold
+    .application-start, .application-end, .error
+        display: block
+        line-height: 2.5em
+        margin-left: .3em
+        border-left: 5px solid
+        padding-left: 1em
+    .preformatted
+        font-family: monospace
+        white-space: pre
+    .important
+        font-weight: bold
+
+.instance-info-bar
+    margin-top: 1em
+    text-align: center
+
+.instance-panel
+    border-top: 1px solid
+    min-height: 3em
+    margin-bottom: 1em
+
+    .action-panel
+        display: inline-block
+        button
+            margin: .2em .3em
+            &[disabled]
+                cursor: not-allowed

@@ -1,0 +1,111 @@
+<h2>{{ 'terraria.instance.dialog.run.title' | translate }}</h2>
+
+<mat-dialog-content>
+    <form autocomplete="off">
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.run.max-players.label' | translate }}</mat-label>
+            <input
+                [formControl]="maxPlayersInput"
+                [placeholder]="'terraria.instance.dialog.run.max-players.placeholder' | translate"
+                id="tsw-terraria-server-max-players-input"
+                matInput
+                type="number"
+            />
+            <mat-error *ngIf="maxPlayersInput.hasError('required')">
+                {{ 'input.errors.required' | translate }}
+            </mat-error>
+            <mat-error *ngIf="maxPlayersInput.hasError('min')">
+                {{ 'input.errors.too-small' | translate: { minValue: MIN_PLAYER_LIMIT } }}
+            </mat-error>
+            <mat-error *ngIf="portInput.hasError('max')">
+                {{ 'input.errors.too-large' | translate: { maxValue: MAX_PLAYER_LIMIT } }}
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.run.port.label' | translate }}</mat-label>
+            <input
+                [formControl]="portInput"
+                [placeholder]="'terraria.instance.dialog.run.port.placeholder' | translate"
+                autocomplete="off"
+                id="tsw-terraria-server-port-input"
+                matInput
+                type="number"
+            />
+            <mat-error *ngIf="portInput.hasError('required')">
+                {{ 'input.errors.required' | translate }}
+            </mat-error>
+            <mat-error *ngIf="portInput.hasError('min')">
+                {{ 'input.errors.too-small' | translate: { minValue: MIN_PORT } }}
+            </mat-error>
+            <mat-error *ngIf="portInput.hasError('max')">
+                {{ 'input.errors.too-large' | translate: { maxValue: MAX_PORT } }}
+            </mat-error>
+            <mat-error *ngIf="portInput.hasError('duplicate')">
+                {{ 'terraria.instance.dialog.run.port.errors.duplicate' | translate: { port: portInput.value } }}
+            </mat-error>
+        </mat-form-field>
+
+        <mat-checkbox [formControl]="automaticallyForwardPortInput">
+            {{ 'terraria.instance.dialog.run.automatically-foward-port.label' | translate }}
+        </mat-checkbox>
+
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.run.password.label' | translate }}</mat-label>
+            <input [formControl]="passwordInput" id="tsw-terraria-server-password-input" matInput type="password"/>
+            <mat-error *ngIf="passwordInput.hasError('maxLength')">
+                {{ 'input.errors.too-long' | translate: { maxLength: MAX_PASSWORD_LENGTH } }}
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.run.world.label' | translate }}</mat-label>
+            <mat-select [formControl]="worldInput">
+                <mat-option *ngFor="let world of worlds || []" [value]="world.id">
+                    {{ world.name }}
+                    {{ worldIsUsedByServer(world) ? ('terraria.instance.dialog.run.world.used' | translate) : '' }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="worlds.length && worldInput.hasError('required')">
+                {{ 'input.errors.required' | translate }}
+            </mat-error>
+            <mat-error *ngIf="!worlds.length">
+                {{ 'terraria.instance.dialog.run.world.errors.no-worlds' | translate }}
+            </mat-error>
+            <mat-hint
+                *ngIf="worldHasMismatchingMods || worldHasUnknownMods || selectedWorldIsUsedByServer"
+                class="warning"
+            >
+                <mat-icon>warning</mat-icon>
+                <span
+                    *ngIf="worldHasMismatchingMods"
+                    [matTooltip]="
+                        'terraria.instance.dialog.run.world.warnings.different-mods-details'
+                            | translate: { instanceMods: instanceModString, worldMods: selectedWorldModString }
+                    "
+                >
+                    {{ 'terraria.instance.dialog.run.world.warnings.different-mods' | translate }}
+                </span>
+                <span *ngIf="worldHasUnknownMods">
+                    {{ 'terraria.instance.dialog.run.world.warnings.unknown-mods' | translate }}
+                </span>
+                <span *ngIf="selectedWorldIsUsedByServer">
+                    {{ 'terraria.instance.dialog.run.world.warnings.used' | translate }}
+                </span>
+            </mat-hint>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button [mat-dialog-close] mat-button>{{ 'dialog.buttons.cancel' | translate }}</button>
+    <button
+        (click)="onRunClicked()"
+        [disabled]="form.invalid || loading || !worlds.length"
+        color="primary"
+        mat-raised-button
+    >
+        {{ 'terraria.instance.dialog.run.buttons.run' | translate }}
+    </button>
+    <mat-progress-bar [class]="loading ? '' : 'tsw-invisible'" color="primary" mode="indeterminate"></mat-progress-bar>
+</mat-dialog-actions>

@@ -10,6 +10,7 @@ import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent
 import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent.MOD_MENU;
 import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent.PASSWORD;
 import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent.PORT;
+import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent.PORT_CONFLICT;
 import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent.RUNNING;
 import static io.github.mewore.tsw.services.terraria.TerrariaInstanceOutputEvent.WORLD_MENU;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -78,9 +79,17 @@ class TerrariaInstanceOutputEventTest {
 
     @Test
     void testRunning() {
-        final String line = "Server started";
+        final String line = "Listening on port 1";
         assertTrue(RUNNING.hasBeenReached(TerrariaInstanceState.PASSWORD_PROMPT, line));
         assertFalse(RUNNING.hasBeenReached(TerrariaInstanceState.PASSWORD_PROMPT, "Other line."));
         assertFalse(RUNNING.hasBeenReached(TerrariaInstanceState.AUTOMATICALLY_FORWARD_PORT_PROMPT, line));
+    }
+
+    @Test
+    void testPortConflict() {
+        final String line = "Tried to run two servers on the same PC";
+        assertTrue(PORT_CONFLICT.hasBeenReached(TerrariaInstanceState.PASSWORD_PROMPT, line));
+        assertFalse(PORT_CONFLICT.hasBeenReached(TerrariaInstanceState.PASSWORD_PROMPT, "Other line."));
+        assertFalse(PORT_CONFLICT.hasBeenReached(TerrariaInstanceState.AUTOMATICALLY_FORWARD_PORT_PROMPT, line));
     }
 }

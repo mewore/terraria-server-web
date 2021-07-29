@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -26,6 +27,7 @@ import lombok.NonNull;
 @Immutable
 public class FileDataEntity {
 
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue
     private Long id;

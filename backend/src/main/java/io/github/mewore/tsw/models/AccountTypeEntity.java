@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "account_type")
 public class AccountTypeEntity {
 
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue
     private Long id;

@@ -32,8 +32,9 @@ import lombok.Setter;
 @DynamicUpdate
 public class AccountEntity {
 
+    @Setter(AccessLevel.NONE)
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = javax.persistence.GenerationType.AUTO)
     private Long id;
 
     @Column(nullable = false, unique = true)

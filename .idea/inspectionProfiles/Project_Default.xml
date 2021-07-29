@@ -33,6 +33,7 @@
     <inspection_tool class="CyclomaticComplexity" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_limit" value="10" />
     </inspection_tool>
+    <inspection_tool class="DeprecatedIsStillUsed" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="EditorConfigKeyCorrectness" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="FieldCount" enabled="true" level="WEAK WARNING" enabled_by_default="true">
       <scope name="Tests" level="INFORMATION" enabled="true">
@@ -54,7 +55,7 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="20">
+          <list size="23">
             <item index="0" class="java.lang.String" itemvalue="mat-button" />
             <item index="1" class="java.lang.String" itemvalue="[mat-dialog-close]" />
             <item index="2" class="java.lang.String" itemvalue="mat-raised-button" />
@@ -75,6 +76,9 @@
             <item index="17" class="java.lang.String" itemvalue="mat-line" />
             <item index="18" class="java.lang.String" itemvalue="mat-subheader" />
             <item index="19" class="java.lang.String" itemvalue="[class.tsw-inactive]" />
+            <item index="20" class="java.lang.String" itemvalue="*ngfor" />
+            <item index="21" class="java.lang.String" itemvalue="[mattooltipdisabled]" />
+            <item index="22" class="java.lang.String" itemvalue="[color]" />
           </list>
         </value>
       </option>
@@ -83,7 +87,7 @@
     <inspection_tool class="HtmlUnknownTag" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="41">
+          <list size="46">
             <item index="0" class="java.lang.String" itemvalue="nobr" />
             <item index="1" class="java.lang.String" itemvalue="noembed" />
             <item index="2" class="java.lang.String" itemvalue="comment" />
@@ -125,6 +129,11 @@
             <item index="38" class="java.lang.String" itemvalue="tsw-terraria-instance-list-item" />
             <item index="39" class="java.lang.String" itemvalue="tsw-new-item-button" />
             <item index="40" class="java.lang.String" itemvalue="tsw-terraria-world-list-item" />
+            <item index="41" class="java.lang.String" itemvalue="ng-container" />
+            <item index="42" class="java.lang.String" itemvalue="mat-selection-list" />
+            <item index="43" class="java.lang.String" itemvalue="mat-list-option" />
+            <item index="44" class="java.lang.String" itemvalue="mat-checkbox" />
+            <item index="45" class="java.lang.String" itemvalue="mat-hint" />
           </list>
         </value>
       </option>

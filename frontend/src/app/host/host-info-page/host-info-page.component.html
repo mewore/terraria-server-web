@@ -9,6 +9,7 @@
         <div mat-subheader>Instances</div>
         <tsw-terraria-instance-list-item
             *ngFor="let instance of instances"
+            [host]="host"
             [instance]="instance"
         ></tsw-terraria-instance-list-item>
         <tsw-new-item-button

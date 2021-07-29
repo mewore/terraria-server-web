@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.repositories.terraria;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -12,12 +11,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.file.OperatingSystem;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.repositories.HostRepository;
 
+import static io.github.mewore.tsw.models.HostFactory.makeHost;
+import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,7 +29,7 @@ class TerrariaInstanceRepositoryIT {
     private static final String SMALLEST_UUID = "00000000-0000-0000-0000-000000000000";
 
     @Autowired
-    private TerrariaInstanceRepository instanceRepository;
+    private TerrariaInstanceRepository terrariaInstanceRepository;
 
     @Autowired
     private HostRepository hostRepository;
@@ -50,33 +50,38 @@ class TerrariaInstanceRepositoryIT {
 
     @Test
     void testFindByHostIdOrderByIdAsc() {
-        final HostEntity host = hostRepository.saveAndFlush(makeHost().build());
-        final TerrariaInstanceEntity firstInstance = instanceRepository.saveAndFlush(makeInstance(host, "c").build());
-        final TerrariaInstanceEntity secondInstance = instanceRepository.saveAndFlush(makeInstance(host, "b").build());
-        final TerrariaInstanceEntity thirdInstance = instanceRepository.saveAndFlush(makeInstance(host, "a").build());
+        final HostEntity host = hostRepository.saveAndFlush(makeHost());
+        final TerrariaInstanceEntity firstInstance = terrariaInstanceRepository.saveAndFlush(
+                makeInstance(host, "c").build());
+        final TerrariaInstanceEntity secondInstance = terrariaInstanceRepository.saveAndFlush(
+                makeInstance(host, "b").build());
+        final TerrariaInstanceEntity thirdInstance = terrariaInstanceRepository.saveAndFlush(
+                makeInstance(host, "a").build());
 
-        final List<TerrariaInstanceEntity> result = instanceRepository.findByHostIdOrderByIdAsc(host.getId());
+        final List<TerrariaInstanceEntity> result = terrariaInstanceRepository.findByHostIdOrderByIdAsc(host.getId());
         assertEquals(Arrays.asList(firstInstance, secondInstance, thirdInstance), result);
     }
 
     @Test
     void testFindByHostIdOrderByIdAsc_nonExistentHost() {
-        final List<TerrariaInstanceEntity> result = instanceRepository.findByHostIdOrderByIdAsc(0);
+        final List<TerrariaInstanceEntity> result = terrariaInstanceRepository.findByHostIdOrderByIdAsc(0);
         assertTrue(result.isEmpty());
     }
 
     @Test
     void testFindTopByHostAndPendingActionNotNull() {
-        final HostEntity host = hostRepository.saveAndFlush(makeHost().build());
-        final TerrariaInstanceEntity instanceWithAction = instanceRepository.saveAndFlush(
+        final HostEntity host = hostRepository.saveAndFlush(
+                makeHostBuilder().uuid(UUID.fromString(SMALLEST_UUID)).build());
+        final TerrariaInstanceEntity instanceWithAction = terrariaInstanceRepository.saveAndFlush(
                 makeInstance(host, "a").pendingAction(TerrariaInstanceAction.SET_UP).build());
-        instanceRepository.saveAndFlush(makeInstance(host, "b").build());
+        terrariaInstanceRepository.saveAndFlush(makeInstance(host, "b").build());
 
-        final HostEntity otherHost = hostRepository.saveAndFlush(makeHost().uuid(uuidWithSuffix("a")).build());
-        instanceRepository.saveAndFlush(
+        final HostEntity otherHost = hostRepository.saveAndFlush(makeHostBuilder().uuid(uuidWithSuffix("a")).build());
+        terrariaInstanceRepository.saveAndFlush(
                 makeInstance(otherHost, "a").pendingAction(TerrariaInstanceAction.SET_UP).build());
 
-        final Optional<TerrariaInstanceEntity> result = instanceRepository.findTopByHostUuidAndPendingActionNotNull(
+        final Optional<TerrariaInstanceEntity> result =
+                terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(
                 host.getUuid());
         assertTrue(result.isPresent());
         assertSame(instanceWithAction, result.get());
@@ -84,16 +89,9 @@ class TerrariaInstanceRepositoryIT {
 
     @Test
     void testSave_sameHostIdAndUuid() {
-        final HostEntity host = hostRepository.saveAndFlush(makeHost().build());
-        instanceRepository.saveAndFlush(makeInstance(host, "").build());
+        final HostEntity host = hostRepository.saveAndFlush(makeHost());
+        terrariaInstanceRepository.saveAndFlush(makeInstance(host, "").build());
         assertThrows(DataIntegrityViolationException.class,
-                () -> instanceRepository.saveAndFlush(makeInstance(host, "").build()));
-    }
-
-    private HostEntity.HostEntityBuilder makeHost() {
-        return HostEntity.builder()
-                .uuid(UUID.fromString(SMALLEST_UUID))
-                .heartbeatDuration(Duration.ZERO)
-                .os(OperatingSystem.UNKNOWN);
+                () -> terrariaInstanceRepository.saveAndFlush(makeInstance(host, "").build()));
     }
 }

@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -32,6 +33,7 @@ import lombok.NonNull;
 public class TerrariaInstanceEventEntity {
 
     @JsonIgnore
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue
     private Long id;

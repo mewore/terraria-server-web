@@ -30,4 +30,9 @@ export class TswValidators {
         }
         return null;
     }
+
+    static noDuplicates<T>(existingValues: Set<T> | T[]): ValidatorFn {
+        const set: Set<T> = existingValues instanceof Set ? existingValues : new Set<T>(existingValues);
+        return (control) => (set.has(control.value) ? ({ duplicate: true } as ValidationErrors) : null);
+    }
 }

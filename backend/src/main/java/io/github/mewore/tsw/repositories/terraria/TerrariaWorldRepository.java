@@ -2,7 +2,6 @@ package io.github.mewore.tsw.repositories.terraria;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,16 +38,12 @@ public interface TerrariaWorldRepository extends JpaRepository<TerrariaWorldEnti
                 worldsToSave.add(newWorld);
                 continue;
             }
-            final boolean dataIsChanged = !Arrays.equals(currentWorld.getData().getContent(),
-                    newWorld.getData().getContent());
-            if (currentWorld.getLastModified().equals(newWorld.getLastModified()) && !dataIsChanged) {
+            if (currentWorld.getLastModified().equals(newWorld.getLastModified())) {
                 continue;
             }
-            if (dataIsChanged) {
-                currentWorld.setData(newWorld.getData());
-                currentWorld.setMods(null);
-            }
             currentWorld.setLastModified(newWorld.getLastModified());
+            currentWorld.setData(newWorld.getData());
+            currentWorld.setMods(null);
             worldsToSave.add(currentWorld);
         }
 

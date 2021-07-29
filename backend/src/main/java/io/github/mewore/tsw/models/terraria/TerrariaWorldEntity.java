@@ -23,25 +23,22 @@ import io.github.mewore.tsw.models.file.FileDataEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import lombok.ToString;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Getter
 @Setter
-@ToString
-@EqualsAndHashCode
 @Entity
 @Table(name = "terraria_world", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "host_id"})})
 @DynamicUpdate
 public class TerrariaWorldEntity {
 
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue
     private Long id;
@@ -56,7 +53,6 @@ public class TerrariaWorldEntity {
     @OneToOne(fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
     private @NonNull FileDataEntity data;
 
-    @Setter
     @Column
     private @Positive @Nullable Set<String> mods;
 

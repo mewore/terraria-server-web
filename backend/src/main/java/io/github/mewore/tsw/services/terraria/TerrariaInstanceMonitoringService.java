@@ -37,6 +37,8 @@ public class TerrariaInstanceMonitoringService {
 
     private final @NonNull LocalHostService localHostService;
 
+    private final @NonNull TerrariaInstanceService terrariaInstanceService;
+
     private final @NonNull TerrariaInstancePreparationService terrariaInstancePreparationService;
 
     private final @NonNull TerrariaInstanceExecutionService terrariaInstanceExecutionService;
@@ -81,13 +83,13 @@ public class TerrariaInstanceMonitoringService {
                             "actions for the [{}] state are: {}", action, originalState, originalState,
                     String.join(", ", originalState.getApplicableActionNames()));
             instance.setPendingAction(null);
-            terrariaInstancePreparationService.saveInstance(instance);
+            terrariaInstanceService.saveInstance(instance);
             return;
         }
 
         try {
             instance.startAction();
-            instance = terrariaInstancePreparationService.saveInstance(instance);
+            instance = terrariaInstanceService.saveInstance(instance);
             final TerrariaInstanceEntity newInstance = applyAction(instance, action);
             if (newInstance == null) {
                 logger.info("Updated Terraria instance {}: [{}] -[{}]-> [DELETED]", instance.getUuid(), originalState,
@@ -97,7 +99,7 @@ public class TerrariaInstanceMonitoringService {
             instance = newInstance;
             instance.completeAction();
             instance.setError(null);
-            instance = terrariaInstancePreparationService.saveInstance(instance);
+            instance = terrariaInstanceService.saveInstance(instance);
             logger.info("Updated Terraria instance {}: [{}] -[{}]-> [{}]", instance.getUuid(), originalState, action,
                     instance.getState());
         } catch (final InvalidInstanceException e) {
@@ -177,6 +179,6 @@ public class TerrariaInstanceMonitoringService {
         instance.setError(event.getText());
 
         terrariaInstanceEventRepository.save(event);
-        terrariaInstancePreparationService.saveInstance(instance);
+        terrariaInstanceService.saveInstance(instance);
     }
 }

@@ -6,21 +6,39 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.mewore.tsw.models.file.OperatingSystem;
+
+import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstance;
+import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceBuilder;
+import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.when;
 
 class TerrariaInstanceEntityTest {
 
-    private static TerrariaInstanceEntity.TerrariaInstanceEntityBuilder makeInstance(final TerrariaInstanceState state) {
-        return TerrariaInstanceFactory.makeInstanceBuilder().state(state);
+    @Test
+    void testGetModLoaderServerFile_windows() {
+        final TerrariaInstanceEntity instance = makeInstance();
+        when(instance.getHost().getOs()).thenReturn(OperatingSystem.WINDOWS);
+        assertEquals("tModLoaderServer.exe", instance.getModLoaderServerFile().getName());
+    }
+
+    @Test
+    void testGetModLoaderServerFile_linux() {
+        final TerrariaInstanceEntity instance = makeInstance();
+        when(instance.getHost().getOs()).thenReturn(OperatingSystem.LINUX);
+        assertEquals("tModLoaderServer", instance.getModLoaderServerFile().getName());
     }
 
     @Test
     void testSetState() {
-        final TerrariaInstanceEntity instance = makeInstance(TerrariaInstanceState.IDLE).pendingOptions(
-                Map.of(1, "PendingOption1")).options(Map.of(1, "Option1")).build();
+        final TerrariaInstanceEntity instance = makeInstanceBuilder().state(TerrariaInstanceState.IDLE)
+                .pendingOptions(Map.of(1, "PendingOption1"))
+                .options(Map.of(1, "Option1"))
+                .build();
         instance.setState(TerrariaInstanceState.BOOTING_UP);
         assertSame(TerrariaInstanceState.BOOTING_UP, instance.getState());
         assertEquals(Collections.emptyMap(), instance.getPendingOptions());
@@ -29,8 +47,10 @@ class TerrariaInstanceEntityTest {
 
     @Test
     void testSetState_same() {
-        final TerrariaInstanceEntity instance = makeInstance(TerrariaInstanceState.BOOTING_UP).pendingOptions(
-                Map.of(1, "PendingOption1")).options(Map.of(1, "Option1")).build();
+        final TerrariaInstanceEntity instance = makeInstanceBuilder().state(TerrariaInstanceState.BOOTING_UP)
+                .pendingOptions(Map.of(1, "PendingOption1"))
+                .options(Map.of(1, "Option1"))
+                .build();
         instance.setState(TerrariaInstanceState.BOOTING_UP);
         assertEquals(Map.of(1, "PendingOption1"), instance.getPendingOptions());
         assertEquals(Map.of(1, "Option1"), instance.getOptions());
@@ -38,8 +58,10 @@ class TerrariaInstanceEntityTest {
 
     @Test
     void testSetState_inactive() {
-        final TerrariaInstanceEntity instance = makeInstance(TerrariaInstanceState.BOOTING_UP).pendingOptions(
-                Map.of(1, "PendingOption1")).options(Map.of(1, "Option1")).build();
+        final TerrariaInstanceEntity instance = makeInstanceBuilder().state(TerrariaInstanceState.BOOTING_UP)
+                .pendingOptions(Map.of(1, "PendingOption1"))
+                .options(Map.of(1, "Option1"))
+                .build();
         instance.setState(TerrariaInstanceState.IDLE);
         assertEquals(Collections.emptyMap(), instance.getPendingOptions());
         assertEquals(Collections.emptyMap(), instance.getOptions());
@@ -47,8 +69,10 @@ class TerrariaInstanceEntityTest {
 
     @Test
     void testStartAction() {
-        final TerrariaInstanceEntity instance = makeInstance(TerrariaInstanceState.IDLE).pendingAction(
-                TerrariaInstanceAction.BOOT_UP).actionExecutionStartTime(null).build();
+        final TerrariaInstanceEntity instance = makeInstanceBuilder().state(TerrariaInstanceState.IDLE)
+                .pendingAction(TerrariaInstanceAction.BOOT_UP)
+                .actionExecutionStartTime(null)
+                .build();
         instance.startAction();
         assertSame(TerrariaInstanceAction.BOOT_UP, instance.getCurrentAction());
         assertNull(instance.getPendingAction());
@@ -57,8 +81,10 @@ class TerrariaInstanceEntityTest {
 
     @Test
     void testCompleteAction() {
-        final TerrariaInstanceEntity instance = makeInstance(TerrariaInstanceState.IDLE).currentAction(
-                TerrariaInstanceAction.BOOT_UP).actionExecutionStartTime(Instant.now()).build();
+        final TerrariaInstanceEntity instance = makeInstanceBuilder().state(TerrariaInstanceState.IDLE)
+                .currentAction(TerrariaInstanceAction.BOOT_UP)
+                .actionExecutionStartTime(Instant.now())
+                .build();
         instance.completeAction();
         assertNull(instance.getCurrentAction());
         assertNull(instance.getActionExecutionStartTime());
@@ -66,7 +92,7 @@ class TerrariaInstanceEntityTest {
 
     @Test
     void testAcknowledgeMenuOption() {
-        final TerrariaInstanceEntity instance = makeInstance(TerrariaInstanceState.IDLE).build();
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         instance.acknowledgeMenuOption(1, "Option");
         assertEquals(Map.of(1, "Option"), instance.getPendingOptions());
         assertEquals(Collections.emptyMap(), instance.getOptions());

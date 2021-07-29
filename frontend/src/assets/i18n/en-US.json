@@ -75,7 +75,10 @@
             "blank": "* Required (and whitespace-only values are not allowed)",
             "required": "* Required",
             "fileExtension:zip": "Must be a file with the '.zip' extension",
-            "terrariaUrl": "Must a Terraria URL: http(s)://terraria.org/..."
+            "terrariaUrl": "Must a Terraria URL: http(s)://terraria.org/...",
+            "too-long": "Too long (max length: {{ maxLength }})",
+            "too-small": "Should be at least {{ minValue }}",
+            "too-large": "Should be at most {{ maxValue }}"
         }
     },
     "list": {
@@ -98,6 +101,40 @@
     },
     "terraria": {
         "instance": {
+            "actions": {
+                "buttons": {
+                    "BOOT_UP": "Boot up",
+                    "GO_TO_MOD_MENU": "Go to the Mod menu",
+                    "SET_LOADED_MODS": "Set the enabled mods",
+                    "RUN_SERVER": "Run",
+                    "SHUT_DOWN": "Shut down",
+                    "SHUT_DOWN_NO_SAVE": "Shut down without saving",
+                    "TERMINATE": "Terminate",
+                    "DELETE": "Delete"
+                },
+                "current": {
+                    "SET_UP": "Setting the instance up...",
+                    "BOOT_UP": "Booting the instance up...",
+                    "GO_TO_MOD_MENU": "Going to the mod menu...",
+                    "SET_LOADED_MODS": "Setting the enabled mods...",
+                    "RUN_SERVER": "Running the instance as a Terraria server...",
+                    "SHUT_DOWN": "Shutting the instance down...",
+                    "SHUT_DOWN_NO_SAVE": "Shutting the instance down (without saving)...",
+                    "TERMINATE": "Forcibly terminating the instance...",
+                    "DELETE": "Deleting the instance completely..."
+                },
+                "pending": {
+                    "SET_UP": "Will set the instance up...",
+                    "BOOT_UP": "Will boot the instance up...",
+                    "GO_TO_MOD_MENU": "Will go to the mod menu...",
+                    "SET_LOADED_MODS": "Will set the enabled mods...",
+                    "RUN_SERVER": "Will run the instance as a Terraria server...",
+                    "SHUT_DOWN": "Will shut the instance down...",
+                    "SHUT_DOWN_NO_SAVE": "Will shut the instance down (without saving)...",
+                    "TERMINATE": "Will forcibly terminate the instance...",
+                    "DELETE": "Will delete the instance completely..."
+                }
+            },
             "dialog": {
                 "create": {
                     "buttons": {
@@ -116,7 +153,71 @@
                         "placeholder": "Terraria dedicated server download URL",
                         "help-text": "Pick a server download link from the terraria.gamepedia.com wiki."
                     }
+                },
+                "delete": {
+                    "title": "Delete the instance?",
+                    "description": "This is irreversible. The executable files and output history of this instance will be deleted forever.",
+                    "confirm": "Delete"
+                },
+                "terminate": {
+                    "title": "Terminate the instance?",
+                    "description": "This will force the instance ot stop. You may break something this way so you should use this only as a last resort.",
+                    "confirm": "Terminate"
+                },
+                "run": {
+                    "buttons": {
+                        "run": "Run"
+                    },
+                    "max-players": {
+                        "label": "Max players",
+                        "placeholder": "Max players (e.g. 8)"
+                    },
+                    "port": {
+                        "errors": {
+                            "duplicate": "There is already a server running on port {{ port }} on this host"
+                        },
+                        "label": "Port",
+                        "placeholder": "Port (e.g. 7777)"
+                    },
+                    "automatically-foward-port": {
+                        "label": "Automatically forward the port"
+                    },
+                    "password": {
+                        "label": "Password"
+                    },
+                    "world": {
+                        "errors": {
+                            "no-worlds": "There are no worlds to run this server with"
+                        },
+                        "label": "",
+                        "used": "(used by a server)",
+                        "warnings": {
+                            "different-mods": "The mods of the world are different from the ones of the instance.",
+                            "different-mods-details": "The mods of the instance are [{{ instanceMods }}]. The mods of the world are [{{ worldMods }}].",
+                            "unknown-mods": "The mods of the world are unknown.",
+                            "used": "A server is already running with this world."
+                        }
+                    },
+                    "title": "Run the Terraria instance as a server"
+                },
+                "set-instance-mods": {
+                    "buttons": {
+                        "set": "Set"
+                    },
+                    "title": "Set the enabled mods"
+                },
+                "shut-down": {
+                    "title": "Shut the instance down?",
+                    "description": "A server is running through this instance right now. All players will be disconnected. Would you like to save the state of the world, or lose all changes to it?",
+                    "confirm": "Save and shut down",
+                    "confirm-no-save": "Shut down"
                 }
+            },
+            "events": {
+                "APPLICATION_START": "Application started.",
+                "APPLICATION_END": "Application stopped.",
+                "ERROR": "Error: {{ error }}",
+                "INVALID_INSTANCE": "The instance has been determined to be invalid: {{ error }}"
             },
             "list-item": {
                 "buttons": {
@@ -132,6 +233,17 @@
                         "server-link": "Wiki page"
                     }
                 }
+            },
+            "states": {
+                "DEFINED": "The instance has been defined.",
+                "VALID": "The instance has passed validation.",
+                "IDLE": "The instance is ready to be started.",
+                "WORLD_MENU": "The instance is at the World menu.",
+                "MOD_MENU": "The instance is at the Mods menu.",
+                "MOD_BROWSER": "The instance is at the Mod Browser menu.",
+                "RUNNING": "The instance is running and connecting to it should be possible.",
+                "INVALID": "The instance has been marked as invalid!",
+                "BROKEN": "The instance is broken! Its actual state is unknown."
             }
         },
         "world": {

@@ -40,6 +40,7 @@ public class HostEntity {
 
     private static final int DEFAULT_PORT = 8080;
 
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue
     private Long id;

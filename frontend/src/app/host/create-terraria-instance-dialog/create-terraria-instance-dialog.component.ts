@@ -33,7 +33,7 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
         TswValidators.terrariaUrl,
     ]);
 
-    readonly modLoaderReleaseInput = new FormControl(undefined, [Validators.required]);
+    readonly modLoaderReleaseInput = new FormControl({ value: undefined, disabled: true }, [Validators.required]);
 
     readonly form = new FormGroup({
         instanceName: this.instanceNameInput,
@@ -59,6 +59,7 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
             this.loading = false;
         }
         this.modLoaderReleaseInput.setValue(this.tModLoaderVersions[0].releaseId);
+        this.modLoaderReleaseInput.enable();
     }
 
     async onCreateClicked(): Promise<void> {

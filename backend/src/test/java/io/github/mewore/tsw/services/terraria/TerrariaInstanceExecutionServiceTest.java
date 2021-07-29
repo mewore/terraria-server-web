@@ -23,6 +23,7 @@ import org.mockito.stubbing.Answer;
 import io.github.mewore.tsw.events.FakeSubscription;
 import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.models.file.FileDataEntity;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
@@ -61,7 +62,7 @@ class TerrariaInstanceExecutionServiceTest {
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
     @Mock
-    private TerrariaInstancePreparationService terrariaInstancePreparationService;
+    private TerrariaInstanceService terrariaInstanceService;
 
     @Mock
     private TerrariaInstanceEventRepository terrariaInstanceEventRepository;
@@ -121,15 +122,14 @@ class TerrariaInstanceExecutionServiceTest {
         instance.setNextOutputBytePosition(10L);
         final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
         when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
-        when(terrariaInstancePreparationService.saveInstance(instance)).thenAnswer(
-                invocation -> invocation.getArgument(0));
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, TerrariaInstanceState.WORLD_MENU,
-                Duration.ofMinutes(1))).thenReturn(instance);
+        when(terrariaInstanceService.saveInstance(instance)).thenAnswer(invocation -> invocation.getArgument(0));
+        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
+                TerrariaInstanceState.WORLD_MENU)).thenReturn(instance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.bootUpInstance(instance);
 
         assertEquals(0L, instance.getNextOutputBytePosition());
-        verify(terrariaInstancePreparationService).ensureInstanceHasNoOutputFile(instance);
+        verify(terrariaInstanceService).ensureInstanceHasNoOutputFile(instance);
         verify(terrariaInstanceOutputService).trackInstance(instance);
         verify(tmuxService).dispatch(INSTANCE_UUID.toString(), instance.getModLoaderServerFile(),
                 instance.getOutputFile());
@@ -147,8 +147,8 @@ class TerrariaInstanceExecutionServiceTest {
     @Test
     void testGoToModMenu() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "m", TerrariaInstanceState.MOD_MENU,
-                Duration.ofSeconds(10))).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(instance, "m", Duration.ofSeconds(10),
+                TerrariaInstanceState.MOD_MENU)).thenReturn(instance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.goToModMenu(instance);
         assertSame(instance, result);
@@ -164,45 +164,40 @@ class TerrariaInstanceExecutionServiceTest {
 
     @Test
     void testSetInstanceLoadedMods() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
-        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
-        instance.setModsToEnable(Set.of("Mod1", "Mod3", "Mod4"));
-        instance.acknowledgeMenuOption(1, "Mod1 (enabled)");
-        instance.acknowledgeMenuOption(2, "Mod2 (enabled)");
-        instance.acknowledgeMenuOption(3, "Mod3 (disabled)");
-        instance.acknowledgeMenuOption(4, "Mod4 (disabled)");
-        instance.setState(TerrariaInstanceState.MOD_MENU);
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.MOD_MENU);
 
-        when(terrariaInstancePreparationService.saveInstance(instance)).thenReturn(instance);
-        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenAnswer(
-                new FakeModMenu(instance.getOptions()));
+        when(terrariaInstanceService.getDesiredModOption(instance)).thenReturn(2)
+                .thenReturn(3)
+                .thenReturn(4)
+                .thenReturn(null);
+
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenReturn(
+                instance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.setInstanceLoadedMods(instance);
         assertSame(instance, result);
 
         verify(terrariaInstanceInputService, times(3)).sendInputToInstance(same(instance), stringCaptor.capture(),
-                same(TerrariaInstanceState.MOD_MENU), eq(Duration.ofSeconds(30)));
+                eq(Duration.ofSeconds(30)), same(TerrariaInstanceState.MOD_MENU));
         assertEquals(Arrays.asList("2", "3", "4"),
                 stringCaptor.getAllValues().stream().sorted().collect(Collectors.toList()));
 
-        verify(terrariaInstanceInputService).sendInputToInstance(instance, "r", TerrariaInstanceState.WORLD_MENU,
-                Duration.ofMinutes(2));
+        verify(terrariaInstanceInputService).sendInputToInstance(instance, "r", Duration.ofMinutes(2),
+                TerrariaInstanceState.WORLD_MENU);
     }
 
     @Test
     void testSetInstanceLoadedMods_tooManyAttempts()
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
-        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.MOD_MENU);
         instance.setModsToEnable(Set.of("Mod1"));
-        instance.acknowledgeMenuOption(1, "Mod1 (disabled)");
-        instance.setState(TerrariaInstanceState.MOD_MENU);
 
-        when(terrariaInstancePreparationService.saveInstance(instance)).thenReturn(instance);
-        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenAnswer(
-                invocation -> {
-                    instance.acknowledgeMenuOption(1, "Mod1 (disabled)");
-                    instance.setState(TerrariaInstanceState.MOD_MENU);
-                    return instance;
-                });
+        when(terrariaInstanceService.getDesiredModOption(instance)).thenReturn(1);
+
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenReturn(
+                instance);
 
         final Exception exception = assertThrows(RuntimeException.class,
                 () -> terrariaInstanceExecutionService.setInstanceLoadedMods(instance));
@@ -217,27 +212,15 @@ class TerrariaInstanceExecutionServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.MOD_MENU);
         instance.setLoadedMods(Set.of("Mod1 v1", "Mod2 v1"));
 
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "r", TerrariaInstanceState.WORLD_MENU,
-                Duration.ofMinutes(2))).thenReturn(instance);
+        when(terrariaInstanceService.getDesiredModOption(instance)).thenReturn(null);
+
+        when(terrariaInstanceInputService.sendInputToInstance(instance, "r", Duration.ofMinutes(2),
+                TerrariaInstanceState.WORLD_MENU)).thenReturn(instance);
 
         final Exception exception = assertThrows(RuntimeException.class,
                 () -> terrariaInstanceExecutionService.setInstanceLoadedMods(instance));
         assertEquals("The mods of instance " + INSTANCE_UUID + " (2: Mod1 v1, Mod2 v1) " +
                 "are not exactly as many as the requested ones (0: )", exception.getMessage());
-    }
-
-    @Test
-    void testSetInstanceLoadedMods_unselectableMod() {
-        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
-        instance.setModsToEnable(Set.of("Mod1", "Mod3", "Mod4"));
-        instance.acknowledgeMenuOption(1, "Mod1 (enabled)");
-        instance.acknowledgeMenuOption(2, "Mod2 (enabled)");
-        instance.setState(TerrariaInstanceState.MOD_MENU);
-
-        final Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> terrariaInstanceExecutionService.setInstanceLoadedMods(instance));
-        assertEquals("Cannot enable the following mods because they aren't in the list of known options: Mod3, Mod4",
-                exception.getMessage());
     }
 
     @Test
@@ -265,24 +248,24 @@ class TerrariaInstanceExecutionServiceTest {
 
         when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenReturn(
                 instance);
-        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any(),
-                eq(true))).thenReturn(instance);
-        when(terrariaInstancePreparationService.saveInstance(instance)).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), eq(true),
+                any())).thenReturn(instance);
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.runInstance(instance);
         assertSame(instance, result);
 
         verify(terrariaInstanceInputService, times(4)).sendInputToInstance(same(instance), stringCaptor.capture(),
-                stateCaptor.capture(), durationCaptor.capture());
+                durationCaptor.capture(), stateCaptor.capture());
         assertEquals(Arrays.asList("2", "10", "8000", "n"), stringCaptor.getAllValues());
         assertEquals(Arrays.asList(TerrariaInstanceState.MAX_PLAYERS_PROMPT, TerrariaInstanceState.PORT_PROMPT,
-                TerrariaInstanceState.AUTOMATICALLY_FORWARD_PORT_PROMPT, TerrariaInstanceState.PASSWORD_PROMPT),
+                        TerrariaInstanceState.AUTOMATICALLY_FORWARD_PORT_PROMPT, TerrariaInstanceState.PASSWORD_PROMPT),
                 stateCaptor.getAllValues());
         assertEquals(Arrays.asList(Duration.ofSeconds(10), Duration.ofSeconds(10), Duration.ofSeconds(10),
                 Duration.ofSeconds(10)), durationCaptor.getAllValues());
 
-        verify(terrariaInstanceInputService).sendInputToInstance(instance, "password", TerrariaInstanceState.RUNNING,
-                Duration.ofSeconds(190), true);
+        verify(terrariaInstanceInputService).sendInputToInstance(instance, "password", Duration.ofSeconds(190), true,
+                TerrariaInstanceState.RUNNING, TerrariaInstanceState.PORT_CONFLICT);
 
         assertEquals("", instance.getPassword());
     }
@@ -299,11 +282,36 @@ class TerrariaInstanceExecutionServiceTest {
 
         when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenReturn(
                 instance);
-        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any(),
-                anyBoolean())).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), anyBoolean(),
+                any())).thenReturn(instance);
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
 
         terrariaInstanceExecutionService.runInstance(instance);
         verify(terrariaInstanceInputService).sendInputToInstance(same(instance), eq("y"), any(), any());
+    }
+
+    @Test
+    void testRunInstance_portConflict() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
+        instance.acknowledgeMenuOption(1, "World1");
+        instance.setState(TerrariaInstanceState.WORLD_MENU);
+        instance.setAutomaticallyForwardPort(true);
+        instance.setPassword("password");
+
+        makeWorldForInstance(instance, "World1");
+
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), any())).thenReturn(
+                instance);
+
+        final TerrariaInstanceEntity instanceWithConflict = makeInstanceWithState(TerrariaInstanceState.PORT_CONFLICT);
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), any(), any(), anyBoolean(),
+                any())).thenReturn(instanceWithConflict);
+
+        when(terrariaInstanceService.saveInstance(instanceWithConflict)).thenReturn(instanceWithConflict);
+
+        final TerrariaInstanceEntity result = terrariaInstanceExecutionService.runInstance(instance);
+        assertSame(instanceWithConflict, result);
+        assertSame(TerrariaInstanceAction.SHUT_DOWN, result.getPendingAction());
     }
 
     @Test
@@ -356,8 +364,8 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(tail);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(90))).thenReturn(awaitedInstance);
+        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", Duration.ofSeconds(90),
+                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         final FileDataEntity newWorldData = mock(FileDataEntity.class);
         final Instant newLastModified = Instant.now();
@@ -393,8 +401,8 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(tail);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(90))).thenReturn(awaitedInstance);
+        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", Duration.ofSeconds(90),
+                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         when(terrariaWorldService.readWorld(world)).thenReturn(null);
 
@@ -407,8 +415,8 @@ class TerrariaInstanceExecutionServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.RUNNING);
 
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(mock(FileTail.class));
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(90))).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", Duration.ofSeconds(90),
+                TerrariaInstanceState.IDLE)).thenReturn(instance);
 
         terrariaInstanceExecutionService.shutDownInstance(instance, true);
         verify(terrariaWorldRepository, never()).save(any());
@@ -422,8 +430,8 @@ class TerrariaInstanceExecutionServiceTest {
 
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(mock(FileTail.class));
 
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit-nosave", TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(30))).thenReturn(instance);
+        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit-nosave", Duration.ofSeconds(30),
+                TerrariaInstanceState.IDLE)).thenReturn(instance);
 
         terrariaInstanceExecutionService.shutDownInstance(instance, false);
 
@@ -440,8 +448,8 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(mock(FileTail.class));
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceInputService.sendBreakToInstance(instance, TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(30))).thenReturn(awaitedInstance);
+        when(terrariaInstanceInputService.sendBreakToInstance(instance, Duration.ofSeconds(30),
+                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.shutDownInstance(instance, true);
         assertSame(awaitedInstance, result);
@@ -473,8 +481,8 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(30))).thenReturn(awaitedInstance);
+        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofSeconds(30),
+                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.terminateInstance(instance);
         assertSame(awaitedInstance, result);
@@ -497,8 +505,8 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, TerrariaInstanceState.IDLE,
-                Duration.ofSeconds(30))).thenReturn(awaitedInstance);
+        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofSeconds(30),
+                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         terrariaInstanceExecutionService.terminateInstance(instance);
 
@@ -514,7 +522,7 @@ class TerrariaInstanceExecutionServiceTest {
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(false);
 
         terrariaInstanceExecutionService.terminateInstance(instance);
-        verify(terrariaInstancePreparationService).saveInstance(instance);
+        verify(terrariaInstanceService).saveInstance(instance);
         assertSame(TerrariaInstanceState.IDLE, instance.getState());
         verify(terrariaInstanceOutputService).stopTrackingInstance(instance);
     }

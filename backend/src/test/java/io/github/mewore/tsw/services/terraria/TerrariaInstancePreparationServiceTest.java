@@ -19,12 +19,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
 import io.github.mewore.tsw.exceptions.InvalidInstanceException;
 import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.HostEntity;
@@ -38,7 +35,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.HostRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.GithubService;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
@@ -97,22 +93,16 @@ class TerrariaInstancePreparationServiceTest {
     private FileService fileService;
 
     @Mock
-    private TerrariaInstanceRepository terrariaInstanceRepository;
-
-    @Mock
-    private ApplicationEventPublisher applicationEventPublisher;
-
-    @Mock
     private HostRepository hostRepository;
+
+    @Mock
+    private TerrariaInstanceService terrariaInstanceService;
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceEntity> instanceCaptor;
 
     @Captor
     private ArgumentCaptor<InputStreamSupplier> inputStreamSupplierCaptor;
-
-    @Captor
-    private ArgumentCaptor<ApplicationEvent> applicationEventCaptor;
 
     @Captor
     private ArgumentCaptor<Pattern> patternCaptor;
@@ -156,7 +146,7 @@ class TerrariaInstancePreparationServiceTest {
         when(host.getTerrariaInstanceDirectory()).thenReturn(Path.of("/"));
         when(hostRepository.findById(1L)).thenReturn(Optional.of(host));
 
-        when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         final TerrariaInstanceEntity createdInstance = terrariaInstancePreparationService.defineTerrariaInstance(1,
                 INSTANCE_CREATION_MODEL);
@@ -185,7 +175,7 @@ class TerrariaInstancePreparationServiceTest {
         final Path serverZipCacheLocation = Path.of("terraria-servers", "terraria-server-1003.zip");
         when(fileService.hasFileInCache(serverZipCacheLocation)).thenReturn(true);
 
-        when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         final File newInstanceDirectory = new File("instance-dir");
         when(fileService.reserveDirectory(any())).thenReturn(newInstanceDirectory);
@@ -216,7 +206,7 @@ class TerrariaInstancePreparationServiceTest {
         verify(fileService).makeFilesInDirectoryExecutable(any(), patternCaptor.capture());
         assertEquals("^tModLoaderServer.*", patternCaptor.getValue().toString());
 
-        verify(terrariaInstanceRepository, times(2)).save(instanceCaptor.capture());
+        verify(terrariaInstanceService, times(2)).saveInstance(instanceCaptor.capture());
 
         assertSame(preparedInstance, instanceCaptor.getAllValues().get(0));
         assertSame(preparedInstance, instanceCaptor.getAllValues().get(1));
@@ -236,7 +226,7 @@ class TerrariaInstancePreparationServiceTest {
     @Test
     void testSetUpTerrariaInstance_Windows() throws IOException, NotFoundException, InvalidInstanceException {
         when(githubService.getRelease(any(), any(), anyLong())).thenReturn(T_MOD_LOADER_RELEASE);
-        when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(fileService.reserveDirectory(any())).thenReturn(new File("instance-dir"));
         when(fileService.cache(any(), any(), any())).thenReturn(new ByteArrayInputStream(new byte[0]));
         when(githubService.fetchAsset(T_MOD_LOADER_ASSET_WINDOWS)).thenReturn(new ByteArrayInputStream(new byte[0]));
@@ -250,7 +240,7 @@ class TerrariaInstancePreparationServiceTest {
     @Test
     void testSetUpTerrariaInstance_Mac() throws IOException, NotFoundException, InvalidInstanceException {
         when(githubService.getRelease(any(), any(), anyLong())).thenReturn(T_MOD_LOADER_RELEASE);
-        when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(fileService.reserveDirectory(any())).thenReturn(new File("instance-dir"));
         when(fileService.cache(any(), any(), any())).thenReturn(new ByteArrayInputStream(new byte[0]));
         when(githubService.fetchAsset(T_MOD_LOADER_ASSET_MAC)).thenReturn(new ByteArrayInputStream(new byte[0]));
@@ -306,7 +296,7 @@ class TerrariaInstancePreparationServiceTest {
     @Test
     void testSetUpTerrariaInstance_noModLoaderServerFiles() throws IOException, NotFoundException {
         when(githubService.getRelease(any(), any(), anyLong())).thenReturn(T_MOD_LOADER_RELEASE);
-        when(terrariaInstanceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(terrariaInstanceService.saveInstance(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(fileService.reserveDirectory(any())).thenReturn(mock(File.class));
         when(fileService.cache(any(), any(), any())).thenReturn(new ByteArrayInputStream(new byte[0]));
         when(githubService.fetchAsset(any())).thenReturn(new ByteArrayInputStream(new byte[0]));
@@ -317,51 +307,5 @@ class TerrariaInstancePreparationServiceTest {
                         makeInstance().host(makeHostWithOs(OperatingSystem.LINUX)).build()));
         assertEquals("Failed to find any files, the name of which matches /^tModLoaderServer.*/",
                 exception.getMessage());
-    }
-
-    @Test
-    void testSaveInstance() {
-        final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
-        final TerrariaInstanceEntity savedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceRepository.save(instance)).thenReturn(savedInstance);
-
-        final TerrariaInstanceEntity result = terrariaInstancePreparationService.saveInstance(instance);
-        assertSame(savedInstance, result);
-        verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
-        assertSame(savedInstance,
-                ((TerrariaInstanceUpdatedEvent) applicationEventCaptor.getValue()).getChangedInstance());
-    }
-
-    @Test
-    void testEnsureInstanceHasNoOutputFile() {
-        final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
-        final File outputFile = mock(File.class);
-        when(instance.getOutputFile()).thenReturn(outputFile);
-        when(outputFile.exists()).thenReturn(true);
-        when(outputFile.delete()).thenReturn(true);
-        terrariaInstancePreparationService.ensureInstanceHasNoOutputFile(instance);
-    }
-
-    @Test
-    void testEnsureInstanceHasNoOutputFile_nonExistent() {
-        final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
-        final File outputFile = mock(File.class);
-        when(instance.getOutputFile()).thenReturn(outputFile);
-        when(outputFile.exists()).thenReturn(false);
-        terrariaInstancePreparationService.ensureInstanceHasNoOutputFile(instance);
-        verify(outputFile, never()).delete();
-    }
-
-    @Test
-    void testEnsureInstanceHasNoOutputFile_failureToDelete() {
-        final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
-        final File outputFile = mock(File.class);
-        when(instance.getOutputFile()).thenReturn(outputFile);
-        when(outputFile.exists()).thenReturn(true);
-        when(outputFile.delete()).thenReturn(false);
-        when(outputFile.getAbsolutePath()).thenReturn("/path/to/file");
-        final Exception exception = assertThrows(IllegalStateException.class,
-                () -> terrariaInstancePreparationService.ensureInstanceHasNoOutputFile(instance));
-        assertEquals("Failed to delete file /path/to/file", exception.getMessage());
     }
 }

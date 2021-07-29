@@ -1,10 +1,12 @@
 package io.github.mewore.tsw.services.terraria;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -50,7 +52,7 @@ public class TerrariaInstanceOutputService {
 
     private final TerrariaInstanceEventRepository terrariaInstanceEventRepository;
 
-    private final TerrariaInstancePreparationService terrariaInstancePreparationService;
+    private final TerrariaInstanceService terrariaInstanceService;
 
     private final TmuxService tmuxService;
 
@@ -91,10 +93,10 @@ public class TerrariaInstanceOutputService {
     }
 
     @Transactional
-    private TerrariaInstanceEntity saveInstanceAndEvent(final TerrariaInstanceEntity instance,
-            final TerrariaInstanceEventEntity event) {
-        terrariaInstanceEventRepository.save(event);
-        return terrariaInstancePreparationService.saveInstance(instance);
+    private TerrariaInstanceEntity saveInstanceAndEvents(final TerrariaInstanceEntity instance,
+            final TerrariaInstanceEventEntity... events) {
+        terrariaInstanceEventRepository.saveAll(Arrays.asList(events));
+        return terrariaInstanceService.saveInstance(instance);
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -126,11 +128,11 @@ public class TerrariaInstanceOutputService {
 
         private final Logger logger = LogManager.getLogger(getClass());
 
-        private StringBuilder lineBuffer = new StringBuilder();
-
         private StringBuilder outputTextBuffer = new StringBuilder();
 
         private @NonNull TerrariaInstanceEntity instance;
+
+        List<TerrariaInstanceEventEntity> events = new ArrayList<>();
 
         @Override
         public void onFileCreated() {
@@ -144,41 +146,77 @@ public class TerrariaInstanceOutputService {
 
         @Override
         public void onCharacter(final char character, final long position) {
-            outputTextBuffer.append(character);
-            if (character == '\n') {
-                if (instance.getState() != TerrariaInstanceState.RUNNING) {
-                    applyLineToInstance(lineBuffer.toString());
-                }
-                lineBuffer = new StringBuilder();
-                instance.setNextOutputBytePosition(position + 1);
-            } else {
-                lineBuffer.append(character);
+            if (character != '\n') {
+                outputTextBuffer.append(character);
+                return;
             }
+            final String line = outputTextBuffer.toString();
+            outputTextBuffer = new StringBuilder();
+
+            if (instance.getState() != TerrariaInstanceState.RUNNING && applyLineToInstance(line)) {
+                events.add(makeEvent(TerrariaInstanceEventType.IMPORTANT_OUTPUT, line));
+                events.add(makeEvent(TerrariaInstanceEventType.OUTPUT, "\n"));
+            } else if (instance.getState() == TerrariaInstanceState.PASSWORD_PROMPT && line.endsWith("%")) {
+                events.add(makeEvent(TerrariaInstanceEventType.DETAILED_OUTPUT, line + "\n"));
+            } else {
+                events.add(makeEvent(TerrariaInstanceEventType.OUTPUT, line + "\n"));
+            }
+            instance.setNextOutputBytePosition(position + 1);
         }
 
         @Override
         public void onReadFinished(final long endPosition) {
-            final String allText = outputTextBuffer.toString();
-            if (allText.isEmpty()) {
+            final String remainingText = outputTextBuffer.toString();
+            if (events.isEmpty() && remainingText.isEmpty()) {
                 return;
             }
+
+            logger.info("Reached the end of the output file. Text:\n<{}>",
+                    events.stream().map(TerrariaInstanceEventEntity::getText).collect(Collectors.joining()) +
+                            remainingText);
+
             outputTextBuffer = new StringBuilder();
-            logger.info("Reached the end of the output file. Text:\n<{}>", allText);
-
-            if (instance.getState() != TerrariaInstanceState.RUNNING &&
-                    applyLineToInstanceState(lineBuffer.toString())) {
-                lineBuffer = new StringBuilder();
-                instance.setNextOutputBytePosition(endPosition);
+            if (!remainingText.isEmpty()) {
+                if (instance.getState() == TerrariaInstanceState.RUNNING) {
+                    events.add(makeEvent(TerrariaInstanceEventType.OUTPUT, remainingText));
+                    instance.setNextOutputBytePosition(endPosition);
+                } else if (applyLineToInstanceState(remainingText)) {
+                    events.add(makeEvent(TerrariaInstanceEventType.IMPORTANT_OUTPUT, remainingText));
+                    instance.setNextOutputBytePosition(endPosition);
+                } else {
+                    outputTextBuffer = new StringBuilder(remainingText);
+                }
             }
+            instance = saveInstanceAndEvents(instance, combineEvents().toArray(new TerrariaInstanceEventEntity[0]));
+            events = new ArrayList<>();
+        }
 
-            final TerrariaInstanceEventEntity logSegment = TerrariaInstanceEventEntity.builder()
-                    .type(TerrariaInstanceEventType.OUTPUT)
-                    .text(allText.replaceAll(
+        private TerrariaInstanceEventEntity makeEvent(final TerrariaInstanceEventType type, final String text) {
+            final String fixedText =
+                    instance.getState() == TerrariaInstanceState.RUNNING && type == TerrariaInstanceEventType.OUTPUT
+                            ? text.replaceAll(
                             "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,6} is connecting\\.\\.\\.",
-                            "[REDACTED IP] is connecting..."))
-                    .instance(instance)
-                    .build();
-            instance = saveInstanceAndEvent(instance, logSegment);
+                            "[REDACTED IP] is connecting...")
+                            : text;
+            return TerrariaInstanceEventEntity.builder().type(type).text(fixedText).instance(instance).build();
+        }
+
+        private List<TerrariaInstanceEventEntity> combineEvents() {
+            if (events.isEmpty()) {
+                return Collections.emptyList();
+            }
+            final List<TerrariaInstanceEventEntity> result = new ArrayList<>();
+            StringBuilder combinedText = new StringBuilder(events.get(0).getText());
+            for (int i = 1; i <= events.size(); i++) {
+                if (i >= events.size() || events.get(i).getType() != events.get(i - 1).getType()) {
+                    result.add(makeEvent(events.get(i - 1).getType(), combinedText.toString()));
+                    combinedText = new StringBuilder();
+                }
+                if (i < events.size()) {
+                    combinedText.append(events.get(i).getText());
+                }
+            }
+            return result;
         }
 
         @Override
@@ -195,10 +233,8 @@ public class TerrariaInstanceOutputService {
          *
          * @param line The line to apply to the instance.
          */
-        private void applyLineToInstance(final String line) {
-            if (!applyLineToInstanceState(line) && !applyLineToInstanceMods(line)) {
-                applyLineToInstanceOptions(line);
-            }
+        private boolean applyLineToInstance(final String line) {
+            return applyLineToInstanceState(line) || applyLineToInstanceMods(line) || applyLineToInstanceOptions(line);
         }
 
         private boolean applyLineToInstanceState(final String line) {
@@ -242,16 +278,16 @@ public class TerrariaInstanceOutputService {
             return true;
         }
 
-        private void applyLineToInstanceOptions(final String line) {
+        private boolean applyLineToInstanceOptions(final String line) {
             final @Nullable WorldMenuOption newOption = WorldMenuOption.fromLine(line);
             if (newOption == null) {
-                return;
+                return false;
             }
             final @Nullable String existingOptionLabel = instance.getPendingOptions().get(newOption.getId());
             if (existingOptionLabel != null) {
                 if (newOption.getLabel().equals(existingOptionLabel)) {
                     logger.warn("Option '{}) {}' is already known", newOption.getId(), newOption.getLabel());
-                    return;
+                    return true;
                 }
                 logger.warn("Overwriting the known option '{}) {}' with a new option '{}) {}'", newOption.getId(),
                         existingOptionLabel, newOption.getId(), newOption.getLabel());
@@ -263,14 +299,14 @@ public class TerrariaInstanceOutputService {
                             .stream()
                             .map(entry -> entry.getKey() + "\t\t" + entry.getValue())
                             .collect(Collectors.joining("\n")));
+            return true;
         }
 
         private void onFileExistenceChanged(final boolean fileExists) {
             instance = terrariaInstanceRepository.getOne(instance.getId());
             @Nullable Boolean hasSession = null;
             final TerrariaInstanceEventEntity.TerrariaInstanceEventEntityBuilder eventBuilder =
-                    TerrariaInstanceEventEntity
-                    .builder()
+                    TerrariaInstanceEventEntity.builder()
                     .instance(instance);
             try {
                 hasSession = tmuxService.hasSession(instance.getUuid().toString());
@@ -280,7 +316,7 @@ public class TerrariaInstanceOutputService {
                 logger.warn("Interrupted while checking for the session of instance " + instance.getUuid(), e);
                 instance.setState(TerrariaInstanceState.BROKEN);
                 instance.setError("TSW has been interrupted");
-                instance = saveInstanceAndEvent(instance,
+                instance = saveInstanceAndEvents(instance,
                         eventBuilder.type(TerrariaInstanceEventType.TSW_INTERRUPTED).build());
                 Thread.currentThread().interrupt();
                 return;
@@ -302,7 +338,7 @@ public class TerrariaInstanceOutputService {
                 instance.setError(error);
                 event = eventBuilder.type(TerrariaInstanceEventType.ERROR).text(error).build();
             }
-            instance = saveInstanceAndEvent(instance, event);
+            instance = saveInstanceAndEvents(instance, event);
         }
     }
 }

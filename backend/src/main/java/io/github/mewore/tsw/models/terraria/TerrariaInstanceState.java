@@ -90,6 +90,12 @@ public enum TerrariaInstanceState {
     RUNNING(true, SHUT_DOWN, SHUT_DOWN_NO_SAVE, TERMINATE),
 
     /**
+     * The server has been run while another one on the same host was using the same port. It should get shut down
+     * automatically afterwards.
+     */
+    PORT_CONFLICT(true, SHUT_DOWN, TERMINATE),
+
+    /**
      * The instance has failed validation checks. This is assumed to be due to its configuration being incorrect.
      */
     INVALID(false, DELETE),

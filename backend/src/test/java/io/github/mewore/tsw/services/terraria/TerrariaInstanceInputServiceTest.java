@@ -38,9 +38,6 @@ class TerrariaInstanceInputServiceTest {
     private TerrariaInstanceInputService terrariaInstanceInputService;
 
     @Mock
-    private TerrariaInstancePreparationService terrariaInstancePreparationService;
-
-    @Mock
     private TerrariaInstanceEventRepository terrariaInstanceEventRepository;
 
     @Mock
@@ -59,7 +56,7 @@ class TerrariaInstanceInputServiceTest {
         when(terrariaInstanceEventService.waitForInstanceState(same(instance), any(), any(), any())).thenReturn(
                 instance);
 
-        terrariaInstanceInputService.sendBreakToInstance(instance, TerrariaInstanceState.IDLE, Duration.ofMinutes(10));
+        terrariaInstanceInputService.sendBreakToInstance(instance, Duration.ofMinutes(10), TerrariaInstanceState.IDLE);
         verify(terrariaInstanceEventRepository).save(eventCaptor.capture());
         assertEquals("^C\n", eventCaptor.getValue().getText());
         verify(tmuxService, only()).sendCtrlC(INSTANCE_UUID.toString());
@@ -72,11 +69,11 @@ class TerrariaInstanceInputServiceTest {
         when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, TerrariaInstanceState.IDLE,
-                Duration.ofMinutes(10))).thenReturn(awaitedInstance);
+        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(10),
+                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         final TerrariaInstanceEntity result = terrariaInstanceInputService.sendInputToInstance(instance, "input",
-                TerrariaInstanceState.IDLE, Duration.ofMinutes(10));
+                Duration.ofMinutes(10), TerrariaInstanceState.IDLE);
         assertSame(awaitedInstance, result);
 
         verify(terrariaInstanceEventRepository).save(eventCaptor.capture());
@@ -92,8 +89,8 @@ class TerrariaInstanceInputServiceTest {
         when(terrariaInstanceEventService.waitForInstanceState(same(instance), any(), any(), any())).thenReturn(
                 instance);
 
-        terrariaInstanceInputService.sendInputToInstance(instance, "sensitive input", TerrariaInstanceState.IDLE,
-                Duration.ofMinutes(10), true);
+        terrariaInstanceInputService.sendInputToInstance(instance, "sensitive input", Duration.ofMinutes(10), true,
+                TerrariaInstanceState.IDLE);
         verify(terrariaInstanceEventRepository).save(eventCaptor.capture());
         assertEquals("[REDACTED]\n", eventCaptor.getValue().getText());
         verify(tmuxService, only()).sendInput(INSTANCE_UUID.toString(), "sensitive input\n");

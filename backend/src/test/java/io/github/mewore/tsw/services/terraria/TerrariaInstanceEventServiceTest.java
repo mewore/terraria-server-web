@@ -120,8 +120,8 @@ class TerrariaInstanceEventServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         final FakeSubscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(instance);
 
-        terrariaInstanceEventService.waitForInstanceState(instance, subscription, TerrariaInstanceState.IDLE,
-                Duration.ofMinutes(1));
+        terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
+                TerrariaInstanceState.IDLE);
         assertEquals(Duration.ofMinutes(1), subscription.getLastTimeout());
     }
 
@@ -131,9 +131,10 @@ class TerrariaInstanceEventServiceTest {
         final FakeSubscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(instance);
 
         final Exception exception = assertThrows(IllegalStateException.class,
-                () -> terrariaInstanceEventService.waitForInstanceState(instance, subscription,
-                        TerrariaInstanceState.WORLD_MENU, Duration.ofMinutes(1)));
-        assertEquals("The instance " + TerrariaInstanceFactory.INSTANCE_UUID + " did not reach the state WORLD_MENU " +
+                () -> terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
+                        TerrariaInstanceState.WORLD_MENU, TerrariaInstanceState.BOOTING_UP));
+        assertEquals("The instance " + TerrariaInstanceFactory.INSTANCE_UUID +
+                " did not reach the state(s) WORLD_MENU/BOOTING_UP " +
                 "within a timeout of PT1M; instead, its state is IDLE.", exception.getMessage());
     }
 

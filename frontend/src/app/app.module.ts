@@ -11,6 +11,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { CoreModule } from './core/core.module';
 import { HeaderModule } from './header/header.module';
 import { HostModule } from './host/host.module';
+import { TerrariaModule } from './terraria/terraria.module';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(httpClient: HttpClient): TranslateLoader {
@@ -27,6 +28,7 @@ export function HttpLoaderFactory(httpClient: HttpClient): TranslateLoader {
         AuthenticationModule,
         HeaderModule,
         HostModule,
+        TerrariaModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,

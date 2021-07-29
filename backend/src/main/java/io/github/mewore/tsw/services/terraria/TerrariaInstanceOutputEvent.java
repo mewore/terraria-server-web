@@ -23,7 +23,9 @@ public enum TerrariaInstanceOutputEvent {
             "Automatically forward port? (y/n):", TerrariaInstanceState.PORT_PROMPT),
     PASSWORD(TerrariaInstanceState.PASSWORD_PROMPT, "Server password (press enter for none):",
             TerrariaInstanceState.AUTOMATICALLY_FORWARD_PORT_PROMPT),
-    RUNNING(TerrariaInstanceState.RUNNING, "Server started", TerrariaInstanceState.PASSWORD_PROMPT);
+    PORT_CONFLICT(TerrariaInstanceState.PORT_CONFLICT, "Tried to run two servers on the same PC",
+            TerrariaInstanceState.PASSWORD_PROMPT),
+    RUNNING(TerrariaInstanceState.RUNNING, "Listening on port", TerrariaInstanceState.PASSWORD_PROMPT);
 
     @Getter
     private final TerrariaInstanceState targetState;

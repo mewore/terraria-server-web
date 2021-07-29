@@ -1,0 +1,30 @@
+<h2>{{ data.titleKey | translate }}</h2>
+
+<mat-dialog-content *ngIf="data.descriptionKey">{{ data.descriptionKey || '' | translate }}</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button [mat-dialog-close] mat-button>{{ 'dialog.buttons.cancel' | translate }}</button>
+    <button
+        (click)="onButtonClicked(button)"
+        *ngFor="let button of data.extraButtons"
+        [color]="data.warn ? 'warn' : 'primary'"
+        [disabled]="loading"
+        mat-stroked-button
+    >
+        {{ button.labelKey | translate }}
+    </button>
+    <button
+        (click)="onButtonClicked(data.primaryButton)"
+        [color]="data.warn ? 'warn' : 'primary'"
+        [disabled]="loading"
+        mat-raised-button
+    >
+        {{ data.primaryButton.labelKey | translate }}
+    </button>
+
+    <mat-progress-bar
+        [class]="loading ? '' : 'tsw-invisible'"
+        [color]="data.warn ? 'warn' : 'primary'"
+        mode="indeterminate"
+    ></mat-progress-bar>
+</mat-dialog-actions>
