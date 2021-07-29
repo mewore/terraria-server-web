@@ -127,7 +127,7 @@ class TerrariaInstanceOutputServiceTest {
         final FileTailEventConsumer tail = track(instance);
         simulateText(tail, "Terraria ",
                 "Server v1.3.5.3 - tModLoader v0.11.8.4\n\n1\t\tWorld1\n2\t\tWorld2\nn\tNew World\nd <number>Delete " +
-                        "World\nm\t\tMods Menu\nb\t\tMod Browser\n\nChoose ");
+                        "World\nm\t\tMods Menu\nb\t\tMod Browser\n\nChoose ", "");
         assertSame(TerrariaInstanceState.BOOTING_UP, instance.getState());
         assertEquals(Map.of(1, "World1", 2, "World2"), instance.getPendingOptions());
         assertEquals(Collections.emptyMap(), instance.getOptions());
@@ -160,7 +160,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_options() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         final FileTailEventConsumer tail = track(instance);
-        simulateText(tail, "1\t\tOldOption1\n");
+        simulateText(tail, "1\t\tOldOption1\n", "");
         assertEquals(Map.of(1, "OldOption1"), instance.getPendingOptions());
 
         simulateText(tail, "1\t\tOption1\n1\t\tOption1\n2\t\tOpt", "ion2\n");

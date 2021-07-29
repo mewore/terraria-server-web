@@ -224,10 +224,6 @@ public class TerrariaInstanceOutputService {
             onFileExistenceChanged(false);
         }
 
-        @Override
-        public void close() {
-        }
-
         /**
          * Modify the current instance based on a line.
          *

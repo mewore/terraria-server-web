@@ -64,8 +64,6 @@ public class FileTail implements Runnable {
             Thread.currentThread().interrupt();
         } catch (final IOException | RuntimeException e) {
             logger.error("Encountered an unexpected exception while tailing the file.", e);
-        } finally {
-            eventConsumer.close();
         }
     }
 

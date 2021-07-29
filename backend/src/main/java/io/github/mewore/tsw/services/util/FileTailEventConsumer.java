@@ -1,6 +1,6 @@
 package io.github.mewore.tsw.services.util;
 
-public interface FileTailEventConsumer extends AutoCloseable {
+public interface FileTailEventConsumer {
 
     void onFileCreated();
 
@@ -11,7 +11,4 @@ public interface FileTailEventConsumer extends AutoCloseable {
     void onReadFinished(final long position);
 
     void onFileDeleted();
-
-    @Override
-    void close();
 }
