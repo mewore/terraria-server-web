@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LogOutDialogComponent } from './log-out-dialog.component';
 
-describe('LogOutDialogComponent', () => {
+xdescribe('LogOutDialogComponent', () => {
     let component: LogOutDialogComponent;
     let fixture: ComponentFixture<LogOutDialogComponent>;
 

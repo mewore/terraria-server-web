@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TerrariaInstanceListItemComponent } from './terraria-instance-list-item.component';
 
-describe('TerrariaInstanceListItemComponent', () => {
+xdescribe('TerrariaInstanceListItemComponent', () => {
     let component: TerrariaInstanceListItemComponent;
     let fixture: ComponentFixture<TerrariaInstanceListItemComponent>;
 

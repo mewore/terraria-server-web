@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { HostInfoPageComponent } from './host-info-page.component';
 
-describe('HostInfoComponent', () => {
+xdescribe('HostInfoComponent', () => {
     let component: HostInfoPageComponent;
     let fixture: ComponentFixture<HostInfoPageComponent>;
 

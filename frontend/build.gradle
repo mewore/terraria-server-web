@@ -65,8 +65,7 @@ task frontendTest(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions])
     description('Tests the frontend.')
 }
 
-// TODO: Fix and uncomment frontendTest
-jar.dependsOn([frontendLint, frontendBuildProd, /*frontendTest*/])
+jar.dependsOn([frontendLint, frontendBuildProd, frontendTest])
 jar {
     inputs.dir('dist')
     outputs.dir('build')
