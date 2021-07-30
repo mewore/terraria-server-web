@@ -11,7 +11,7 @@
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker/3.15.0/1d9f6977d66399b1c49de0f210b542c55af61cc3/checker-3.15.0.jar" />
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker-util/3.15.0/5c219612a4ce26568897f73db235f444bc25cb11/checker-util-3.15.0.jar" />
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker-qual/3.15.0/365507b8eacc42fa8722fe9faffa84255f2ef721/checker-qual-3.15.0.jar" />
-          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.18/481f5bfed3ae29f656eedfe9e98c8365b8ba5c57/lombok-1.18.18.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.20/18bcea7d5df4d49227b4a0743a536208ce4825bb/lombok-1.18.20.jar" />
           <entry name="$PROJECT_DIR$/backend/build/checkerframework" />
         </processorPath>
         <module name="terraria-server-web.backend.test" />

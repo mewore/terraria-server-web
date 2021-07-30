@@ -31,12 +31,6 @@ public class HttpService {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    public byte[] requestRaw(final URL url) throws IOException {
-        try (final InputStream stream = url.openStream()) {
-            return stream.readAllBytes();
-        }
-    }
-
     public void checkUrl(final URL url) throws IOException, HttpClientErrorException {
         try (final InputStream stream = requestAsStream(url, HEAD_REQUEST_SETTINGS)) {
             logger.info("The response header for URL {} is:\n{}", url, new String(stream.readAllBytes()));
@@ -77,7 +71,8 @@ public class HttpService {
     }
 
     public <T> T get(final URL url, final TypeReference<T> typeReference) throws IOException {
-        final byte[] raw = requestRaw(url);
-        return JSON_READER.createParser(raw).readValueAs(typeReference);
+        try (final InputStream stream = requestAsStream(url)) {
+            return JSON_READER.createParser(stream).readValueAs(typeReference);
+        }
     }
 }
