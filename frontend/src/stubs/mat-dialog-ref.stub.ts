@@ -1,5 +1,5 @@
 import { DialogPosition, MatDialogRef, MatDialogState, _MatDialogContainerBase } from '@angular/material/dialog';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 export class MatDialogRefStub<C, O> implements Required<MatDialogRef<C, O>> {
     get _containerInstance(): _MatDialogContainerBase {
@@ -16,6 +16,12 @@ export class MatDialogRefStub<C, O> implements Required<MatDialogRef<C, O>> {
 
     get disableClose(): boolean | undefined {
         throw new Error('Method not mocked.');
+    }
+
+    static withCloseValue<C, O>(closeValue?: O): MatDialogRef<C, O> {
+        const dialog = new MatDialogRefStub<C, O>() as MatDialogRef<C, O>;
+        spyOn(dialog, 'afterClosed').and.returnValue(of(closeValue));
+        return dialog;
     }
 
     close(_dialogResult?: O): void {
