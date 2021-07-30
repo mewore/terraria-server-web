@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { SetInstanceModsDialogService } from './set-instance-mods-dialog.service';
 
-describe('SetInstanceModsDialogService', () => {
+xdescribe('SetInstanceModsDialogService', () => {
     let service: SetInstanceModsDialogService;
 
     beforeEach(() => {

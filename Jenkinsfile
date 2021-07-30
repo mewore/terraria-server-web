@@ -51,8 +51,14 @@ pipeline {
         stage('Frontend') {
             steps {
                 script {
-                    sh './gradlew frontend:frontendLint frontend:frontendBuildProd --no-daemon'
+                    sh './gradlew frontend:frontendLint frontend:frontendBuildProd frontend:frontendTest --no-daemon'
                 }
+                cobertura([
+                    coberturaReportFile: '**/frontend/coverage/terraria-server-web/cobertura-coverage.xml',
+                    conditionalCoverageTargets: '90, 0, 0',
+                    lineCoverageTargets: '95, 0, 0',
+                    methodCoverageTargets: '95, 0, 0',
+                ])
             }
         }
         stage('Jar') {

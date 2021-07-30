@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TerrariaInstancePageComponent } from './terraria-instance-page.component';
 
-describe('TerrariaInstancePageComponent', () => {
+xdescribe('TerrariaInstancePageComponent', () => {
     let component: TerrariaInstancePageComponent;
     let fixture: ComponentFixture<TerrariaInstancePageComponent>;
 
