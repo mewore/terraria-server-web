@@ -34,6 +34,7 @@ task frontendLint(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions])
 }
 
 task frontendBuild(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
+    mustRunAfter = [frontendLint]
     inputs.dir('src')
     inputs.files(COMMON_ROOT_SOURCE_FILES)
     inputs.file('tsconfig.app.json')
@@ -43,7 +44,7 @@ task frontendBuild(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]
 }
 
 task frontendBuildProd(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
-    inputs.dir('src')
+    dependsOn = [frontendLint]
     inputs.files(COMMON_ROOT_SOURCE_FILES)
     inputs.file('tsconfig.app.json')
     outputs.dir('dist')
