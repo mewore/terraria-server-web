@@ -3,21 +3,23 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 
+export type LogOutDialogComponentOutput = void;
+
 @Component({
     selector: 'tsw-log-out-dialog',
     templateUrl: './log-out-dialog.component.html',
     styleUrls: ['./log-out-dialog.component.sass'],
 })
 export class LogOutDialogComponent {
-    loggingOut = false;
+    loading = false;
 
     constructor(
-        private readonly dialog: MatDialogRef<LogOutDialogComponent, void>,
+        private readonly dialog: MatDialogRef<LogOutDialogComponent, LogOutDialogComponentOutput>,
         private readonly authenticationService: AuthenticationService
     ) {}
 
     async logOut(): Promise<void> {
-        this.loggingOut = true;
+        this.loading = true;
         try {
             await this.authenticationService.logOut();
             this.dialog.close();
@@ -34,7 +36,7 @@ export class LogOutDialogComponent {
                 throw error;
             }
         } finally {
-            this.loggingOut = false;
+            this.loading = false;
         }
     }
 }

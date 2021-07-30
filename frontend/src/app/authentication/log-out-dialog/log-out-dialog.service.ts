@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { LogOutDialogComponent } from './log-out-dialog.component';
+import { LogOutDialogComponent, LogOutDialogComponentOutput } from './log-out-dialog.component';
 
 @Injectable({
     providedIn: 'root',
@@ -8,7 +8,7 @@ import { LogOutDialogComponent } from './log-out-dialog.component';
 export class LogOutDialogService {
     constructor(private readonly dialog: MatDialog) {}
 
-    openDialog(): Promise<void> {
+    openDialog(): Promise<LogOutDialogComponentOutput> {
         return this.dialog.open(LogOutDialogComponent, {}).afterClosed().toPromise();
     }
 }

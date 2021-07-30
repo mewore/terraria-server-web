@@ -20,9 +20,8 @@ describe('AuthenticationDialogComponent', () => {
 
     async function instantiate(): Promise<AuthenticationDialogComponent> {
         fixture = TestBed.createComponent(AuthenticationDialogComponent);
-        component = fixture.componentInstance;
         await fixture.whenStable();
-        return component;
+        return fixture.componentInstance;
     }
 
     beforeEach(async () => {
@@ -37,7 +36,7 @@ describe('AuthenticationDialogComponent', () => {
 
         dialogRef = TestBed.inject(MatDialogRef);
         authenticationService = TestBed.inject(AuthenticationService);
-        await instantiate();
+        component = await instantiate();
     });
 
     it('should create', async () => {
@@ -113,7 +112,6 @@ describe('AuthenticationDialogComponent', () => {
 
             it('should close with the user authentication as a result', () => {
                 expect(dialogCloseSpy).toHaveBeenCalledWith(userAuth);
-                expect(logInSpy).toHaveBeenCalledWith('username', 'password');
             });
 
             it('should not be busy', () => {
@@ -224,7 +222,6 @@ describe('AuthenticationDialogComponent', () => {
 
             it('should close with the user authentication as a result', () => {
                 expect(dialogCloseSpy).toHaveBeenCalledWith(userAuth);
-                expect(signUpSpy).toHaveBeenCalledWith('username', 'password');
             });
 
             it('should not be busy', () => {

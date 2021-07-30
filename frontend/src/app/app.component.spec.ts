@@ -20,9 +20,8 @@ describe('AppComponent', () => {
 
     async function instantiate(): Promise<AppComponent> {
         const fixture = TestBed.createComponent(AppComponent);
-        const component = fixture.componentInstance;
         await fixture.whenStable();
-        return component;
+        return fixture.componentInstance;
     }
 
     it('should create the app', async () => {

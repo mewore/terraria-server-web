@@ -51,7 +51,7 @@
     <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="myValues">
         <value>
-          <list size="10">
+          <list size="15">
             <item index="0" class="java.lang.String" itemvalue="[mattooltip]" />
             <item index="1" class="java.lang.String" itemvalue="[disabled]" />
             <item index="2" class="java.lang.String" itemvalue="mat-icon-button" />
@@ -62,6 +62,11 @@
             <item index="7" class="java.lang.String" itemvalue="[routerlink]" />
             <item index="8" class="java.lang.String" itemvalue="[class.tsw-inactive]" />
             <item index="9" class="java.lang.String" itemvalue="mat-subheader" />
+            <item index="10" class="java.lang.String" itemvalue="mat-button" />
+            <item index="11" class="java.lang.String" itemvalue="[mat-dialog-close]" />
+            <item index="12" class="java.lang.String" itemvalue="(click)" />
+            <item index="13" class="java.lang.String" itemvalue="color" />
+            <item index="14" class="java.lang.String" itemvalue="mat-raised-button" />
           </list>
         </value>
       </option>
