@@ -189,7 +189,7 @@
                         "errors": {
                             "no-worlds": "There are no worlds to run this server with"
                         },
-                        "label": "",
+                        "label": "World",
                         "used": "(used by a server)",
                         "warnings": {
                             "different-mods": "The mods of the world are different from the ones of the instance.",
