@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { EMPTY, Observable } from 'rxjs';
 
-export class TranslateServiceStub {
+export class TranslateServiceStub implements Partial<TranslateService> {
 
     addLangs(_langs: Array<string>): void {}
 

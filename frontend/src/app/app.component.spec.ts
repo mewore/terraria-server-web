@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { TranslateService } from '@ngx-translate/core';
-import { TranslateServiceStub } from 'src/stub/translate.service.stub';
+import { TranslateServiceStub } from 'src/stubs/translate.service.stub';
 import { AppComponent } from './app.component';
 import { HeaderBarStubComponent } from './header/header-bar/header-bar.component.stub';
 

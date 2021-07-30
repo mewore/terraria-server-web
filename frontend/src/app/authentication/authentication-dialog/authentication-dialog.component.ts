@@ -10,6 +10,8 @@ interface AuthenticationSpec {
     password: string;
 }
 
+export type AuthenticationDialogComponentOutput = AuthenticatedUser;
+
 @Component({
     selector: 'tsw-authentication-dialog',
     templateUrl: './authentication-dialog.component.html',
@@ -25,7 +27,7 @@ export class AuthenticationDialogComponent {
     errorMessageKey = '';
 
     constructor(
-        private readonly dialog: MatDialogRef<AuthenticationDialogComponent, AuthenticatedUser>,
+        private readonly dialog: MatDialogRef<AuthenticationDialogComponent, AuthenticationDialogComponentOutput>,
         private readonly authenticationService: AuthenticationService
     ) {}
 
@@ -40,8 +42,7 @@ export class AuthenticationDialogComponent {
     logIn(): Promise<void> {
         return this.attemptRequest(
             () => (this.loggingIn = true),
-            (authenticationSpec) =>
-                this.authenticationService.logIn(authenticationSpec.username, authenticationSpec.password),
+            () => this.authenticationService.logIn(this.usernameFormControl.value, this.passwordFormControl.value),
             () => (this.loggingIn = false)
         );
     }
@@ -49,15 +50,14 @@ export class AuthenticationDialogComponent {
     signUp(): Promise<void> {
         return this.attemptRequest(
             () => (this.signingUp = true),
-            (authenticationSpec) =>
-                this.authenticationService.signUp(authenticationSpec.username, authenticationSpec.password),
+            () => this.authenticationService.signUp(this.usernameFormControl.value, this.passwordFormControl.value),
             () => (this.signingUp = false)
         );
     }
 
     async attemptRequest(
         before: () => void,
-        requestFunction: (authenticationSpec: AuthenticationSpec) => Promise<AuthenticatedUser>,
+        requestFunction: () => Promise<AuthenticatedUser>,
         after: () => void
     ): Promise<void> {
         this.usernameFormControl.markAsDirty();
@@ -68,7 +68,7 @@ export class AuthenticationDialogComponent {
         this.errorMessageKey = '';
         try {
             before();
-            const userAuth = await requestFunction(this.getAuthenticationSpec());
+            const userAuth = await requestFunction();
             this.dialog.close(userAuth);
         } catch (error) {
             if (error instanceof HttpErrorResponse) {
@@ -89,12 +89,5 @@ export class AuthenticationDialogComponent {
         } finally {
             after();
         }
-    }
-
-    getAuthenticationSpec(): AuthenticationSpec {
-        return {
-            username: this.usernameFormControl.value,
-            password: this.passwordFormControl.value,
-        };
     }
 }

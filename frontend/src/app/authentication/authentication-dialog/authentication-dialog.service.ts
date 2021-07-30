@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { AuthenticatedUser } from 'src/app/core/types';
-import { AuthenticationDialogComponent } from './authentication-dialog.component';
+import { AuthenticationDialogComponent, AuthenticationDialogComponentOutput } from './authentication-dialog.component';
 
 @Injectable({
     providedIn: 'root',
@@ -9,7 +8,7 @@ import { AuthenticationDialogComponent } from './authentication-dialog.component
 export class AuthenticationDialogService {
     constructor(private readonly dialog: MatDialog) {}
 
-    openDialog(): Promise<AuthenticatedUser | undefined> {
+    openDialog(): Promise<AuthenticationDialogComponentOutput | undefined> {
         return this.dialog.open(AuthenticationDialogComponent, {}).afterClosed().toPromise();
     }
 }
