@@ -1,10 +1,13 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
-import { ImperfectStub } from './imperfect-stub';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable()
-export class MatDialogStub extends ImperfectStub<MatDialog> implements OnDestroy {
+export class MatDialogStub implements Required<MatDialog>, OnDestroy {
+    get afterAllClosed(): Observable<void> {
+        throw new Error('Method not mocked.');
+    }
+
     get openDialogs(): MatDialogRef<any, any>[] {
         throw new Error('Method not mocked.');
     }

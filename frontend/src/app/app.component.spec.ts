@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import { HeaderBarStubComponent } from './header/header-bar/header-bar.component.stub';
 
 describe('AppComponent', () => {
-    let translateService: TranslateService;
+    let translateService: TranslateServiceStub;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({

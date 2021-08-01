@@ -1,8 +1,8 @@
 import { TranslateService } from '@ngx-translate/core';
 import { EMPTY, Observable } from 'rxjs';
-import { ImperfectStub as ImperfectStub } from './imperfect-stub';
 
-export class TranslateServiceStub extends ImperfectStub<TranslateService> {
+export class TranslateServiceStub implements Partial<TranslateService> {
+
     addLangs(_langs: Array<string>): void {}
 
     setDefaultLang(_lang: string): void {}

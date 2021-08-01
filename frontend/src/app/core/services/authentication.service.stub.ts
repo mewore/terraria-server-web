@@ -2,7 +2,7 @@ import { EMPTY, Observable } from 'rxjs';
 import { AuthenticatedUser } from '../types';
 import { AuthenticationService } from './authentication.service';
 
-export class AuthenticationServiceStub implements AuthenticationService {
+export class AuthenticationServiceStub implements Required<AuthenticationService> {
     readonly userObservable: Observable<AuthenticatedUser | undefined> = EMPTY;
 
     get currentUser(): AuthenticatedUser | undefined {

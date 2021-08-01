@@ -1,9 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticatedUser } from 'src/app/core/types';
+
+interface AuthenticationSpec {
+    username: string;
+    password: string;
+}
 
 export type AuthenticationDialogComponentOutput = AuthenticatedUser;
 

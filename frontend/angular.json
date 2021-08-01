@@ -86,8 +86,7 @@
                         "main": "src/test.ts",
                         "codeCoverageExclude": [
                             "**/*.stub.*",
-                            "**/generated/**/*",
-                            "**/stubs/**/*"
+                            "**/generated/**/*"
                         ],
                         "polyfills": "src/polyfills.ts",
                         "tsConfig": "tsconfig.spec.json",
