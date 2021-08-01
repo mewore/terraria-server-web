@@ -5,18 +5,6 @@ import { AuthenticatedUser } from '../types';
 import { AuthenticationStateService, SessionState } from './authentication-state.service';
 import { RestApiService } from './rest-api.service';
 
-export abstract class AuthenticationService {
-    abstract userObservable: Observable<AuthenticatedUser | undefined>;
-    abstract currentUser: AuthenticatedUser | undefined;
-    abstract canManageHosts: boolean;
-
-    abstract logIn(username: string, password: string): Promise<AuthenticatedUser>;
-
-    abstract signUp(username: string, password: string): Promise<AuthenticatedUser>;
-
-    abstract logOut(): Promise<void>;
-}
-
 @Injectable({
     providedIn: 'root',
 })
@@ -25,7 +13,7 @@ export class AuthenticationServiceImpl implements AuthenticationService {
 
     private userSubject: BehaviorSubject<AuthenticatedUser | undefined>;
 
-    userObservable: Observable<AuthenticatedUser | undefined>;
+    readonly userObservable: Observable<AuthenticatedUser | undefined>;
 
     constructor(
         private readonly restApi: RestApiService,
@@ -114,4 +102,16 @@ export class AuthenticationServiceImpl implements AuthenticationService {
         await this.restApi.logOut();
         this.userSubject.next(undefined);
     }
+}
+
+export abstract class AuthenticationService {
+    abstract readonly userObservable: Observable<AuthenticatedUser | undefined>;
+    abstract readonly currentUser: AuthenticatedUser | undefined;
+    abstract readonly canManageHosts: boolean;
+
+    abstract logIn(username: string, password: string): Promise<AuthenticatedUser>;
+
+    abstract signUp(username: string, password: string): Promise<AuthenticatedUser>;
+
+    abstract logOut(): Promise<void>;
 }
