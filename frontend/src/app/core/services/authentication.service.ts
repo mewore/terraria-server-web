@@ -5,10 +5,22 @@ import { AuthenticatedUser } from '../types';
 import { AuthenticationStateService, SessionState } from './authentication-state.service';
 import { RestApiService } from './rest-api.service';
 
+export abstract class AuthenticationService {
+    abstract userObservable: Observable<AuthenticatedUser | undefined>;
+    abstract currentUser: AuthenticatedUser | undefined;
+    abstract canManageHosts: boolean;
+
+    abstract logIn(username: string, password: string): Promise<AuthenticatedUser>;
+
+    abstract signUp(username: string, password: string): Promise<AuthenticatedUser>;
+
+    abstract logOut(): Promise<void>;
+}
+
 @Injectable({
     providedIn: 'root',
 })
-export class AuthenticationService {
+export class AuthenticationServiceImpl implements AuthenticationService {
     private readonly SESSION_STORAGE_KEY = 'user';
 
     private userSubject: BehaviorSubject<AuthenticatedUser | undefined>;
