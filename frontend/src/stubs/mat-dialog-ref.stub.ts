@@ -1,25 +1,10 @@
 import { DialogPosition, MatDialogRef, MatDialogState, _MatDialogContainerBase } from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
+import { ImperfectStub } from './imperfect-stub';
 
-export class MatDialogRefStub<C, O> implements Required<MatDialogRef<C, O>> {
-    get _containerInstance(): _MatDialogContainerBase {
-        throw new Error('Method not mocked.');
-    }
-
-    get id(): string {
-        throw new Error('Method not mocked.');
-    }
-
-    get componentInstance(): C {
-        throw new Error('Method not mocked.');
-    }
-
-    get disableClose(): boolean | undefined {
-        throw new Error('Method not mocked.');
-    }
-
+export class MatDialogRefStub<C, O> extends ImperfectStub<MatDialogRef<C, O>> {
     static withCloseValue<C, O>(closeValue?: O): MatDialogRef<C, O> {
-        const dialog = new MatDialogRefStub<C, O>() as MatDialogRef<C, O>;
+        const dialog = new MatDialogRefStub<C, O>().masked();
         spyOn(dialog, 'afterClosed').and.returnValue(of(closeValue));
         return dialog;
     }
@@ -48,19 +33,19 @@ export class MatDialogRefStub<C, O> implements Required<MatDialogRef<C, O>> {
         throw new Error('Method not mocked.');
     }
 
-    updatePosition(_position?: DialogPosition): MatDialogRef<C, O> {
+    updatePosition(_position?: DialogPosition): this {
         throw new Error('Method not mocked.');
     }
 
-    updateSize(_width?: string, _height?: string): MatDialogRef<C, O> {
+    updateSize(_width?: string, _height?: string): this {
         throw new Error('Method not mocked.');
     }
 
-    addPanelClass(_classes: string | string[]): MatDialogRef<C, O> {
+    addPanelClass(_classes: string | string[]): this {
         throw new Error('Method not mocked.');
     }
 
-    removePanelClass(_classes: string | string[]): MatDialogRef<C, O> {
+    removePanelClass(_classes: string | string[]): this {
         throw new Error('Method not mocked.');
     }
 
