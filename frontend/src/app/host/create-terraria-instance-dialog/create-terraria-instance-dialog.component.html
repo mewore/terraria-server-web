@@ -33,11 +33,10 @@
             </mat-error>
         </mat-form-field>
         <p>
-            <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">{{
-                'terraria.instance.dialog.create.terraria-server-url.help-text' | translate
-                }}</a>
+            <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
+                {{ 'terraria.instance.dialog.create.terraria-server-url.help-text' | translate }}
+            </a>
         </p>
-        <br/>
         <mat-form-field appearance="standard">
             <mat-label>{{ 'terraria.instance.dialog.create.tmodloader-version.label' | translate }}</mat-label>
             <mat-select [formControl]="modLoaderReleaseInput">
@@ -54,17 +53,8 @@
 
 <mat-dialog-actions align="end">
     <button mat-button [mat-dialog-close]>{{ 'dialog.buttons.cancel' | translate }}</button>
-    <button
-        mat-raised-button
-        (click)="onCreateClicked()"
-        [disabled]="form.invalid || creating || loading"
-        color="primary"
-    >
+    <button (click)="onCreateClicked()" [disabled]="form.invalid || loading" color="primary" mat-raised-button>
         {{ 'terraria.instance.dialog.create.buttons.create' | translate }}
     </button>
-    <mat-progress-bar
-        mode="indeterminate"
-        [class]="creating || loading ? '' : 'tsw-invisible'"
-        color="primary"
-    ></mat-progress-bar>
+    <mat-progress-bar [class]="loading ? '' : 'tsw-invisible'" color="primary" mode="indeterminate"></mat-progress-bar>
 </mat-dialog-actions>

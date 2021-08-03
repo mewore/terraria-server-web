@@ -23,7 +23,6 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
     tModLoaderVersions: TModLoaderVersionViewModel[] = [];
 
     loading = false;
-    creating = false;
 
     readonly instanceNameInput = new FormControl('', [TswValidators.notBlank]);
 
@@ -68,7 +67,7 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
             return;
         }
 
-        this.creating = true;
+        this.loading = true;
         try {
             const newInstance = await this.restApi.createTerrariaInstance(this.data.id, {
                 instanceName: this.instanceNameInput.value,
@@ -77,7 +76,7 @@ export class CreateTerrariaInstanceDialogComponent implements OnInit {
             });
             this.dialog.close(newInstance);
         } finally {
-            this.creating = false;
+            this.loading = false;
         }
     }
 }
