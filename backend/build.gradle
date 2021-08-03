@@ -116,7 +116,7 @@ generateTypeScript {
 
     optionalAnnotations = ['org.springframework.lang.Nullable', 'org.checkerframework.checker.nullness.qual.Nullable']
 
-    customTypeMappings = ['java.nio.file.Path:string', 'java.time.Instant:string']
+    customTypeMappings = ['java.nio.file.Path:string', 'java.time.Instant:string', 'java.time.Duration:undefined']
 
     outputFileType = TypeScriptFileType.implementationFile
     jsonLibrary = JsonLibrary.jackson2

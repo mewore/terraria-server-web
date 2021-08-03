@@ -12,6 +12,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicUpdate;
@@ -53,11 +55,13 @@ public class HostEntity {
     @Column(nullable = false)
     private boolean alive = true;
 
+    @JsonIgnore
     @Builder.Default
     @Getter(AccessLevel.NONE)
     @Column(nullable = false)
     private @NonNull Instant lastHeartbeat = Instant.now();
 
+    @JsonIgnore
     @Getter(AccessLevel.NONE)
     @Column(nullable = false)
     private @NonNull Duration heartbeatDuration;
