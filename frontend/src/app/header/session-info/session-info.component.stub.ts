@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
-    selector: 'tsw-header-bar',
+    selector: 'tsw-session-info',
     template: '',
 })
-export class HeaderBarStubComponent {}
+export class SessionInfoStubComponent {}
