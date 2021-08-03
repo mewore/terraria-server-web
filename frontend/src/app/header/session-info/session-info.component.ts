@@ -27,12 +27,12 @@ export class SessionInfoComponent implements OnDestroy {
         });
     }
 
-    get isAuthenticated(): boolean {
-        return !!this.authenticationService.currentUser;
-    }
-
     ngOnDestroy(): void {
         this.subscription.unsubscribe();
+    }
+
+    get isAuthenticated(): boolean {
+        return !!this.authenticationService.currentUser;
     }
 
     onLogInClicked(): void {

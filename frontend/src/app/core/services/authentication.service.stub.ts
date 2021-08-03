@@ -5,9 +5,17 @@ import { AuthenticationService } from './authentication.service';
 
 @Injectable()
 export class AuthenticationServiceStub implements AuthenticationService {
-    readonly currentUser: AuthenticatedUser | undefined;
-    readonly canManageHosts: boolean = false;
-    readonly userObservable: Observable<AuthenticatedUser | undefined> = EMPTY;
+    public get currentUser(): AuthenticatedUser | undefined {
+        return undefined;
+    }
+
+    public get canManageHosts(): boolean {
+        return false;
+    }
+
+    public get userObservable(): Observable<AuthenticatedUser | undefined> {
+        throw EMPTY;
+    }
 
     logIn(_username: string, _password: string): Promise<AuthenticatedUser> {
         throw new Error('Method not mocked.');

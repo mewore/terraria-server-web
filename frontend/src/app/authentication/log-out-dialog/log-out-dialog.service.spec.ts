@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { MatDialogStub } from 'src/stubs/mat-dialog.stub';
 import { LogOutDialogComponent } from './log-out-dialog.component';
-import { LogOutDialogService } from './log-out-dialog.service';
+import { LogOutDialogService, LogOutDialogServiceImpl } from './log-out-dialog.service';
 
 describe('LogOutDialogService', () => {
     let service: LogOutDialogService;
@@ -14,7 +14,7 @@ describe('LogOutDialogService', () => {
         TestBed.configureTestingModule({ providers: [{ provide: MatDialog, useClass: MatDialogStub }] });
         dialog = TestBed.inject(MatDialog);
 
-        service = TestBed.inject(LogOutDialogService);
+        service = TestBed.inject(LogOutDialogServiceImpl);
     });
 
     it('should be created', () => {

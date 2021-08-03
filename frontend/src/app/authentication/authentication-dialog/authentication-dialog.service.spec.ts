@@ -1,12 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthenticatedUser } from 'src/app/core/types';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { MatDialogStub } from 'src/stubs/mat-dialog.stub';
-import { AuthenticationDialogComponent, AuthenticationDialogComponentOutput } from './authentication-dialog.component';
+import { AuthenticationDialogComponent } from './authentication-dialog.component';
 
-import { AuthenticationDialogService } from './authentication-dialog.service';
+import { AuthenticationDialogService, AuthenticationDialogServiceImpl } from './authentication-dialog.service';
 
 describe('AuthenticationDialogService', () => {
     let service: AuthenticationDialogService;
@@ -17,7 +16,7 @@ describe('AuthenticationDialogService', () => {
         TestBed.configureTestingModule({ providers: [{ provide: MatDialog, useClass: MatDialogStub }] });
         dialog = TestBed.inject(MatDialog);
 
-        service = TestBed.inject(AuthenticationDialogService);
+        service = TestBed.inject(AuthenticationDialogServiceImpl);
     });
 
     it('should be created', () => {
