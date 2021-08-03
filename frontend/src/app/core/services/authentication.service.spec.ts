@@ -27,7 +27,7 @@ describe('AuthenticationService', () => {
     let userSubscription: Subscription | undefined;
     let emittedUsers: (AuthenticatedUser | undefined)[];
 
-    function initialize(): AuthenticationService {
+    function instantiate(): AuthenticationService {
         service = TestBed.inject(AuthenticationServiceImpl);
         userSubscription = service.userObservable.subscribe({
             next: (newUser) => emittedUsers.push(newUser),
@@ -65,12 +65,12 @@ describe('AuthenticationService', () => {
     });
 
     it('should be created', () => {
-        expect(initialize()).toBeTruthy();
+        expect(instantiate()).toBeTruthy();
     });
 
     describe('when there is initially no user in the session storage', () => {
         it('should have no user', () => {
-            expect(initialize().currentUser).toBeUndefined();
+            expect(instantiate().currentUser).toBeUndefined();
         });
 
         it('canManageHosts should return false', () => {
@@ -81,7 +81,7 @@ describe('AuthenticationService', () => {
             let pingSpy: jasmine.Spy<() => void>;
 
             beforeEach(() => {
-                initialize();
+                instantiate();
                 pingSpy = spyOn(restApiService, 'ping');
             });
 
@@ -101,7 +101,7 @@ describe('AuthenticationService', () => {
                 username: 'username',
             } as AuthenticatedUser;
             markAsUnsureSpy = spyOn(authenticationStateService, 'markAsUnsure').and.returnValue();
-            initialize();
+            instantiate();
         });
 
         it('should have the user', () => {
@@ -124,7 +124,7 @@ describe('AuthenticationService', () => {
             let pingSpy: jasmine.Spy<() => Promise<AccountTypeEntity>>;
 
             beforeEach(() => {
-                initialize();
+                instantiate();
                 pingSpy = spyOn(restApiService, 'ping');
             });
 
@@ -200,7 +200,7 @@ describe('AuthenticationService', () => {
             logInSpy = spyOn(restApiService, 'logIn').and.resolveTo({
                 token: 'token',
             } as SessionViewModel);
-            initialize();
+            instantiate();
             await service.logIn('username', 'password');
         });
 
@@ -225,7 +225,7 @@ describe('AuthenticationService', () => {
             signUpSpy = spyOn(restApiService, 'signUp').and.resolveTo({
                 token: 'token',
             } as SessionViewModel);
-            initialize();
+            instantiate();
             await service.signUp('username', 'password');
         });
 
@@ -248,7 +248,7 @@ describe('AuthenticationService', () => {
 
         beforeEach(async () => {
             logOutSpy = spyOn(restApiService, 'logOut').and.resolveTo();
-            initialize();
+            instantiate();
             await service.logOut();
         });
 
