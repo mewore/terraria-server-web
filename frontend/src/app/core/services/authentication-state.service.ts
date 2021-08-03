@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 export enum SessionState {
     UNAUTHENTICATED,
@@ -8,13 +8,21 @@ export enum SessionState {
     AUTHENTICATED,
 }
 
+export abstract class AuthenticationStateService {
+    abstract readonly unsureObservable: Observable<void>;
+    abstract sessionState: SessionState;
+    abstract authData: string | undefined;
+
+    abstract markAsUnsure(): void;
+}
+
 @Injectable({
     providedIn: 'root',
 })
-export class AuthenticationStateService {
-    private unsureSubject = new BehaviorSubject<void>(undefined);
+export class AuthenticationStateServiceImpl implements AuthenticationStateService {
+    private unsureSubject = new Subject<void>();
 
-    public unsureObservable = this.unsureSubject.asObservable();
+    readonly unsureObservable = this.unsureSubject.asObservable();
 
     private privateAuthData?: string;
 

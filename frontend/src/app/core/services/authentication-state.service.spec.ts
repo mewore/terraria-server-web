@@ -1,29 +1,35 @@
 import { TestBed } from '@angular/core/testing';
+import { Subscription } from 'rxjs';
 
-import { AuthenticationStateService, SessionState } from './authentication-state.service';
+import { AuthenticationStateService, AuthenticationStateServiceImpl, SessionState } from './authentication-state.service';
 
 describe('AuthenticationStateService', () => {
     let service: AuthenticationStateService;
 
+    let unsureSubscription: Subscription;
     let unsureNotificationCount: number;
 
     beforeEach(() => {
         TestBed.configureTestingModule({});
 
-        service = TestBed.inject(AuthenticationStateService);
+        service = TestBed.inject(AuthenticationStateServiceImpl);
 
         unsureNotificationCount = 0;
-        service.unsureObservable.subscribe({
+        unsureSubscription = service.unsureObservable.subscribe({
             next: () => unsureNotificationCount++,
         });
+    });
+
+    afterEach(() => {
+        unsureSubscription.unsubscribe();
     });
 
     it('should be created', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should have one unsure notification in the beginning', () => {
-        expect(unsureNotificationCount).toBe(1);
+    it('should have no unsure notifications in the beginning', () => {
+        expect(unsureNotificationCount).toBe(0);
     });
 
     it('should be unauthenticated', () => {
@@ -63,7 +69,7 @@ describe('AuthenticationStateService', () => {
             });
 
             it('should notify once about being unsure', () => {
-                expect(unsureNotificationCount).toBe(2);
+                expect(unsureNotificationCount).toBe(1);
             });
         });
     });

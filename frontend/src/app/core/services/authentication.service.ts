@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { SessionViewModel } from 'src/generated/backend';
 import { AuthenticatedUser } from '../types';
 import { AuthenticationStateService, SessionState } from './authentication-state.service';
+import { ErrorService } from './error.service';
 import { RestApiService } from './rest-api.service';
+import { StorageService } from './storage.service';
 
 export abstract class AuthenticationService {
     abstract readonly userObservable: Observable<AuthenticatedUser | undefined>;
@@ -20,50 +22,45 @@ export abstract class AuthenticationService {
 @Injectable({
     providedIn: 'root',
 })
-export class AuthenticationServiceImpl implements AuthenticationService {
-    private readonly SESSION_STORAGE_KEY = 'user';
+export class AuthenticationServiceImpl implements AuthenticationService, OnDestroy {
+    private _currentUser: AuthenticatedUser | undefined;
 
-    private userSubject: BehaviorSubject<AuthenticatedUser | undefined>;
+    private readonly userSubject = new Subject<AuthenticatedUser | undefined>();
 
-    readonly userObservable: Observable<AuthenticatedUser | undefined>;
+    readonly userObservable = this.userSubject.asObservable();
+
+    private readonly unsureSubscription: Subscription;
 
     constructor(
         private readonly restApi: RestApiService,
-        private readonly authenticationStateService: AuthenticationStateService
+        private readonly authenticationStateService: AuthenticationStateService,
+        private readonly storageService: StorageService,
+        private readonly errorService: ErrorService
     ) {
-        const rawUser = sessionStorage.getItem(this.SESSION_STORAGE_KEY);
-        const initialUser = rawUser ? JSON.parse(rawUser) : undefined;
-        this.userSubject = new BehaviorSubject<AuthenticatedUser | undefined>(initialUser);
-        this.userObservable = this.userSubject.asObservable();
-        this.userObservable.subscribe({
-            next: (newAuth) => {
-                if (newAuth) {
-                    sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(newAuth));
-                    this.authenticationStateService.authData = newAuth.authData;
-                } else {
-                    sessionStorage.removeItem(this.SESSION_STORAGE_KEY);
-                    this.authenticationStateService.authData = undefined;
-                }
-            },
-        });
-        this.authenticationStateService.unsureObservable.subscribe({
+        const initialUser = storageService.user;
+        this.unsureSubscription = this.authenticationStateService.unsureObservable.subscribe({
             next: () => {
-                if (this.currentUser && this.authenticationStateService.sessionState === SessionState.UNSURE) {
+                if (this.currentUser) {
                     this.refreshState(this.currentUser);
                 }
             },
         });
         if (initialUser && initialUser.authData) {
+            this._currentUser = initialUser;
             this.authenticationStateService.authData = initialUser.authData;
             this.authenticationStateService.markAsUnsure();
         }
+    }
+
+    ngOnDestroy(): void {
+        this.unsureSubscription.unsubscribe();
     }
 
     private async refreshState(currentUser: AuthenticatedUser): Promise<void> {
         this.authenticationStateService.sessionState = SessionState.CHECKING;
         try {
             const accountType = await this.restApi.ping();
-            this.userSubject.next({
+            this.setCurrentUser({
                 authData: currentUser.authData,
                 sessionToken: currentUser.sessionToken,
                 username: currentUser.username,
@@ -71,14 +68,21 @@ export class AuthenticationServiceImpl implements AuthenticationService {
             });
             this.authenticationStateService.sessionState = SessionState.AUTHENTICATED;
         } catch (error) {
-            this.userSubject.next(undefined);
+            this.setCurrentUser(undefined);
             this.authenticationStateService.sessionState = SessionState.UNAUTHENTICATED;
-            throw error;
+            this.errorService.showError(error);
         }
     }
 
     get currentUser(): AuthenticatedUser | undefined {
-        return this.userSubject.value;
+        return this._currentUser;
+    }
+
+    private setCurrentUser(value: AuthenticatedUser | undefined): void {
+        this._currentUser = value;
+        this.userSubject.next(value);
+        this.storageService.user = value;
+        this.authenticationStateService.authData = value?.authData;
     }
 
     get canManageHosts(): boolean {
@@ -96,14 +100,14 @@ export class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private saveSession(username: string, session: SessionViewModel): AuthenticatedUser {
-        const result: AuthenticatedUser = {
+        const newUser: AuthenticatedUser = {
             username,
             sessionToken: session.token,
             authData: this.encodeBasicAuth(username, session.token),
             accountType: session.role,
         };
-        this.userSubject.next(result);
-        return result;
+        this.setCurrentUser(newUser);
+        return newUser;
     }
 
     private encodeBasicAuth(username: string, token: string): string {
@@ -112,6 +116,6 @@ export class AuthenticationServiceImpl implements AuthenticationService {
 
     async logOut(): Promise<void> {
         await this.restApi.logOut();
-        this.userSubject.next(undefined);
+        this.setCurrentUser(undefined);
     }
 }
