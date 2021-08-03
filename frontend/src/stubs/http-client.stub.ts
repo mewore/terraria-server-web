@@ -1,11 +1,7 @@
-import { HttpClient, HttpHandler } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { ImperfectStub } from './imperfect-stub';
 
-export class HttpClientStub implements ImperfectStub<HttpClient> {
-    masked(): HttpClient {
-        return this as unknown as HttpClient;
-    }
-
+export class HttpClientStub extends ImperfectStub<HttpClient> {
     request(): never {
         throw new Error('Method not mocked.');
     }
