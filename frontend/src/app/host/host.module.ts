@@ -15,6 +15,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { CreateTerrariaInstanceDialogComponent } from './create-terraria-instance-dialog/create-terraria-instance-dialog.component';
+import {
+    CreateTerrariaInstanceDialogService,
+    CreateTerrariaInstanceDialogServiceImpl,
+} from './create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 import { HostInfoPageComponent } from './host-info-page/host-info-page.component';
 import { HostListItemComponent } from './host-list-item/host-list-item.component';
 import { HostListPageComponent } from './host-list-page/host-list-page.component';
@@ -51,5 +55,6 @@ import { TerrariaWorldListItemComponent } from './terraria-world-list-item/terra
         ReactiveFormsModule,
         TranslateModule.forChild(),
     ],
+    providers: [{ provide: CreateTerrariaInstanceDialogService, useClass: CreateTerrariaInstanceDialogServiceImpl }],
 })
 export class HostModule {}
