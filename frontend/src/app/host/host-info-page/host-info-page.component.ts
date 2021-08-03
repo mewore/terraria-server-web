@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ErrorService } from 'src/app/core/services/error.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { HostEntity, TerrariaInstanceEntity, TerrariaWorldEntity } from 'src/generated/backend';
 import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
@@ -9,7 +11,7 @@ import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance
     templateUrl: './host-info-page.component.html',
     styleUrls: ['./host-info-page.component.sass'],
 })
-export class HostInfoPageComponent implements OnInit {
+export class HostInfoPageComponent implements OnInit, OnDestroy {
     loading = false;
 
     host?: HostEntity;
@@ -18,19 +20,23 @@ export class HostInfoPageComponent implements OnInit {
 
     worlds?: TerrariaWorldEntity[];
 
+    routeSubscription?: Subscription;
+
     constructor(
         private readonly restApi: RestApiService,
         private readonly activatedRoute: ActivatedRoute,
-        private readonly createDialogService: CreateTerrariaInstanceDialogService
+        private readonly createDialogService: CreateTerrariaInstanceDialogService,
+        private readonly errorService: ErrorService,
     ) {}
 
     async ngOnInit(): Promise<void> {
-        this.loading = true;
-        this.activatedRoute.paramMap.subscribe(async (paramMap) => {
+        this.routeSubscription = this.activatedRoute.paramMap.subscribe(async (paramMap) => {
+            this.loading = true;
             try {
                 const hostIdParam = paramMap.get('hostId');
                 if (!hostIdParam) {
-                    throw new Error('The [hostId] parameter is not set!');
+                    this.errorService.showError(new Error('The [hostId] parameter is not set!'));
+                    return;
                 }
                 const hostId = parseInt(hostIdParam, 10);
                 [this.host, this.instances, this.worlds] = await Promise.all([
@@ -44,13 +50,18 @@ export class HostInfoPageComponent implements OnInit {
         });
     }
 
+    ngOnDestroy(): void {
+        this.routeSubscription?.unsubscribe();
+    }
+
     get loaded(): boolean {
         return !this.loading;
     }
 
     async terrariaInstanceCreationRequested(): Promise<void> {
         if (!this.host || !this.instances) {
-            throw new Error('The data has not been loaded. Cannot create a Terraria instance.');
+            this.errorService.showError(new Error('The data has not been loaded. Cannot create a Terraria instance.'));
+            return;
         }
         const newInstance = await this.createDialogService.openDialog(this.host);
         if (newInstance) {

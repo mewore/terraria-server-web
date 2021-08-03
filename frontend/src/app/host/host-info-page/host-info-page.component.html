@@ -1,7 +1,6 @@
 <mat-list class="tsw-host-info">
     <div mat-subheader>Host</div>
     <tsw-host-list-item [host]="host"></tsw-host-list-item>
-
 </mat-list>
 <div *ngIf="loaded; else loadingSpinner" class="tsw-sublist-container">
     <mat-list>
