@@ -2,7 +2,7 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 export class TswValidators {
     static notBlank(control: AbstractControl): ValidationErrors | null {
-        return ('' + control.value || '').trim() ? null : { blank: true };
+        return ('' + (control.value || '')).trim() ? null : { blank: true };
     }
 
     static fileExtension(extension: string): ValidatorFn {
