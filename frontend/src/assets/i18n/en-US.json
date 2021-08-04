@@ -245,6 +245,9 @@
                 "buttons": {
                     "delete": "Delete",
                     "download": "Download"
+                },
+                "status": {
+                    "loading": "Loading..."
                 }
             }
         }

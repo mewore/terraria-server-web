@@ -6,13 +6,9 @@ import { TerrariaWorldEntity } from 'src/generated/backend';
     templateUrl: './terraria-world-list-item.component.html',
     styleUrls: ['./terraria-world-list-item.component.sass'],
 })
-export class TerrariaWorldListItemComponent implements OnInit {
+export class TerrariaWorldListItemComponent {
     @Input()
     world?: TerrariaWorldEntity;
-
-    constructor() {}
-
-    ngOnInit(): void {}
 
     get lastModifiedString(): string | undefined {
         return this.world ? new Date(this.world.lastModified).toLocaleString() : undefined;
