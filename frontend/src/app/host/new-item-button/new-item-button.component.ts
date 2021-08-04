@@ -32,6 +32,8 @@ export class NewItemButtonComponent {
     }
 
     clicked(): void {
-        this.press.emit();
+        if (!this.createDisabledReason) {
+            this.press.emit();
+        }
     }
 }
