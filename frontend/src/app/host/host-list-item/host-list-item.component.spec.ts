@@ -11,8 +11,9 @@ import { TranslateServiceStub } from 'src/stubs/translate.service.stub';
 import { HostListItemComponent } from './host-list-item.component';
 
 describe('HostListItemComponent', () => {
-    let component: HostListItemComponent;
     let fixture: ComponentFixture<HostListItemComponent>;
+    let component: HostListItemComponent;
+
     let host: HostEntity;
 
     beforeEach(async () => {
