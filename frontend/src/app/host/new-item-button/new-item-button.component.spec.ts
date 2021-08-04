@@ -33,7 +33,7 @@ describe('NewItemButtonComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [MatListModule, MatIconModule, MatTooltipModule],
-            declarations: [NewItemButtonComponent, HostListItemStubComponent, TranslatePipeStub],
+            declarations: [NewItemButtonComponent, TranslatePipeStub],
             providers: [
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
                 { provide: TranslateService, useClass: TranslateServiceStub },

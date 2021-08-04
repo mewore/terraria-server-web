@@ -222,6 +222,9 @@
                         "mod-loader-link": "GitHub release page",
                         "server-link": "Wiki page"
                     }
+                },
+                "status": {
+                    "loading": "Loading..."
                 }
             },
             "states": {

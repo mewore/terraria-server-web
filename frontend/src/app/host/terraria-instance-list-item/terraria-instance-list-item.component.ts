@@ -6,14 +6,10 @@ import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
     templateUrl: './terraria-instance-list-item.component.html',
     styleUrls: ['./terraria-instance-list-item.component.sass'],
 })
-export class TerrariaInstanceListItemComponent implements OnInit {
+export class TerrariaInstanceListItemComponent {
     @Input()
     host?: HostEntity;
 
     @Input()
     instance?: TerrariaInstanceEntity;
-
-    constructor() {}
-
-    ngOnInit(): void {}
 }
