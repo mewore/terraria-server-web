@@ -15,8 +15,8 @@
         class="tsw-name"
         mat-line
     >
-        <span *ngIf="instance; else loadingName">{{ instance?.name || ('host-info.no-name' | translate) }}</span>
-        <ng-template #loadingName>{{ 'host-info.name-loading' | translate }}</ng-template>
+        <span *ngIf="instance; else loadingName">{{ instance?.name || ('list-item.no-name' | translate) }}</span>
+        <ng-template #loadingName>{{ 'list-item.name-loading' | translate }}</ng-template>
     </a>
 
     <div mat-line>

@@ -85,6 +85,7 @@
                     "options": {
                         "main": "src/test.ts",
                         "codeCoverageExclude": [
+                            "test.ts",
                             "**/*.stub.*",
                             "**/generated/**/*",
                             "**/stubs/**/*"

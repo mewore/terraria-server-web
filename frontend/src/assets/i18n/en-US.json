@@ -43,20 +43,6 @@
             }
         }
     },
-    "host-info": {
-        "no-name": "[No name]",
-        "name-loading": "[Loading]",
-        "status": {
-            "running": "Running",
-            "stopped": "Stopped"
-        },
-        "terraria-instances": {
-            "title": "Terraria instances"
-        },
-        "terraria-worlds": {
-            "title": "Terraria worlds"
-        }
-    },
     "host-list-item": {
         "description": "Terraria worlds: {{ worldCount }} | Terraria instances: {{ instanceCount }}",
         "status": {
@@ -83,6 +69,10 @@
     },
     "list": {
         "new-item": "New"
+    },
+    "list-item": {
+        "no-name": "[No name]",
+        "name-loading": "[Loading]"
     },
     "loading": "Loading",
     "log-out": {

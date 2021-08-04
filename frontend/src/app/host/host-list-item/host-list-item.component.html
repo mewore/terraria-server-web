@@ -10,8 +10,8 @@
         monitor
     </mat-icon>
     <a [class.disabled]="!host" [routerLink]="host ? ['/', 'hosts', host?.id] : undefined" class="host-link" mat-line>
-        <span *ngIf="host; else loadingName">{{ host?.name || ('host-info.no-name' | translate) }}</span>
-        <ng-template #loadingName>{{ 'host-info.name-loading' | translate }}</ng-template>
+        <span *ngIf="host; else loadingName">{{ host?.name || ('list-item.no-name' | translate) }}</span>
+        <ng-template #loadingName>{{ 'list-item.name-loading' | translate }}</ng-template>
     </a>
     <div class="tsw-uuid" mat-line>{{ host?.uuid }}</div>
 </mat-list-item>
