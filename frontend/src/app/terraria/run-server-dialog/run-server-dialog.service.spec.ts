@@ -5,7 +5,7 @@ import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { MatDialogStub } from 'src/stubs/mat-dialog.stub';
 import { RunServerDialogComponent, RunServerDialogInput, RunServerDialogOutput } from './run-server-dialog.component';
 
-import { RunServerDialogService } from './run-server-dialog.service';
+import { RunServerDialogService, RunServerDialogServiceImpl } from './run-server-dialog.service';
 
 describe('RunServerDialogService', () => {
     let service: RunServerDialogService;
@@ -16,7 +16,7 @@ describe('RunServerDialogService', () => {
         TestBed.configureTestingModule({ providers: [{ provide: MatDialog, useClass: MatDialogStub }] });
         dialog = TestBed.inject(MatDialog);
 
-        service = TestBed.inject(RunServerDialogService);
+        service = TestBed.inject(RunServerDialogServiceImpl);
     });
 
     it('should be created', () => {

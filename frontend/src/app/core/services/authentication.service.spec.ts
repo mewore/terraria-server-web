@@ -85,10 +85,11 @@ describe('AuthenticationService', () => {
                 pingSpy = spyOn(restApiService, 'ping');
             });
 
-            it('should not ping', () => {
+            it('should not ping', fakeAsync(() => {
                 unsureSubject.next();
+                flushMicrotasks();
                 expect(pingSpy).not.toHaveBeenCalled();
-            });
+            }));
         });
     });
 

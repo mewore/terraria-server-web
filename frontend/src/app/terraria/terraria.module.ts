@@ -14,7 +14,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { RunServerDialogComponent } from './run-server-dialog/run-server-dialog.component';
+import { RunServerDialogService, RunServerDialogServiceImpl } from './run-server-dialog/run-server-dialog.service';
 import { SetInstanceModsDialogComponent } from './set-instance-mods-dialog/set-instance-mods-dialog.component';
+import {
+    SetInstanceModsDialogService,
+    SetInstanceModsDialogServiceImpl,
+} from './set-instance-mods-dialog/set-instance-mods-dialog.service';
 import { TerrariaInstancePageComponent } from './terraria-instance-page/terraria-instance-page.component';
 import { TerrariaRoutingModule } from './terraria-routing.module';
 
@@ -37,6 +42,10 @@ import { TerrariaRoutingModule } from './terraria-routing.module';
         MatProgressBarModule,
         MatProgressSpinnerModule,
         TranslateModule.forChild(),
+    ],
+    providers: [
+        { provide: RunServerDialogService, useClass: RunServerDialogServiceImpl },
+        { provide: SetInstanceModsDialogService, useClass: SetInstanceModsDialogServiceImpl },
     ],
 })
 export class TerrariaModule {}

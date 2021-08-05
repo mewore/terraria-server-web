@@ -95,28 +95,16 @@ describe('SetInstanceModsDialogComponent', () => {
         });
 
         describe('when Set is clicked', () => {
-            let setInstanceModsSpy: jasmine.Spy;
-            let closeDialogSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => void>;
             let showErrorSpy: jasmine.Spy<(error: Error) => void>;
 
             beforeEach(fakeAsync(() => {
-                setInstanceModsSpy = spyOn(restApiService, 'setInstanceMods');
-                closeDialogSpy = spyOn(dialogRef, 'close');
-                showErrorSpy = spyOn(errorService, 'showError').and.callFake(() => {});
+                showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
                 getButton('Set').click();
                 tick();
             }));
 
             it('should show an error', () => {
                 expect(showErrorSpy).toHaveBeenCalledOnceWith(new Error('The selected mods are unknown!'));
-            });
-
-            it('should not set the mods', () => {
-                expect(setInstanceModsSpy).not.toHaveBeenCalled();
-            });
-
-            it('should not close the dialog', () => {
-                expect(closeDialogSpy).not.toHaveBeenCalled();
             });
 
             it('should not be loading', () => {

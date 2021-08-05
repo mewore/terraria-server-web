@@ -4,7 +4,7 @@ import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { MatDialogStub } from 'src/stubs/mat-dialog.stub';
 import { SimpleDialogComponent, SimpleDialogInput } from './simple-dialog.component';
 
-import { SimpleDialogService } from './simple-dialog.service';
+import { SimpleDialogService, SimpleDialogServiceImpl } from './simple-dialog.service';
 
 type DialogReturnType = string;
 
@@ -17,7 +17,7 @@ describe('SimpleDialogService', () => {
         TestBed.configureTestingModule({ providers: [{ provide: MatDialog, useClass: MatDialogStub }] });
         dialog = TestBed.inject(MatDialog);
 
-        service = TestBed.inject(SimpleDialogService);
+        service = TestBed.inject(SimpleDialogServiceImpl);
     });
 
     it('should be created', () => {

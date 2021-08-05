@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 
 export abstract class ErrorService {
-    abstract showError(error: Error): void;
+    abstract showError(error: Error | string): void;
 }
 
 @Injectable({
     providedIn: 'root',
 })
 export class ErrorServiceImpl implements ErrorService {
-    showError(error: Error): void {
+    showError(error: Error | string): void {
         console.error(error);
     }
 }

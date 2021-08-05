@@ -2,10 +2,14 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { RunServerDialogComponent, RunServerDialogInput, RunServerDialogOutput } from './run-server-dialog.component';
 
+export abstract  class RunServerDialogService {
+    abstract openDialog(data: RunServerDialogInput): Promise<RunServerDialogOutput | undefined>;
+}
+
 @Injectable({
     providedIn: 'root',
 })
-export class RunServerDialogService {
+export class RunServerDialogServiceImpl implements RunServerDialogService {
     constructor(private readonly dialog: MatDialog) {}
 
     openDialog(data: RunServerDialogInput): Promise<RunServerDialogOutput | undefined> {

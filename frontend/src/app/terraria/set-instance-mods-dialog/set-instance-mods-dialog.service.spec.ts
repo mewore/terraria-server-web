@@ -4,7 +4,7 @@ import { TerrariaInstanceEntity } from 'src/generated/backend';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { MatDialogStub } from 'src/stubs/mat-dialog.stub';
 import { SetInstanceModsDialogComponent, SetInstanceModsDialogInput, SetInstanceModsDialogOutput } from './set-instance-mods-dialog.component';
-import { SetInstanceModsDialogService } from './set-instance-mods-dialog.service';
+import { SetInstanceModsDialogService, SetInstanceModsDialogServiceImpl } from './set-instance-mods-dialog.service';
 
 describe('SetInstanceModsDialogService', () => {
     let service: SetInstanceModsDialogService;
@@ -15,7 +15,7 @@ describe('SetInstanceModsDialogService', () => {
         TestBed.configureTestingModule({ providers: [{ provide: MatDialog, useClass: MatDialogStub }] });
         dialog = TestBed.inject(MatDialog);
 
-        service = TestBed.inject(SetInstanceModsDialogService);
+        service = TestBed.inject(SetInstanceModsDialogServiceImpl);
     });
 
     it('should be created', () => {

@@ -94,7 +94,7 @@
             "actions": {
                 "buttons": {
                     "BOOT_UP": "Boot up",
-                    "GO_TO_MOD_MENU": "Go to the Mod menu",
+                    "GO_TO_MOD_MENU": "Go to the Mods menu",
                     "SET_LOADED_MODS": "Set the enabled mods",
                     "RUN_SERVER": "Run",
                     "SHUT_DOWN": "Shut down",
@@ -207,7 +207,8 @@
                 "APPLICATION_START": "Application started.",
                 "APPLICATION_END": "Application stopped.",
                 "ERROR": "Error: {{ error }}",
-                "INVALID_INSTANCE": "The instance has been determined to be invalid: {{ error }}"
+                "INVALID_INSTANCE": "The instance has been determined to be invalid: {{ error }}",
+                "TSW_INTERRUPTED": "The application was interrupted: {{ error }}"
             },
             "list-item": {
                 "buttons": {
@@ -231,9 +232,15 @@
                 "DEFINED": "The instance has been defined.",
                 "VALID": "The instance has passed validation.",
                 "IDLE": "The instance is ready to be started.",
+                "BOOTING_UP": "The instance is booting up.",
                 "WORLD_MENU": "The instance is at the World menu.",
+                "CHANGING_MOD_STATE": "The instance is changing the state of a mod and waiting for the Mods menu to refresh.",
                 "MOD_MENU": "The instance is at the Mods menu.",
                 "MOD_BROWSER": "The instance is at the Mod Browser menu.",
+                "MAX_PLAYERS_PROMPT": "The instance is at the max players prompt.",
+                "PORT_PROMPT": "The instance is at the port prompt.",
+                "AUTOMATICALLY_FORWARD_PORT_PROMPT": "The instance is at the automatically forward port prompt.",
+                "PASSWORD_PROMPT": "The instance is at the password prompt.",
                 "RUNNING": "The instance is running and connecting to it should be possible.",
                 "INVALID": "The instance has been marked as invalid!",
                 "BROKEN": "The instance is broken! Its actual state is unknown."

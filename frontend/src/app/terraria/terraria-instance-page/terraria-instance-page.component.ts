@@ -1,7 +1,8 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { ErrorService } from 'src/app/core/services/error.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { SimpleDialogService } from 'src/app/core/simple-dialog/simple-dialog.service';
 import {
@@ -59,7 +60,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         {
             action: 'SET_LOADED_MODS',
             isDisplayed: () => this.instance?.state === 'MOD_MENU',
-            onClick: () => this.setLoadedMods(),
+            onClick: () => this.setEnabledMods(),
         },
         {
             action: 'RUN_SERVER',
@@ -102,10 +103,11 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
     constructor(
         private readonly restApi: RestApiService,
         private readonly activatedRoute: ActivatedRoute,
+        private readonly errorService: ErrorService,
         private readonly authService: AuthenticationService,
         private readonly translateService: TranslateService,
-        private readonly setInstanceModsDialogService: SetInstanceModsDialogService,
         private readonly runServerDialogService: RunServerDialogService,
+        private readonly setInstanceModsDialogService: SetInstanceModsDialogService,
         private readonly simpleDialogService: SimpleDialogService
     ) {}
 
@@ -114,15 +116,17 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
             try {
                 const hostIdParam = paramMap.get('hostId');
                 if (!hostIdParam) {
-                    throw new Error('The [hostId] parameter is not set!');
+                    this.errorService.showError('The [hostId] parameter is not set!');
+                    return;
                 }
                 const instanceIdParam = paramMap.get('instanceId');
                 if (!instanceIdParam) {
-                    throw new Error('The [instanceId] parameter is not set!');
+                    this.errorService.showError('The [instanceId] parameter is not set!');
+                    return;
                 }
                 const hostId = parseInt(hostIdParam, 10);
                 const instanceId = parseInt(instanceIdParam, 10);
-                this.fetchData(hostId, instanceId);
+                await this.fetchData(hostId, instanceId);
             } finally {
                 this.loading = false;
             }
@@ -138,7 +142,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         ]);
         this.host = host;
         this.otherInstances = instances.filter((instance) => instance.id !== instanceId);
-        this.instance = instances.find((instance) => instance.id === instanceId) || instanceDetails.instance;
+        this.instance = instanceDetails.instance;
         this.instanceEvents = instanceDetails.events;
         this.logParts = instanceDetails.events
             .map((event): LogPart | undefined => {
@@ -167,14 +171,8 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
                             text: event.text,
                         };
                     }
-                    case 'ERROR': {
-                        return {
-                            className: 'error orange',
-                            text: this.translateService.instant('terraria.instance.events.' + event.type, {
-                                error: event.text,
-                            }),
-                        };
-                    }
+                    case 'ERROR':
+                    case 'TSW_INTERRUPTED':
                     case 'INVALID_INSTANCE': {
                         return {
                             className: 'error orange',
@@ -199,24 +197,12 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         setTimeout(() => panel.scrollTo({ top: panel.scrollHeight }), 100);
     }
 
-    get loaded(): boolean {
-        return !this.loading;
-    }
-
     get hasAction(): boolean {
         return !!this.instance?.pendingAction || !!this.instance?.currentAction;
     }
 
     get canManageTerraria(): boolean {
         return this.authService.currentUser?.accountType?.ableToManageTerraria || false;
-    }
-
-    get canSetLoadedMods(): boolean {
-        return !!this.instance && (this.instance.state === 'MOD_MENU' || this.instance.state === 'CHANGING_MOD_STATE');
-    }
-
-    get canRun(): boolean {
-        return this.instance?.state === 'IDLE';
     }
 
     bootUp(): void {
@@ -227,10 +213,10 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'GO_TO_MOD_MENU' }));
     }
 
-    setLoadedMods(): void {
+    setEnabledMods(): void {
         const instance = this.instance;
         if (!instance) {
-            throw new Error('The instance is not defined!');
+            return this.errorService.showError('The instance is not defined!');
         }
         this.doWhileLoading(() => this.setInstanceModsDialogService.openDialog(instance));
     }
@@ -238,21 +224,23 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
     runServer(): void {
         const [instance, host] = [this.instance, this.host];
         if (!instance) {
-            throw new Error('The instance is not defined!');
+            return this.errorService.showError('The instance is not defined!');
         }
         if (!host) {
-            throw new Error('The host is not defined!');
+            return this.errorService.showError('The host is not defined!');
         }
-        this.doWhileLoading(() => this.runServerDialogService.openDialog({
-            instance,
-            hostId: host.id,
-        }));
+        this.doWhileLoading(() =>
+            this.runServerDialogService.openDialog({
+                instance,
+                hostId: host.id,
+            })
+        );
     }
 
     shutDown(): void {
         const instance = this.instance;
         if (!instance) {
-            throw new Error('The instance is not defined!');
+            return this.errorService.showError('The instance is not defined!');
         }
         if (instance.state !== 'RUNNING') {
             this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }));
@@ -261,15 +249,18 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         this.doWhileLoading(() => {
             return this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
                 titleKey: 'terraria.instance.dialog.shut-down.title',
-                descriptionKey: 'terraria.instance.dialog.shut-down.description', 
+                descriptionKey: 'terraria.instance.dialog.shut-down.description',
                 primaryButton: {
                     labelKey: 'terraria.instance.dialog.shut-down.confirm',
                     onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }),
                 },
-                extraButtons: [{
-                    labelKey: 'terraria.instance.dialog.shut-down.confirm-no-save',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN_NO_SAVE' }),
-                }],
+                extraButtons: [
+                    {
+                        labelKey: 'terraria.instance.dialog.shut-down.confirm-no-save',
+                        onClicked: () =>
+                            this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN_NO_SAVE' }),
+                    },
+                ],
             });
         });
     }
@@ -278,7 +269,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         this.doWhileLoading(() => {
             return this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
                 titleKey: 'terraria.instance.dialog.terminate.title',
-                descriptionKey: 'terraria.instance.dialog.terminate.description', 
+                descriptionKey: 'terraria.instance.dialog.terminate.description',
                 primaryButton: {
                     labelKey: 'terraria.instance.dialog.terminate.confirm',
                     onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'TERMINATE' }),
@@ -292,7 +283,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         this.doWhileLoading(() => {
             return this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
                 titleKey: 'terraria.instance.dialog.delete.title',
-                descriptionKey: 'terraria.instance.dialog.delete.description', 
+                descriptionKey: 'terraria.instance.dialog.delete.description',
                 primaryButton: {
                     labelKey: 'terraria.instance.dialog.delete.confirm',
                     onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'DELETE' }),
@@ -302,16 +293,13 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         });
     }
 
-    async doWhileLoading(action: () => undefined | Promise<TerrariaInstanceEntity | undefined>): Promise<void> {
+    async doWhileLoading(action: () => Promise<TerrariaInstanceEntity | undefined>): Promise<void> {
         if (this.loading) {
-            throw new Error('Already loading!');
+            return this.errorService.showError('Already loading!');
         }
         this.loading = true;
         try {
-            const result = action();
-            if (result) {
-                this.instance = (await result) ?? this.instance;
-            }
+            this.instance = (await action()) ?? this.instance;
         } finally {
             this.loading = false;
         }

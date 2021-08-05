@@ -11,6 +11,7 @@ import { AuthenticationService, AuthenticationServiceImpl } from './services/aut
 import { ErrorService, ErrorServiceImpl } from './services/error.service';
 import { StorageService, StorageServiceImpl } from './services/storage.service';
 import { SimpleDialogComponent } from './simple-dialog/simple-dialog.component';
+import { SimpleDialogService, SimpleDialogServiceImpl } from './simple-dialog/simple-dialog.service';
 
 @NgModule({
     declarations: [SimpleDialogComponent],
@@ -28,6 +29,7 @@ import { SimpleDialogComponent } from './simple-dialog/simple-dialog.component';
         { provide: AuthenticationStateService, useClass: AuthenticationStateServiceImpl },
         { provide: ErrorService, useClass: ErrorServiceImpl },
         { provide: StorageService, useClass: StorageServiceImpl },
+        { provide: SimpleDialogService, useClass: SimpleDialogServiceImpl },
     ],
 })
 export class CoreModule {}

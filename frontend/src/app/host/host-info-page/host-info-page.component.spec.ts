@@ -73,6 +73,19 @@ describe('HostInfoComponent', () => {
         expect(component.loaded).toBeTrue();
     });
 
+    describe('when there is no subscription', () => {
+        beforeEach(() => {
+            component.routeSubscription?.unsubscribe();
+            component.routeSubscription = undefined;
+        });
+
+        describe('ngOnDestroy', () => {
+            it('should not throw an error', () => {
+                expect(() => component.ngOnDestroy()).not.toThrow();
+            });
+        });
+    });
+
     describe('when there is no host info', () => {
         describe('when the creation of a terraria instance has been requested', () => {
             let openDialogSpy: jasmine.Spy<(host: HostEntity) => void>;

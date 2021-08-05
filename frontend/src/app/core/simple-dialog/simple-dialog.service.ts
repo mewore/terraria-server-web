@@ -2,10 +2,14 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ButtonDefinition, SimpleDialogComponent, SimpleDialogInput } from './simple-dialog.component';
 
+export abstract class SimpleDialogService {
+    abstract openDialog<T>(data: SimpleDialogInput<T>): Promise<T | undefined>;
+}
+
 @Injectable({
     providedIn: 'root',
 })
-export class SimpleDialogService {
+export class SimpleDialogServiceImpl implements SimpleDialogService {
     public static readonly OK_BUTTON = {} as ButtonDefinition<void>;
 
     constructor(private readonly dialog: MatDialog) {}

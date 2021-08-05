@@ -6,10 +6,14 @@ import {
     SetInstanceModsDialogOutput,
 } from './set-instance-mods-dialog.component';
 
+export abstract class SetInstanceModsDialogService {
+    abstract openDialog(data: SetInstanceModsDialogInput): Promise<SetInstanceModsDialogOutput | undefined>;
+}
+
 @Injectable({
     providedIn: 'root',
 })
-export class SetInstanceModsDialogService {
+export class SetInstanceModsDialogServiceImpl implements SetInstanceModsDialogService {
     constructor(private readonly dialog: MatDialog) {}
 
     openDialog(data: SetInstanceModsDialogInput): Promise<SetInstanceModsDialogOutput | undefined> {
