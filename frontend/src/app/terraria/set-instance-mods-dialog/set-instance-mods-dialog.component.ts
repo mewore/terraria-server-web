@@ -1,6 +1,7 @@
-import { AfterViewInit, Component, Inject, ViewChild } from '@angular/core';
+import { Component, Inject, ViewChild } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSelectionList } from '@angular/material/list';
+import { ErrorService } from 'src/app/core/services/error.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { TerrariaInstanceEntity, TModLoaderVersionViewModel } from 'src/generated/backend';
 
@@ -22,7 +23,6 @@ export class SetInstanceModsDialogComponent {
     tModLoaderVersions: TModLoaderVersionViewModel[] = [];
 
     loading = false;
-    setting = false;
 
     readonly modOptions: ModOption[] = [];
 
@@ -32,6 +32,7 @@ export class SetInstanceModsDialogComponent {
     constructor(
         private readonly dialog: MatDialogRef<SetInstanceModsDialogComponent, SetInstanceModsDialogOutput>,
         private readonly restApi: RestApiService,
+        private readonly errorService: ErrorService,
         @Inject(MAT_DIALOG_DATA) public instance: SetInstanceModsDialogInput
     ) {
         for (const label of Object.values(this.instance.options)) {
@@ -49,26 +50,19 @@ export class SetInstanceModsDialogComponent {
         }
     }
 
-    modSelected(mod: ModOption): void {
-        mod.selected = true;
-    }
-
-    modUnselected(mod: ModOption): void {
-        mod.selected = false;
-    }
-
     async onSetClicked(): Promise<void> {
         const selectedMods = this.list?.selectedOptions.selected.map((option) => option.value);
         if (!selectedMods) {
-            throw new Error('The selected mods are unknown!');
+            this.errorService.showError(new Error('The selected mods are unknown!'));
+            return;
         }
 
-        this.setting = true;
+        this.loading = true;
         try {
             const newInstance = await this.restApi.setInstanceMods(this.instance.id, selectedMods);
             this.dialog.close(newInstance);
         } finally {
-            this.setting = false;
+            this.loading = false;
         }
     }
 }

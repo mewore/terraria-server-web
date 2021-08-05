@@ -10,12 +10,8 @@
 
 <mat-dialog-actions align="end">
     <button [mat-dialog-close] mat-button>{{ 'dialog.buttons.cancel' | translate }}</button>
-    <button (click)="onSetClicked()" [disabled]="setting || loading" color="primary" mat-raised-button>
+    <button (click)="onSetClicked()" [disabled]="loading" color="primary" mat-raised-button>
         {{ 'terraria.instance.dialog.set-instance-mods.buttons.set' | translate }}
     </button>
-    <mat-progress-bar
-        [class]="setting || loading ? '' : 'tsw-invisible'"
-        color="primary"
-        mode="indeterminate"
-    ></mat-progress-bar>
+    <mat-progress-bar [class]="loading ? '' : 'tsw-invisible'" color="primary" mode="indeterminate"></mat-progress-bar>
 </mat-dialog-actions>
