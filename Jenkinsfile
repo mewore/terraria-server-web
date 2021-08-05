@@ -55,9 +55,9 @@ pipeline {
                 }
                 cobertura([
                     coberturaReportFile: '**/frontend/coverage/terraria-server-web/cobertura-coverage.xml',
-                    conditionalCoverageTargets: '90, 0, 0',
-                    lineCoverageTargets: '95, 0, 0',
-                    methodCoverageTargets: '95, 0, 0',
+                    conditionalCoverageTargets: '90, 70, 0',
+                    lineCoverageTargets: '95, 80, 0',
+                    methodCoverageTargets: '95, 80, 0',
                 ])
             }
         }
