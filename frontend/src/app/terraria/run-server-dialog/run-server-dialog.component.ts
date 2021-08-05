@@ -47,7 +47,7 @@ export class RunServerDialogComponent implements OnInit {
     readonly automaticallyForwardPortInput = new FormControl(true);
 
     readonly passwordInput = new FormControl('', [Validators.maxLength(this.MAX_PASSWORD_LENGTH)]);
-    
+
     worlds: TerrariaWorldEntity[] = [];
     worldById: { [id: number]: TerrariaWorldEntity } = {};
     private worldModStringById: { [id: number]: string } = {};
@@ -108,13 +108,13 @@ export class RunServerDialogComponent implements OnInit {
             for (const instance of instances) {
                 if (instance.state === 'RUNNING') {
                     this.takenPorts.add(instance.port);
-                }
-                if (instance.worldId) {
-                    const instanceArray = this.instancesByWorldId.get(instance.worldId);
-                    if (instanceArray) {
-                        instanceArray.push(instance);
-                    } else {
-                        this.instancesByWorldId.set(instance.worldId, [instance]);
+                    if (instance.worldId) {
+                        const instanceArray = this.instancesByWorldId.get(instance.worldId);
+                        if (instanceArray) {
+                            instanceArray.push(instance);
+                        } else {
+                            this.instancesByWorldId.set(instance.worldId, [instance]);
+                        }
                     }
                 }
             }

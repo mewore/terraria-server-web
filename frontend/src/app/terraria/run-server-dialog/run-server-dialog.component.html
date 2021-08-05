@@ -17,7 +17,7 @@
             <mat-error *ngIf="maxPlayersInput.hasError('min')">
                 {{ 'input.errors.too-small' | translate: { minValue: MIN_PLAYER_LIMIT } }}
             </mat-error>
-            <mat-error *ngIf="portInput.hasError('max')">
+            <mat-error *ngIf="maxPlayersInput.hasError('max')">
                 {{ 'input.errors.too-large' | translate: { maxValue: MAX_PLAYER_LIMIT } }}
             </mat-error>
         </mat-form-field>
@@ -53,7 +53,7 @@
         <mat-form-field appearance="standard">
             <mat-label>{{ 'terraria.instance.dialog.run.password.label' | translate }}</mat-label>
             <input [formControl]="passwordInput" id="tsw-terraria-server-password-input" matInput type="password"/>
-            <mat-error *ngIf="passwordInput.hasError('maxLength')">
+            <mat-error *ngIf="passwordInput.hasError('maxlength')">
                 {{ 'input.errors.too-long' | translate: { maxLength: MAX_PASSWORD_LENGTH } }}
             </mat-error>
         </mat-form-field>

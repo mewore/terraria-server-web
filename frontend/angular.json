@@ -88,7 +88,8 @@
                             "test.ts",
                             "**/*.stub.*",
                             "**/generated/**/*",
-                            "**/stubs/**/*"
+                            "**/stubs/**/*",
+                            "**/test-util/**/*"
                         ],
                         "polyfills": "src/polyfills.ts",
                         "tsConfig": "tsconfig.spec.json",
