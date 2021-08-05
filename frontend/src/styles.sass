@@ -28,6 +28,17 @@ a.disabled
   color: $inactive
   cursor: default
 
+@media (max-height: 600px)
+    .mat-dialog-container
+        .mat-dialog-actions
+            padding: 0
+        .mat-dialog-title
+            margin: 0
+            white-space: nowrap
+            text-overflow: ellipsis
+            overflow-x: hidden
+            display: block
+
 /* Solarized */
 $base03: #002b36
 $base02: #073642

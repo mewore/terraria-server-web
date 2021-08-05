@@ -1,4 +1,4 @@
-<h2>{{ 'terraria.instance.dialog.create.title' | translate }}</h2>
+<h2 class="mat-dialog-title">{{ 'terraria.instance.dialog.create.title' | translate }}</h2>
 
 <mat-dialog-content>
     <form>
@@ -32,11 +32,9 @@
                 {{ 'input.errors.terrariaUrl' | translate }}
             </mat-error>
         </mat-form-field>
-        <p>
-            <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
-                {{ 'terraria.instance.dialog.create.terraria-server-url.help-text' | translate }}
-            </a>
-        </p>
+        <a href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
+            {{ 'terraria.instance.dialog.create.terraria-server-url.help-text' | translate }}
+        </a>
         <mat-form-field appearance="standard">
             <mat-label>{{ 'terraria.instance.dialog.create.tmodloader-version.label' | translate }}</mat-label>
             <mat-select [formControl]="modLoaderReleaseInput">
