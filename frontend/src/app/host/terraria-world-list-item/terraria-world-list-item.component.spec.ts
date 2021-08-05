@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -58,5 +58,41 @@ describe('TerrariaWorldListItemComponent', () => {
 
     it('should have the world name in the first line', () => {
         expect(getLines()[0]).toBe('Test World');
+    });
+
+    describe('lastModifiedString', () => {
+        it('should return a non-empty string', () => {
+            expect(component.lastModifiedString).toBeTruthy();
+        });
+    });
+
+    describe('lastModifiedDetailedString', () => {
+        it('should return a non-empty string', () => {
+            expect(component.lastModifiedDetailedString).toBeTruthy();
+        });
+    });
+
+    describe('when the world is undefined', () => {
+        beforeEach(fakeAsync(() => {
+            component.world = undefined;
+            fixture.detectChanges();
+            tick();
+        }));
+
+        it('should have no lines', () => {
+            expect(getLines()).toEqual([]);
+        });
+
+        describe('lastModifiedString', () => {
+            it('should return undefined', () => {
+                expect(component.lastModifiedString).toBeUndefined();
+            });
+        });
+
+        describe('lastModifiedDetailedString', () => {
+            it('should return undefined', () => {
+                expect(component.lastModifiedDetailedString).toBeUndefined();
+            });
+        });
     });
 });
