@@ -4,6 +4,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,6 +23,9 @@ public interface TerrariaWorldRepository extends JpaRepository<TerrariaWorldEnti
 
     @Query("SELECT w FROM TerrariaWorldEntity w JOIN FETCH w.data d WHERE w.host = :host")
     List<TerrariaWorldEntity> findByHostWithData(final HostEntity host);
+
+    @Query("SELECT w FROM TerrariaWorldEntity w JOIN FETCH w.data d WHERE w.id = :id")
+    Optional<TerrariaWorldEntity> findByIdWithData(final long id);
 
     List<TerrariaWorldEntity> findByHostIdOrderByIdAsc(final long hostId);
 
