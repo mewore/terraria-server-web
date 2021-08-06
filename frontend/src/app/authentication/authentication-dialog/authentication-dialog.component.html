@@ -35,15 +35,15 @@
 
 <mat-dialog-actions align="end">
     <button mat-button [mat-dialog-close]>{{ 'dialog.buttons.cancel' | translate }}</button>
-    <button mat-stroked-button (click)="signUp()" color="accent" [disabled]="busy || !valid">
+    <button (click)="signUp()" [disabled]="loading || !valid" color="accent" mat-stroked-button>
         {{ 'authentication.dialog.buttons.sign-up' | translate }}
     </button>
-    <button mat-raised-button (click)="logIn()" color="primary" [disabled]="busy || !valid">
+    <button (click)="logIn()" [disabled]="loading || !valid" color="primary" mat-raised-button>
         {{ 'authentication.dialog.buttons.log-in' | translate }}
     </button>
     <mat-progress-bar
         mode="indeterminate"
-        [class]="busy ? '' : 'tsw-invisible'"
+        [class]="loading ? '' : 'tsw-invisible'"
         [color]="signingUp ? 'accent' : 'primary'"
     ></mat-progress-bar>
 </mat-dialog-actions>

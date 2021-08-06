@@ -27,13 +27,13 @@ describe('AuthenticationService', () => {
     let userSubscription: Subscription | undefined;
     let emittedUsers: (AuthenticatedUser | undefined)[];
 
-    function instantiate(): AuthenticationService {
+    const instantiate = (): AuthenticationService => {
         service = TestBed.inject(AuthenticationServiceImpl);
         userSubscription = service.userObservable.subscribe({
             next: (newUser) => emittedUsers.push(newUser),
         });
         return service;
-    }
+    };
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({

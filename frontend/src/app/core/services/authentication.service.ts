@@ -23,11 +23,11 @@ export abstract class AuthenticationService {
     providedIn: 'root',
 })
 export class AuthenticationServiceImpl implements AuthenticationService, OnDestroy {
-    private _currentUser: AuthenticatedUser | undefined;
+    readonly userObservable: Observable<AuthenticatedUser | undefined>;
+
+    currentUser: AuthenticatedUser | undefined;
 
     private readonly userSubject = new Subject<AuthenticatedUser | undefined>();
-
-    readonly userObservable = this.userSubject.asObservable();
 
     private readonly unsureSubscription: Subscription;
 
@@ -37,6 +37,7 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
         private readonly storageService: StorageService,
         private readonly errorService: ErrorService
     ) {
+        this.userObservable = this.userSubject.asObservable();
         const initialUser = storageService.user;
         this.unsureSubscription = this.authenticationStateService.unsureObservable.subscribe({
             next: () => {
@@ -46,7 +47,7 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
             },
         });
         if (initialUser && initialUser.authData) {
-            this._currentUser = initialUser;
+            this.currentUser = initialUser;
             this.authenticationStateService.authData = initialUser.authData;
             this.authenticationStateService.markAsUnsure();
         }
@@ -54,6 +55,25 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
 
     ngOnDestroy(): void {
         this.unsureSubscription.unsubscribe();
+    }
+
+    get canManageHosts(): boolean {
+        return this.currentUser?.accountType?.ableToManageHosts || false;
+    }
+
+    async logIn(username: string, password: string): Promise<AuthenticatedUser> {
+        const session = await this.restApi.logIn({ username, password });
+        return this.saveSession(username, session);
+    }
+
+    async signUp(username: string, password: string): Promise<AuthenticatedUser> {
+        const session = await this.restApi.signUp({ username, password });
+        return this.saveSession(username, session);
+    }
+
+    async logOut(): Promise<void> {
+        await this.restApi.logOut();
+        this.setCurrentUser(undefined);
     }
 
     private async refreshState(currentUser: AuthenticatedUser): Promise<void> {
@@ -74,29 +94,11 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
         }
     }
 
-    get currentUser(): AuthenticatedUser | undefined {
-        return this._currentUser;
-    }
-
     private setCurrentUser(value: AuthenticatedUser | undefined): void {
-        this._currentUser = value;
+        this.currentUser = value;
         this.userSubject.next(value);
         this.storageService.user = value;
         this.authenticationStateService.authData = value?.authData;
-    }
-
-    get canManageHosts(): boolean {
-        return this.currentUser?.accountType?.ableToManageHosts || false;
-    }
-
-    async logIn(username: string, password: string): Promise<AuthenticatedUser> {
-        const session = await this.restApi.logIn({ username, password });
-        return this.saveSession(username, session);
-    }
-
-    async signUp(username: string, password: string): Promise<AuthenticatedUser> {
-        const session = await this.restApi.signUp({ username, password });
-        return this.saveSession(username, session);
     }
 
     private saveSession(username: string, session: SessionViewModel): AuthenticatedUser {
@@ -112,10 +114,5 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
 
     private encodeBasicAuth(username: string, token: string): string {
         return 'Basic ' + btoa(username + ':' + token);
-    }
-
-    async logOut(): Promise<void> {
-        await this.restApi.logOut();
-        this.setCurrentUser(undefined);
     }
 }

@@ -3,8 +3,8 @@ import { Observable, of } from 'rxjs';
 import { ImperfectStub } from './imperfect-stub';
 
 export class MatDialogRefStub<C, O> extends ImperfectStub<MatDialogRef<C, O>> {
-    static withCloseValue<C, O>(closeValue?: O): MatDialogRef<C, O> {
-        const dialog = new MatDialogRefStub<C, O>().masked();
+    static withCloseValue<T>(closeValue?: T): MatDialogRef<unknown, T> {
+        const dialog = new MatDialogRefStub<unknown, T>().masked();
         spyOn(dialog, 'afterClosed').and.returnValue(of(closeValue));
         return dialog;
     }

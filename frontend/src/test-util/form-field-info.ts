@@ -22,11 +22,11 @@ export class MatFormFieldInfo implements FormFieldInfo {
     }
 
     get label(): string | undefined {
-        return this.getFieldElement().getElementsByTagName('mat-label').item(0)?.textContent?.trim();
+        return this.getFieldElement().querySelector<HTMLElement>('mat-label')?.innerText?.trim();
     }
 
     get errors(): string[] {
-        const errors: string[] = this.getContentOfElements(this.getFieldElement().getElementsByClassName('mat-error'));
+        const errors: string[] = this.getContentOfElements(this.getFieldElement().querySelectorAll('.mat-error'));
         if (errors.length > 0 && this.control.valid) {
             throw new Error(`There are shown errors (${errors.join(', ')}) while the control is marked as valid`);
         }
@@ -41,11 +41,8 @@ export class MatFormFieldInfo implements FormFieldInfo {
     }
 
     get warnings(): string[] {
-        const hintElement = this.getFieldElement().getElementsByClassName('mat-hint').item(0);
-        if (!hintElement || !hintElement.classList.contains('warning')) {
-            return [];
-        }
-        return this.getContentOfElements(hintElement.getElementsByTagName('span'));
+        const hintElement = this.getFieldElement().querySelector('.mat-hint.warning');
+        return hintElement ? this.getContentOfElements(hintElement.querySelectorAll('span')) : [];
     }
 
     get value(): string | number {
@@ -60,12 +57,8 @@ export class MatFormFieldInfo implements FormFieldInfo {
         })();
     }
 
-    private getContentOfElements(elements: HTMLCollectionOf<Element>): string[] {
-        const content: string[] = [];
-        for (let i = 0; i < elements.length; i++) {
-            content.push(elements.item(i)?.textContent?.trim() || '');
-        }
-        return content;
+    private getContentOfElements(elements: ArrayLike<HTMLElement>): string[] {
+        return Array.from(elements).map((element) => element.innerText.trimStart());
     }
 
     private getFieldElement(): Element {

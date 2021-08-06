@@ -26,7 +26,7 @@ export class HostInfoPageComponent implements OnInit, OnDestroy {
         private readonly restApi: RestApiService,
         private readonly activatedRoute: ActivatedRoute,
         private readonly createDialogService: CreateTerrariaInstanceDialogService,
-        private readonly errorService: ErrorService,
+        private readonly errorService: ErrorService
     ) {}
 
     async ngOnInit(): Promise<void> {

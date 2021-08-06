@@ -1,14 +1,13 @@
 import { TranslateService } from '@ngx-translate/core';
 import { EMPTY, Observable, of } from 'rxjs';
-import { ImperfectStub as ImperfectStub } from './imperfect-stub';
-
 import * as i18nFileRoot from '../assets/i18n/en-US.json';
+import { ImperfectStub as ImperfectStub } from './imperfect-stub';
 
 interface I18nFileNode {
     [key: string]: I18nFileNode | string | undefined;
 }
 
-export class TranslateServiceStub extends ImperfectStub<TranslateService> {
+export class EnUsTranslateServiceStub extends ImperfectStub<TranslateService> {
     addLangs(_langs: Array<string>): void {}
 
     setDefaultLang(_lang: string): void {}
@@ -33,7 +32,7 @@ export class TranslateServiceStub extends ImperfectStub<TranslateService> {
         const keyParts = typeof key === 'string' ? key.split('.') : key;
         const root = i18nFileRoot as unknown as { default?: I18nFileNode | string };
         if (!root.default) {
-            throw new Error(`There is no 'default' property!`);
+            throw new Error('There is no "default" property!');
         }
         let i18nNode = root.default;
         for (let i = 0; i < keyParts.length; i++) {
@@ -67,9 +66,8 @@ export class TranslateServiceStub extends ImperfectStub<TranslateService> {
         }
         return i18nNode.replace(
             /\{\{\s*(\S+)\s*\}\}/g,
-            (wholeMatch: string, interpolationKey: string, _index: number) => {
-                return interpolationMap.has(interpolationKey) ? interpolationMap.get(interpolationKey) : wholeMatch;
-            }
+            (wholeMatch: string, interpolationKey: string, _index: number) =>
+                interpolationMap.has(interpolationKey) ? interpolationMap.get(interpolationKey) : wholeMatch
         );
     }
 

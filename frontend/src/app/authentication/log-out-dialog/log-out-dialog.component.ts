@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { ErrorService } from 'src/app/core/services/error.service';
 
 export type LogOutDialogComponentOutput = void;
 
@@ -15,25 +16,20 @@ export class LogOutDialogComponent {
 
     constructor(
         private readonly dialog: MatDialogRef<LogOutDialogComponent, LogOutDialogComponentOutput>,
-        private readonly authenticationService: AuthenticationService
+        private readonly authenticationService: AuthenticationService,
+        private readonly errorService: ErrorService
     ) {}
 
     async logOut(): Promise<void> {
-        this.loading = true;
         try {
+            this.loading = true;
             await this.authenticationService.logOut();
             this.dialog.close();
         } catch (error) {
-            if (error instanceof HttpErrorResponse) {
-                switch (error.status) {
-                    case 401:
-                        this.dialog.close();
-                        break;
-                    default:
-                        throw error;
-                }
+            if (error instanceof HttpErrorResponse && error.status === 401) {
+                this.dialog.close();
             } else {
-                throw error;
+                this.errorService.showError(error);
             }
         } finally {
             this.loading = false;

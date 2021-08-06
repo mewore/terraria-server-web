@@ -2,13 +2,9 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { TswValidators } from './tsw-validators';
 
 describe('TswValidators', () => {
-    function makeControl(value?: string): AbstractControl {
-        return { value } as AbstractControl;
-    }
+    const makeControl = (value?: string): AbstractControl => ({ value } as AbstractControl);
 
-    function makeNumberControl(value?: number): AbstractControl {
-        return { value } as AbstractControl;
-    }
+    const makeNumberControl = (value?: number): AbstractControl => ({ value } as AbstractControl);
 
     describe('notBlank', () => {
         describe('when there is a non-blank value', () => {

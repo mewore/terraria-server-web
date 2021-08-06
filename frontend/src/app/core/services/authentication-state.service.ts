@@ -20,15 +20,17 @@ export abstract class AuthenticationStateService {
     providedIn: 'root',
 })
 export class AuthenticationStateServiceImpl implements AuthenticationStateService {
-    private unsureSubject = new Subject<void>();
-
-    readonly unsureObservable = this.unsureSubject.asObservable();
-
-    private privateAuthData?: string;
+    readonly unsureObservable: Observable<void>;
 
     sessionState: SessionState = SessionState.UNAUTHENTICATED;
 
-    constructor() {}
+    private unsureSubject = new Subject<void>();
+
+    private privateAuthData?: string;
+
+    constructor() {
+        this.unsureObservable = this.unsureSubject.asObservable();
+    }
 
     get authData(): string | undefined {
         return this.privateAuthData;

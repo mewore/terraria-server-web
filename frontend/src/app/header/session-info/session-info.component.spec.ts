@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject } from 'rxjs';
 import { AuthenticationDialogService } from 'src/app/authentication/authentication-dialog/authentication-dialog.service';
 import { AuthenticationDialogServiceStub } from 'src/app/authentication/authentication-dialog/authentication-dialog.service.stub';
@@ -7,6 +10,8 @@ import { LogOutDialogServiceStub } from 'src/app/authentication/log-out-dialog/l
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticationServiceStub } from 'src/app/core/services/authentication.service.stub';
 import { AuthenticatedUser } from 'src/app/core/types';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
 
 import { SessionInfoComponent } from './session-info.component';
 
@@ -21,7 +26,8 @@ describe('SessionInfoComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [SessionInfoComponent],
+            imports: [MatButtonModule, MatIconModule, MatTooltipModule],
+            declarations: [SessionInfoComponent, EnUsTranslatePipeStub],
             providers: [
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
                 { provide: AuthenticationDialogService, useClass: AuthenticationDialogServiceStub },
@@ -36,17 +42,11 @@ describe('SessionInfoComponent', () => {
         authenticationDialogService = TestBed.inject(AuthenticationDialogService);
         logOutDialogService = TestBed.inject(LogOutDialogService);
 
-        fixture = TestBed.createComponent(SessionInfoComponent);
-        await fixture.whenStable();
-        component = fixture.componentInstance;
+        [fixture, component] = await initComponent(SessionInfoComponent);
     });
 
     afterEach(() => {
         fixture.destroy();
-    });
-
-    it('should create', async () => {
-        expect(component).toBeTruthy();
     });
 
     describe('the username', () => {

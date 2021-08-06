@@ -9,6 +9,7 @@ import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { HostEntity, TerrariaInstanceEntity, TerrariaWorldEntity } from 'src/generated/backend';
 import { FakeParamMap } from 'src/stubs/fake-param-map';
+import { initComponent } from 'src/test-util/angular-test-util';
 import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 import { CreateTerrariaInstanceDialogServiceStub } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service.stub';
 import { HostListItemStubComponent } from '../host-list-item/host-list-item.component.stub';
@@ -51,18 +52,11 @@ describe('HostInfoComponent', () => {
         dialogService = TestBed.inject(CreateTerrariaInstanceDialogService);
         errorService = TestBed.inject(ErrorService);
 
-        fixture = TestBed.createComponent(HostInfoPageComponent);
-        component = fixture.componentInstance;
-        fixture.detectChanges();
-        await fixture.whenStable();
+        [fixture, component] = await initComponent(HostInfoPageComponent);
     });
 
     afterEach(() => {
         fixture.destroy();
-    });
-
-    it('should create', () => {
-        expect(component).toBeTruthy();
     });
 
     it('should not be loading', () => {

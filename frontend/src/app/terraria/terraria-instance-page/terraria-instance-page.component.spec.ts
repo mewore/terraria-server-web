@@ -4,7 +4,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { EMPTY, Observable, Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticationServiceStub } from 'src/app/core/services/authentication.service.stub';
 import { ErrorService } from 'src/app/core/services/error.service';
@@ -28,8 +28,9 @@ import {
     TerrariaInstanceMessage,
 } from 'src/generated/backend';
 import { FakeParamMap } from 'src/stubs/fake-param-map';
-import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { TranslateServiceStub } from 'src/stubs/translate.service.stub';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { EnUsTranslateServiceStub } from 'src/stubs/translate.service.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
 import { RunServerDialogInput } from '../run-server-dialog/run-server-dialog.component';
 import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.service';
 import { RunServerDialogServiceStub } from '../run-server-dialog/run-server-dialog.service.stub';
@@ -55,13 +56,6 @@ describe('TerrariaInstancePageComponent', () => {
 
     let authenticatedUser: AuthenticatedUser | undefined;
 
-    async function instantiate(): Promise<void> {
-        fixture = TestBed.createComponent(TerrariaInstancePageComponent);
-        fixture.detectChanges();
-        await fixture.whenStable();
-        component = fixture.componentInstance;
-    }
-
     let instanceEvents: TerrariaInstanceEventEntity[];
     let instance: TerrariaInstanceEntity;
     let hostInstances: TerrariaInstanceEntity[];
@@ -77,26 +71,21 @@ describe('TerrariaInstancePageComponent', () => {
     >;
     let eventMessageSubject: Subject<TerrariaInstanceEventMessage>;
 
-    function inputEvent(text: string): TerrariaInstanceEventEntity {
-        return { text, type: 'INPUT' } as TerrariaInstanceEventEntity;
-    }
-
-    function outputEvent(text: string): TerrariaInstanceEventEntity {
-        return { text, type: 'OUTPUT' } as TerrariaInstanceEventEntity;
-    }
+    const inputEvent = (text: string) => ({ text, type: 'INPUT' } as TerrariaInstanceEventEntity);
+    const outputEvent = (text: string) => ({ text, type: 'OUTPUT' } as TerrariaInstanceEventEntity);
 
     beforeEach(async () => {
         routeSubject = new Subject();
 
         await TestBed.configureTestingModule({
             imports: [MatTooltipModule, MatButtonModule, MatProgressBarModule],
-            declarations: [TerrariaInstancePageComponent, TranslatePipeStub],
+            declarations: [TerrariaInstancePageComponent, EnUsTranslatePipeStub],
             providers: [
                 { provide: RestApiService, useClass: RestApiServiceStub },
                 { provide: ActivatedRoute, useValue: { paramMap: routeSubject.asObservable() } },
                 { provide: ErrorService, useClass: ErrorServiceStub },
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
-                { provide: TranslateService, useClass: TranslateServiceStub },
+                { provide: TranslateService, useClass: EnUsTranslateServiceStub },
                 { provide: RunServerDialogService, useClass: RunServerDialogServiceStub },
                 { provide: SetInstanceModsDialogService, useClass: SetInstanceModsDialogServiceStub },
                 { provide: SimpleDialogService, useClass: SimpleDialogServiceStub },
@@ -143,11 +132,7 @@ describe('TerrariaInstancePageComponent', () => {
             eventMessageSubject.asObservable()
         );
 
-        await instantiate();
-    });
-
-    it('should create', () => {
-        expect(component).toBeTruthy();
+        [fixture, component] = await initComponent(TerrariaInstancePageComponent);
     });
 
     describe('when there is an invalid activated route', () => {
@@ -197,36 +182,26 @@ describe('TerrariaInstancePageComponent', () => {
         await fixture.whenStable();
     });
 
-    function getButton(label: string): HTMLButtonElement {
-        const buttons = (fixture.nativeElement as Element).getElementsByTagName('button');
-        for (let i = 0; i < buttons.length; i++) {
-            const button = buttons.item(i);
-            if (button && button.innerText.trim() === label) {
-                return button;
-            }
-        }
-        throw new Error(`There is no '${label}' button`);
-    }
-
-    function getButtonLabels(): string[] {
-        const buttons = (fixture.nativeElement as Element).getElementsByTagName('button');
-        const result: string[] = [];
-        for (let i = 0; i < buttons.length; i++) {
-            const button = buttons.item(i);
-            if (button) {
-                result.push(button.innerText);
-            }
+    const getButton = (label: string): HTMLButtonElement => {
+        const result = getButtons().find((button) => button.innerText.trim() === label);
+        if (!result) {
+            throw new Error(`There is no '${label}' button`);
         }
         return result;
-    }
+    };
 
-    function getInstanceInfoText(): string {
-        const infoBar = (fixture.nativeElement as Element).getElementsByClassName('instance-info-bar').item(0);
+    const getButtons = (): HTMLButtonElement[] =>
+        Array.from((fixture.nativeElement as Element).getElementsByTagName('button'));
+
+    const getButtonLabels = (): string[] => getButtons().map((button) => button.innerText);
+
+    const getInstanceInfoText = (): string => {
+        const infoBar = (fixture.nativeElement as Element).querySelector('.instance-info-bar');
         if (!infoBar) {
             throw new Error('There is no instance-info-bar element');
         }
         return (infoBar as HTMLElement).innerText;
-    }
+    };
 
     describe('when there is minimal data', () => {
         beforeEach(initializeWithRoute);
@@ -364,20 +339,16 @@ describe('TerrariaInstancePageComponent', () => {
     });
 
     describe('when there are all kinds of instance events', () => {
-        function importantEvent(text: string): TerrariaInstanceEventEntity {
-            return { text, type: 'IMPORTANT_OUTPUT' } as TerrariaInstanceEventEntity;
-        }
-        function detailEvent(text: string): TerrariaInstanceEventEntity {
-            return { text, type: 'DETAILED_OUTPUT' } as TerrariaInstanceEventEntity;
-        }
+        const importantEvent = (text: string) => ({ text, type: 'IMPORTANT_OUTPUT' } as TerrariaInstanceEventEntity);
+        const detailEvent = (text: string) => ({ text, type: 'DETAILED_OUTPUT' } as TerrariaInstanceEventEntity);
 
-        function getLogLines(): string[] {
-            const logPanel = (fixture.nativeElement as Element).getElementsByClassName('log-panel').item(0);
+        const getLogLines = (): string[] => {
+            const logPanel = (fixture.nativeElement as Element).querySelector<HTMLElement>('.log-panel');
             if (!logPanel) {
                 throw new Error('There is no log-panel element');
             }
-            return (logPanel as HTMLElement).innerText.split('\n');
-        }
+            return logPanel.innerText.split('\n');
+        };
 
         beforeEach(() => {
             instanceEvents = [
@@ -549,7 +520,8 @@ describe('TerrariaInstancePageComponent', () => {
                         `[${translateService.instant(simpleDialogData.primaryButton.labelKey)}]`,
                     ]).toEqual([
                         'Delete the instance?',
-                        'This is irreversible. The executable files and output history of this instance will be deleted forever.',
+                        'This is irreversible. ' +
+                            'The executable files and output history of this instance will be deleted forever.',
                         '[Delete]',
                     ]);
                     expect(simpleDialogData.extraButtons).toBeUndefined();
@@ -713,7 +685,8 @@ describe('TerrariaInstancePageComponent', () => {
                         `[${translateService.instant(simpleDialogData.primaryButton.labelKey)}]`,
                     ]).toEqual([
                         'Terminate the instance?',
-                        'This will force the instance ot stop. You may break something this way so you should use this only as a last resort.',
+                        'This will force the instance ot stop. ' +
+                            'You may break something this way so you should use this only as a last resort.',
                         '[Terminate]',
                     ]);
                     expect(simpleDialogData.extraButtons).toBeUndefined();

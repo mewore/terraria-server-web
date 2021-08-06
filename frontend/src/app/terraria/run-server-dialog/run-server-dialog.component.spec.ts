@@ -12,13 +12,16 @@ import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { TerrariaInstanceEntity, TerrariaInstanceRunServerModel, TerrariaWorldEntity } from 'src/generated/backend';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
-import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
+import { DialogInfo, MaterialDialogInfo } from 'src/test-util/dialog-info';
 import { FormFieldInfo, MatFormFieldInfo } from 'src/test-util/form-field-info';
 import { RunServerDialogComponent, RunServerDialogInput, RunServerDialogOutput } from './run-server-dialog.component';
 
 describe('RunServerDialogComponent', () => {
     let fixture: ComponentFixture<RunServerDialogComponent>;
     let component: RunServerDialogComponent;
+    let dialog: DialogInfo;
 
     let dialogRef: MatDialogRef<RunServerDialogComponent, RunServerDialogOutput>;
     let restApiService: RestApiService;
@@ -35,18 +38,10 @@ describe('RunServerDialogComponent', () => {
     let getHostInstancesSpy: jasmine.Spy<(hostId: number) => Promise<TerrariaInstanceEntity[]>>;
     let hostInstances: TerrariaInstanceEntity[];
 
-    async function instantiate(): Promise<void> {
-        fixture?.destroy();
-        fixture = TestBed.createComponent(RunServerDialogComponent);
-        // For some reason, detecting changes twice is necessary in order for the world input
-        // initial error to be visible
-        fixture.detectChanges();
-        await fixture.whenStable();
-        fixture.detectChanges();
-        await fixture.whenStable();
-        await fixture.whenRenderingDone();
-        component = fixture.componentInstance;
-    }
+    const init = async (): Promise<void> => {
+        [fixture, component] = await initComponent(RunServerDialogComponent);
+        dialog = new MaterialDialogInfo(fixture);
+    };
 
     beforeEach(async () => {
         instance = {
@@ -99,7 +94,7 @@ describe('RunServerDialogComponent', () => {
                 MatTooltipModule,
                 NoopAnimationsModule,
             ],
-            declarations: [RunServerDialogComponent, TranslatePipeStub],
+            declarations: [RunServerDialogComponent, EnUsTranslatePipeStub],
             providers: [
                 { provide: MatDialogRef, useClass: MatDialogRefStub },
                 { provide: RestApiService, useClass: RestApiServiceStub },
@@ -116,19 +111,14 @@ describe('RunServerDialogComponent', () => {
         );
     });
 
-    function getButton(label: string): HTMLButtonElement {
-        const buttons = (fixture.nativeElement as Element).getElementsByTagName('button');
-        for (let i = 0; i < buttons.length; i++) {
-            const button = buttons.item(i);
-            if (button && button.textContent?.trim() === label) {
-                return button;
-            }
-        }
-        throw new Error(`There is no '${label}' button`);
-    }
+    it('should have the correct title', async () => {
+        await init();
+        expect(dialog.title).toBe('Run the Terraria instance as a server');
+    });
 
-    afterEach(() => {
-        fixture.destroy();
+    it('should have the correct buttons', async () => {
+        await init();
+        expect(dialog.buttons).toEqual(['Cancel', 'Run']);
     });
 
     describe('when there are worlds', () => {
@@ -155,11 +145,7 @@ describe('RunServerDialogComponent', () => {
                     mods: ['OtherMod'],
                 } as TerrariaWorldEntity,
             ];
-            await instantiate();
-        });
-
-        it('should create', () => {
-            expect(component).toBeTruthy();
+            await init();
         });
 
         it('should not be loading', () => {
@@ -411,6 +397,10 @@ describe('RunServerDialogComponent', () => {
                 expect(component.form.valid).toBeTrue();
             });
 
+            it('all buttons should be enabled', () => {
+                expect(dialog.enabledButtons).toEqual(['Cancel', 'Run']);
+            });
+
             describe('clicking on Run', () => {
                 let runInstanceSpy: jasmine.Spy<
                     (instanceId: number, model: TerrariaInstanceRunServerModel) => Promise<TerrariaInstanceEntity>
@@ -419,15 +409,14 @@ describe('RunServerDialogComponent', () => {
                 const result: TerrariaInstanceEntity = {} as TerrariaInstanceEntity;
                 let closeDialogSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => void>;
 
-                beforeEach(fakeAsync(() => {
+                beforeEach(() => {
                     runInstanceSpy = spyOn(restApiService, 'runInstance').and.callFake(() => {
                         loadingWhileRunningInstance = component.loading;
                         return Promise.resolve(result);
                     });
                     closeDialogSpy = spyOn(dialogRef, 'close');
-                    getButton('Run').click();
-                    tick();
-                }));
+                    dialog.clickButton('Run');
+                });
 
                 it('should run the instance and close the dialog', () => {
                     expect(runInstanceSpy).toHaveBeenCalledOnceWith(2, {
@@ -465,17 +454,8 @@ describe('RunServerDialogComponent', () => {
                 expect(component.form.invalid).toBeTrue();
             });
 
-            describe('clicking on Run', () => {
-                let runInstanceSpy: jasmine.Spy;
-
-                beforeEach(() => {
-                    runInstanceSpy = spyOn(restApiService, 'runInstance');
-                    getButton('Run').click();
-                });
-
-                it('should do nothing', () => {
-                    expect(runInstanceSpy).not.toHaveBeenCalled();
-                });
+            it('only the Cancel buttons should be enabled', () => {
+                expect(dialog.enabledButtons).toEqual(['Cancel']);
             });
 
             describe('onRunClicked', () => {
@@ -496,7 +476,7 @@ describe('RunServerDialogComponent', () => {
     describe('when there are no worlds', () => {
         beforeEach(async () => {
             hostWorlds = [];
-            await instantiate();
+            await init();
         });
 
         describe('the World form field', () => {

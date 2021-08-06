@@ -2,7 +2,6 @@ import { AfterViewInit, Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import { webSocket } from 'rxjs/webSocket';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { ErrorService } from 'src/app/core/services/error.service';
 import { MessageService } from 'src/app/core/services/message.service';
@@ -38,19 +37,6 @@ interface ButtonDefinition {
     styleUrls: ['./terraria-instance-page.component.sass'],
 })
 export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
-    private readonly RUNNING_STATES = new Set<TerrariaInstanceState>([
-        'BOOTING_UP',
-        'WORLD_MENU',
-        'MOD_MENU',
-        'MOD_BROWSER',
-        'CHANGING_MOD_STATE',
-        'MAX_PLAYERS_PROMPT',
-        'PORT_PROMPT',
-        'AUTOMATICALLY_FORWARD_PORT_PROMPT',
-        'PASSWORD_PROMPT',
-        'RUNNING',
-    ]);
-
     readonly BUTTONS: ButtonDefinition[] = [
         {
             action: 'BOOT_UP',
@@ -105,6 +91,19 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
 
     instanceId = 0;
 
+    private readonly RUNNING_STATES = new Set<TerrariaInstanceState>([
+        'BOOTING_UP',
+        'WORLD_MENU',
+        'MOD_MENU',
+        'MOD_BROWSER',
+        'CHANGING_MOD_STATE',
+        'MAX_PLAYERS_PROMPT',
+        'PORT_PROMPT',
+        'AUTOMATICALLY_FORWARD_PORT_PROMPT',
+        'PASSWORD_PROMPT',
+        'RUNNING',
+    ]);
+
     private instanceMessageSubscription?: Subscription;
 
     private instanceEventMessageSubscription?: Subscription;
@@ -152,6 +151,102 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     ngOnDestroy(): void {
         this.instanceMessageSubscription?.unsubscribe();
         this.instanceEventMessageSubscription?.unsubscribe();
+    }
+
+    get hasAction(): boolean {
+        return !!this.instance?.pendingAction || !!this.instance?.currentAction;
+    }
+
+    get canManageTerraria(): boolean {
+        return this.authService.currentUser?.accountType?.ableToManageTerraria || false;
+    }
+
+    bootUp(): void {
+        this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'BOOT_UP' }));
+    }
+
+    goToModMenu(): void {
+        this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'GO_TO_MOD_MENU' }));
+    }
+
+    setEnabledMods(): void {
+        const instance = this.instance;
+        if (!instance) {
+            return this.errorService.showError('The instance is not defined!');
+        }
+        this.doWhileLoading(() => this.setInstanceModsDialogService.openDialog(instance));
+    }
+
+    runServer(): void {
+        const [instance, host] = [this.instance, this.host];
+        if (!instance) {
+            return this.errorService.showError('The instance is not defined!');
+        }
+        if (!host) {
+            return this.errorService.showError('The host is not defined!');
+        }
+        this.doWhileLoading(() =>
+            this.runServerDialogService.openDialog({
+                instance,
+                hostId: host.id,
+            })
+        );
+    }
+
+    shutDown(): void {
+        const instance = this.instance;
+        if (!instance) {
+            return this.errorService.showError('The instance is not defined!');
+        }
+        if (instance.state !== 'RUNNING') {
+            this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }));
+            return;
+        }
+        this.doWhileLoading(() =>
+            this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
+                titleKey: 'terraria.instance.dialog.shut-down.title',
+                descriptionKey: 'terraria.instance.dialog.shut-down.description',
+                primaryButton: {
+                    labelKey: 'terraria.instance.dialog.shut-down.confirm',
+                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }),
+                },
+                extraButtons: [
+                    {
+                        labelKey: 'terraria.instance.dialog.shut-down.confirm-no-save',
+                        onClicked: () =>
+                            this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN_NO_SAVE' }),
+                    },
+                ],
+            })
+        );
+    }
+
+    terminate(): void {
+        this.doWhileLoading(() =>
+            this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
+                titleKey: 'terraria.instance.dialog.terminate.title',
+                descriptionKey: 'terraria.instance.dialog.terminate.description',
+                primaryButton: {
+                    labelKey: 'terraria.instance.dialog.terminate.confirm',
+                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'TERMINATE' }),
+                },
+                warn: true,
+            })
+        );
+    }
+
+    deleteInstance(): void {
+        this.doWhileLoading(() =>
+            this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
+                titleKey: 'terraria.instance.dialog.delete.title',
+                descriptionKey: 'terraria.instance.dialog.delete.description',
+                primaryButton: {
+                    labelKey: 'terraria.instance.dialog.delete.confirm',
+                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'DELETE' }),
+                },
+                warn: true,
+            })
+        );
     }
 
     private updateInstance(instanceMessage: TerrariaInstanceMessage): void {
@@ -246,103 +341,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         }
     }
 
-    get hasAction(): boolean {
-        return !!this.instance?.pendingAction || !!this.instance?.currentAction;
-    }
-
-    get canManageTerraria(): boolean {
-        return this.authService.currentUser?.accountType?.ableToManageTerraria || false;
-    }
-
-    bootUp(): void {
-        this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'BOOT_UP' }));
-    }
-
-    goToModMenu(): void {
-        this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'GO_TO_MOD_MENU' }));
-    }
-
-    setEnabledMods(): void {
-        const instance = this.instance;
-        if (!instance) {
-            return this.errorService.showError('The instance is not defined!');
-        }
-        this.doWhileLoading(() => this.setInstanceModsDialogService.openDialog(instance));
-    }
-
-    runServer(): void {
-        const [instance, host] = [this.instance, this.host];
-        if (!instance) {
-            return this.errorService.showError('The instance is not defined!');
-        }
-        if (!host) {
-            return this.errorService.showError('The host is not defined!');
-        }
-        this.doWhileLoading(() =>
-            this.runServerDialogService.openDialog({
-                instance,
-                hostId: host.id,
-            })
-        );
-    }
-
-    shutDown(): void {
-        const instance = this.instance;
-        if (!instance) {
-            return this.errorService.showError('The instance is not defined!');
-        }
-        if (instance.state !== 'RUNNING') {
-            this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }));
-            return;
-        }
-        this.doWhileLoading(() => {
-            return this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
-                titleKey: 'terraria.instance.dialog.shut-down.title',
-                descriptionKey: 'terraria.instance.dialog.shut-down.description',
-                primaryButton: {
-                    labelKey: 'terraria.instance.dialog.shut-down.confirm',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }),
-                },
-                extraButtons: [
-                    {
-                        labelKey: 'terraria.instance.dialog.shut-down.confirm-no-save',
-                        onClicked: () =>
-                            this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN_NO_SAVE' }),
-                    },
-                ],
-            });
-        });
-    }
-
-    terminate(): void {
-        this.doWhileLoading(() => {
-            return this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
-                titleKey: 'terraria.instance.dialog.terminate.title',
-                descriptionKey: 'terraria.instance.dialog.terminate.description',
-                primaryButton: {
-                    labelKey: 'terraria.instance.dialog.terminate.confirm',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'TERMINATE' }),
-                },
-                warn: true,
-            });
-        });
-    }
-
-    deleteInstance(): void {
-        this.doWhileLoading(() => {
-            return this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
-                titleKey: 'terraria.instance.dialog.delete.title',
-                descriptionKey: 'terraria.instance.dialog.delete.description',
-                primaryButton: {
-                    labelKey: 'terraria.instance.dialog.delete.confirm',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'DELETE' }),
-                },
-                warn: true,
-            });
-        });
-    }
-
-    async doWhileLoading(action: () => Promise<TerrariaInstanceEntity | undefined>): Promise<void> {
+    private async doWhileLoading(action: () => Promise<TerrariaInstanceEntity | undefined>): Promise<void> {
         if (this.loading) {
             return this.errorService.showError('Already loading!');
         }

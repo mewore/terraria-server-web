@@ -20,14 +20,14 @@ interface ModOption {
     styleUrls: ['./set-instance-mods-dialog.component.sass'],
 })
 export class SetInstanceModsDialogComponent {
+    @ViewChild(MatSelectionList)
+    list?: MatSelectionList;
+
     tModLoaderVersions: TModLoaderVersionViewModel[] = [];
 
     loading = false;
 
     readonly modOptions: ModOption[] = [];
-
-    @ViewChild(MatSelectionList)
-    list?: MatSelectionList;
 
     constructor(
         private readonly dialog: MatDialogRef<SetInstanceModsDialogComponent, SetInstanceModsDialogOutput>,

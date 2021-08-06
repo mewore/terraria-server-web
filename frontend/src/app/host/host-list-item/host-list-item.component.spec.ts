@@ -5,25 +5,27 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterTestingModule } from '@angular/router/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { HostEntity } from 'src/generated/backend';
-import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { TranslateServiceStub } from 'src/stubs/translate.service.stub';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { EnUsTranslateServiceStub } from 'src/stubs/translate.service.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
+import { ListItemInfo, MaterialListItemInfo } from 'src/test-util/list-item-info';
 
 import { HostListItemComponent } from './host-list-item.component';
 
 describe('HostListItemComponent', () => {
     let fixture: ComponentFixture<HostListItemComponent>;
     let component: HostListItemComponent;
+    let listItemInfo: ListItemInfo;
 
     let host: HostEntity;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [MatListModule, MatIconModule, MatTooltipModule, RouterTestingModule],
-            declarations: [HostListItemComponent, TranslatePipeStub],
-            providers: [{ provide: TranslateService, useClass: TranslateServiceStub }],
+            declarations: [HostListItemComponent, EnUsTranslatePipeStub],
+            providers: [{ provide: TranslateService, useClass: EnUsTranslateServiceStub }],
         }).compileComponents();
-        fixture = TestBed.createComponent(HostListItemComponent);
-        component = fixture.componentInstance;
+
         host = {
             id: 1,
             alive: true,
@@ -31,22 +33,12 @@ describe('HostListItemComponent', () => {
             terrariaInstanceDirectory: 'dir',
             uuid: 'uuid',
         };
-        component.host = host;
-        fixture.detectChanges();
-        await fixture.whenStable();
-    });
 
-    function getLines(): string[] {
-        const lineElements = (fixture.nativeElement as HTMLElement).getElementsByClassName('mat-line');
-        const lines: string[] = [];
-        for (let i = 0; i < lineElements.length; i++) {
-            lines.push(lineElements.item(i)?.textContent?.trim() || '');
-        }
-        return lines;
-    }
-
-    it('should create', () => {
-        expect(component).toBeTruthy();
+        [fixture, component] = await initComponent(
+            HostListItemComponent,
+            (createdComponent) => (createdComponent.host = host)
+        );
+        listItemInfo = new MaterialListItemInfo(fixture);
     });
 
     it('should have an "online" icon tooltip', () => {
@@ -54,7 +46,7 @@ describe('HostListItemComponent', () => {
     });
 
     it('should have the correct lines', () => {
-        expect(getLines()).toEqual(['[No name]', 'uuid']);
+        expect(listItemInfo.getLines()).toEqual(['[No name]', 'uuid']);
     });
 
     describe('when the host has a name', () => {
@@ -64,7 +56,7 @@ describe('HostListItemComponent', () => {
         });
 
         it('should have the correct lines', () => {
-            expect(getLines()).toEqual(['name', 'uuid']);
+            expect(listItemInfo.getLines()).toEqual(['name', 'uuid']);
         });
     });
 
@@ -89,7 +81,7 @@ describe('HostListItemComponent', () => {
         });
 
         it('should have the correct lines', () => {
-            expect(getLines()).toEqual(['[Loading]', '']);
+            expect(listItemInfo.getLines()).toEqual(['[Loading]', '']);
         });
     });
 });

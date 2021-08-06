@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { ErrorService } from 'src/app/core/services/error.service';
 import { AuthenticatedUser } from 'src/app/core/types';
 
 export type AuthenticationDialogComponentOutput = AuthenticatedUser;
@@ -23,14 +24,15 @@ export class AuthenticationDialogComponent {
 
     constructor(
         private readonly dialog: MatDialogRef<AuthenticationDialogComponent, AuthenticationDialogComponentOutput>,
-        private readonly authenticationService: AuthenticationService
+        private readonly authenticationService: AuthenticationService,
+        private readonly errorService: ErrorService
     ) {}
 
     get valid(): boolean {
         return this.usernameFormControl.valid && this.passwordFormControl.valid;
     }
 
-    get busy(): boolean {
+    get loading(): boolean {
         return this.signingUp || this.loggingIn;
     }
 
@@ -76,10 +78,10 @@ export class AuthenticationDialogComponent {
                         this.errorMessageKey = 'authentication.dialog.errors.unauthorized';
                         break;
                     default:
-                        throw error;
+                        this.errorService.showError(error);
                 }
             } else {
-                throw error;
+                this.errorService.showError(error);
             }
         } finally {
             after();

@@ -1,0 +1,107 @@
+{
+    "root": true,
+    "ignorePatterns": ["projects/**/*"],
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "parserOptions": {
+                "project": ["tsconfig.json", "e2e/tsconfig.json"],
+                "createDefaultProgram": true
+            },
+            "extends": [
+                "plugin:@angular-eslint/ng-cli-compat",
+                "plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
+                "plugin:@angular-eslint/template/process-inline-templates"
+            ],
+            "plugins": ["eslint-plugin-react"],
+            "rules": {
+                "@angular-eslint/component-selector": [
+                    "error",
+                    {
+                        "type": "element",
+                        "prefix": "tsw",
+                        "style": "kebab-case"
+                    }
+                ],
+                "@angular-eslint/directive-selector": [
+                    "error",
+                    {
+                        "type": "attribute",
+                        "prefix": "tsw",
+                        "style": "camelCase"
+                    }
+                ],
+                "@typescript-eslint/naming-convention": [
+                    "error",
+                    {
+                        "selector": "classProperty",
+                        "modifiers": ["private", "readonly"],
+                        "format": ["camelCase", "UPPER_CASE"]
+                    },
+                    {
+                        "selector": "classProperty",
+                        "modifiers": ["private"],
+                        "format": ["camelCase", "UPPER_CASE"],
+                        "leadingUnderscore": "allow"
+                    }
+                ],
+                "arrow-parens": ["off", "always"],
+                "brace-style": ["off", "off"],
+                "comma-dangle": [
+                    "error",
+                    {
+                        "arrays": "always-multiline",
+                        "objects": "always-multiline",
+                        "imports": "always-multiline"
+                    }
+                ],
+                "dot-notation": "error",
+                "import/order": "error",
+                "indent": ["error", 4, {"SwitchCase": 1}],
+                "linebreak-style": "off",
+                "max-len": [
+                    "error",
+                    {
+                        "ignorePattern": "^(import |export )",
+                        "code": 120
+                    }
+                ],
+                "new-parens": "off",
+                "newline-per-chained-call": "off",
+                "no-empty-function": "off",
+                "no-extra-semi": "off",
+                "no-irregular-whitespace": "off",
+                "no-shadow": ["off"],
+                "no-trailing-spaces": "error",
+                "no-unused-expressions": "error",
+                "no-use-before-define": "off",
+                "padded-blocks": [
+                    "off",
+                    {
+                        "blocks": "never"
+                    },
+                    {
+                        "allowSingleLineBlocks": true
+                    }
+                ],
+                "quotes": [2, "single", {"avoidEscape": true}],
+                "react/jsx-curly-spacing": "off",
+                "react/jsx-equals-spacing": "off",
+                "react/jsx-tag-spacing": [
+                    "off",
+                    {
+                        "afterOpening": "allow",
+                        "closingSlash": "allow"
+                    }
+                ],
+                "react/jsx-wrap-multilines": "off",
+                "semi": "error",
+                "space-in-parens": ["off", "never"]
+            }
+        },
+        {
+            "files": ["*.html"],
+            "extends": ["plugin:@angular-eslint/template/recommended"]
+        }
+    ]
+}

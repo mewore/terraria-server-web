@@ -26,8 +26,6 @@ export class RunServerDialogComponent implements OnInit {
 
     readonly MAX_PASSWORD_LENGTH = 255;
 
-    private readonly instanceId: number;
-
     loading = false;
 
     readonly maxPlayersInput = new FormControl(8, [
@@ -50,8 +48,6 @@ export class RunServerDialogComponent implements OnInit {
 
     worlds: TerrariaWorldEntity[] = [];
     worldById: { [id: number]: TerrariaWorldEntity } = {};
-    private worldModStringById: { [id: number]: string } = {};
-    private readonly instancesByWorldId = new Map<number, TerrariaInstanceEntity[]>();
     readonly instanceModString: string;
 
     readonly worldInput = new FormControl({ value: undefined, disabled: true }, [Validators.required]);
@@ -63,6 +59,10 @@ export class RunServerDialogComponent implements OnInit {
         password: this.passwordInput,
         world: this.worldInput,
     } as { [key: string]: FormControl });
+
+    private worldModStringById: { [id: number]: string } = {};
+    private readonly instancesByWorldId = new Map<number, TerrariaInstanceEntity[]>();
+    private readonly instanceId: number;
 
     constructor(
         private readonly dialog: MatDialogRef<RunServerDialogComponent, RunServerDialogOutput>,

@@ -5,7 +5,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { HostEntity } from 'src/generated/backend';
-import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
 import { HostListItemStubComponent } from '../host-list-item/host-list-item.component.stub';
 
 import { HostListPageComponent } from './host-list-page.component';
@@ -16,18 +17,12 @@ describe('HostListPageComponent', () => {
 
     let restApiService: RestApiService;
 
-    async function instantiate(): Promise<HostListPageComponent> {
-        fixture = TestBed.createComponent(HostListPageComponent);
-        component = fixture.componentInstance;
-        fixture.detectChanges();
-        await fixture.whenStable();
-        return component;
-    }
+    const init = async (): Promise<unknown> => ([fixture, component] = await initComponent(HostListPageComponent));
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [MatListModule, MatProgressSpinnerModule, MatDividerModule],
-            declarations: [HostListPageComponent, HostListItemStubComponent, TranslatePipeStub],
+            declarations: [HostListPageComponent, HostListItemStubComponent, EnUsTranslatePipeStub],
             providers: [{ provide: RestApiService, useClass: RestApiServiceStub }],
         }).compileComponents();
 
@@ -44,11 +39,7 @@ describe('HostListPageComponent', () => {
             remoteHost = { id: 2, uuid: 'remote-uuid' } as HostEntity;
             otherRemoteHost = { id: 3, uuid: 'other-remote-uuid' } as HostEntity;
             spyOn(restApiService, 'getHosts').and.resolveTo([localHost, remoteHost, otherRemoteHost]);
-            await instantiate();
-        });
-
-        it('should create', () => {
-            expect(component).toBeTruthy();
+            await init();
         });
 
         it('should not be loading', () => {
@@ -67,7 +58,7 @@ describe('HostListPageComponent', () => {
     describe('when there are no hosts', () => {
         beforeEach(async () => {
             spyOn(restApiService, 'getHosts').and.resolveTo([]);
-            await instantiate();
+            await init();
         });
 
         it('should not be loading', () => {
@@ -86,7 +77,7 @@ describe('HostListPageComponent', () => {
     describe('when there are only remote hosts', () => {
         beforeEach(async () => {
             spyOn(restApiService, 'getHosts').and.resolveTo([{ id: 2, uuid: 'remote-uuid' } as HostEntity]);
-            await instantiate();
+            await init();
         });
 
         it('should not have a local host', () => {

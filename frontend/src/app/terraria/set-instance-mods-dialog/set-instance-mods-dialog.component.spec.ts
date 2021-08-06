@@ -9,27 +9,22 @@ import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { TerrariaInstanceEntity } from 'src/generated/backend';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
-import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
+import { DialogInfo, MaterialDialogInfo as MaterialDialogInfo } from 'src/test-util/dialog-info';
 import { MaterialSelectionListInfo, SelectionListInfo } from 'src/test-util/selection-list-info';
 import { SetInstanceModsDialogComponent, SetInstanceModsDialogOutput } from './set-instance-mods-dialog.component';
 
 describe('SetInstanceModsDialogComponent', () => {
     let fixture: ComponentFixture<SetInstanceModsDialogComponent>;
     let component: SetInstanceModsDialogComponent;
+    let modList: SelectionListInfo;
+    let dialog: DialogInfo;
 
     let dialogRef: MatDialogRef<SetInstanceModsDialogComponent, SetInstanceModsDialogOutput>;
     let restApiService: RestApiService;
     let errorService: ErrorService;
     let instance: TerrariaInstanceEntity;
-    let modList: SelectionListInfo;
-
-    async function instantiate(): Promise<void> {
-        fixture = TestBed.createComponent(SetInstanceModsDialogComponent);
-        fixture.detectChanges();
-        await fixture.whenStable();
-        component = fixture.componentInstance;
-        modList = new MaterialSelectionListInfo(fixture);
-    }
 
     beforeEach(async () => {
         instance = {
@@ -46,7 +41,7 @@ describe('SetInstanceModsDialogComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [MatDialogModule, MatListModule, MatProgressBarModule, NoopAnimationsModule],
-            declarations: [SetInstanceModsDialogComponent, TranslatePipeStub],
+            declarations: [SetInstanceModsDialogComponent, EnUsTranslatePipeStub],
             providers: [
                 { provide: MatDialogRef, useClass: MatDialogRefStub },
                 { provide: RestApiService, useClass: RestApiServiceStub },
@@ -59,22 +54,18 @@ describe('SetInstanceModsDialogComponent', () => {
 
         restApiService = TestBed.inject(RestApiService);
         errorService = TestBed.inject(ErrorService);
-        await instantiate();
+
+        [fixture, component] = await initComponent(SetInstanceModsDialogComponent);
+        modList = new MaterialSelectionListInfo(fixture);
+        dialog = new MaterialDialogInfo(fixture);
     });
 
-    function getButton(label: string): HTMLButtonElement {
-        const buttons = (fixture.nativeElement as Element).getElementsByTagName('button');
-        for (let i = 0; i < buttons.length; i++) {
-            const button = buttons.item(i);
-            if (button && button.textContent?.trim() === label) {
-                return button;
-            }
-        }
-        throw new Error(`There is no '${label}' button`);
-    }
+    it('should have the correct title', () => {
+        expect(dialog.title).toBe('Set the enabled mods');
+    });
 
-    it('should create', () => {
-        expect(component).toBeTruthy();
+    it('should have the correct buttons', () => {
+        expect(dialog.buttons).toEqual(['Cancel', 'Set']);
     });
 
     it('should have the correct options', () => {
@@ -89,6 +80,26 @@ describe('SetInstanceModsDialogComponent', () => {
         expect(modList.uncheckedOptions).toEqual(['third', 'fourth']);
     });
 
+    it('should should have the correct buttons', () => {
+        expect(dialog.buttons).toEqual(['Cancel', 'Set']);
+    });
+
+    it('all buttons should be enabled', () => {
+        expect(dialog.buttons).toEqual(['Cancel', 'Set']);
+    });
+
+    describe('while loading', () => {
+        beforeEach(fakeAsync(() => {
+            component.loading = true;
+            fixture.detectChanges();
+            tick();
+        }));
+
+        it('only the cancel button should be enabled', () => {
+            expect(dialog.enabledButtons).toEqual(['Cancel']);
+        });
+    });
+
     describe('when the list property is not defined', () => {
         beforeEach(() => {
             component.list = undefined;
@@ -97,11 +108,10 @@ describe('SetInstanceModsDialogComponent', () => {
         describe('when Set is clicked', () => {
             let showErrorSpy: jasmine.Spy<(error: Error) => void>;
 
-            beforeEach(fakeAsync(() => {
+            beforeEach(() => {
                 showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
-                getButton('Set').click();
-                tick();
-            }));
+                dialog.clickButton('Set');
+            });
 
             it('should show an error', () => {
                 expect(showErrorSpy).toHaveBeenCalledOnceWith(new Error('The selected mods are unknown!'));
@@ -130,15 +140,14 @@ describe('SetInstanceModsDialogComponent', () => {
             const result: TerrariaInstanceEntity = {} as TerrariaInstanceEntity;
             let closeDialogSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => void>;
 
-            beforeEach(fakeAsync(() => {
+            beforeEach(() => {
                 setInstanceModsSpy = spyOn(restApiService, 'setInstanceMods').and.callFake(() => {
                     loadingWhileSettingMods = component.loading;
                     return Promise.resolve(result);
                 });
                 closeDialogSpy = spyOn(dialogRef, 'close');
-                getButton('Set').click();
-                tick();
-            }));
+                dialog.clickButton('Set');
+            });
 
             it('should set the mods', () => {
                 expect(setInstanceModsSpy).toHaveBeenCalledOnceWith(2, ['second', 'third']);

@@ -4,228 +4,277 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticationServiceStub } from 'src/app/core/services/authentication.service.stub';
+import { ErrorService } from 'src/app/core/services/error.service';
+import { ErrorServiceStub } from 'src/app/core/services/error.service.stub';
 import { AuthenticatedUser } from 'src/app/core/types';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
-import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { initComponent } from 'src/test-util/angular-test-util';
+import { DialogInfo, MaterialDialogInfo } from 'src/test-util/dialog-info';
 import { AuthenticationDialogComponent, AuthenticationDialogComponentOutput } from './authentication-dialog.component';
 
 describe('AuthenticationDialogComponent', () => {
-    let component: AuthenticationDialogComponent;
     let fixture: ComponentFixture<AuthenticationDialogComponent>;
+    let component: AuthenticationDialogComponent;
+    let dialog: DialogInfo;
 
     let dialogRef: MatDialogRef<AuthenticationDialogComponent, AuthenticationDialogComponentOutput>;
     let authenticationService: AuthenticationService;
-
-    async function instantiate(): Promise<AuthenticationDialogComponent> {
-        fixture = TestBed.createComponent(AuthenticationDialogComponent);
-        await fixture.whenStable();
-        return fixture.componentInstance;
-    }
+    let errorService: ErrorService;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [MatDialogModule, ReactiveFormsModule, MatInputModule, MatProgressBarModule],
-            declarations: [AuthenticationDialogComponent, TranslatePipeStub],
+            imports: [MatDialogModule, ReactiveFormsModule, MatInputModule, MatProgressBarModule, NoopAnimationsModule],
+            declarations: [AuthenticationDialogComponent, EnUsTranslatePipeStub],
             providers: [
                 { provide: MatDialogRef, useClass: MatDialogRefStub },
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
+                { provide: ErrorService, useClass: ErrorServiceStub },
             ],
         }).compileComponents();
 
         dialogRef = TestBed.inject(MatDialogRef);
         authenticationService = TestBed.inject(AuthenticationService);
-        component = await instantiate();
+        errorService = TestBed.inject(ErrorService);
+
+        [fixture, component] = await initComponent(AuthenticationDialogComponent);
+        dialog = new MaterialDialogInfo(fixture);
     });
 
-    it('should create', async () => {
-        expect(component).toBeTruthy();
+    it('should have the correct title', async () => {
+        expect(dialog.title).toBe('Log in or sign up');
     });
 
-    it('should not be busy', async () => {
-        expect(component.busy).toBeFalse();
+    it('should have the correct buttons', async () => {
+        expect(dialog.buttons).toEqual(['Cancel', 'Sign up', 'Log in']);
     });
 
-    describe('the inputs', () => {
-        it('should be invalid', () => {
-            expect(component.valid).toBeFalse();
+    it('should not have a loading indicator', async () => {
+        expect(dialog.hasLoadingIndicator).toBeFalse();
+    });
+
+    describe('while logging in', () => {
+        beforeEach(() => {
+            component.loggingIn = true;
+            fixture.detectChanges();
         });
 
-        describe('when data is entered in them', () => {
-            it('should be valid', () => {
-                component.usernameFormControl.setValue('username');
-                component.passwordFormControl.setValue('password');
-                expect(component.valid).toBeTrue();
-            });
+        it('only the Cancel button should be enabled', async () => {
+            expect(dialog.enabledButtons).toEqual(['Cancel']);
+        });
+
+        it('have a loading indicator', async () => {
+            expect(dialog.hasLoadingIndicator).toBeTrue();
         });
     });
 
-    describe('when logging in', () => {
-        let logInSpy: jasmine.Spy;
-
-        beforeEach(async () => {
-            logInSpy = spyOn(authenticationService, 'logIn');
-            component.usernameFormControl.setValue('username');
-            component.passwordFormControl.setValue('password');
+    describe('while signing up', () => {
+        beforeEach(() => {
+            component.loggingIn = true;
+            fixture.detectChanges();
         });
 
-        describe('when the inputs are unset', () => {
-            beforeEach(async () => {
-                component.usernameFormControl.setValue('');
-                component.passwordFormControl.setValue('');
-                await component.logIn();
+        it('only the Cancel button should be enabled', async () => {
+            expect(dialog.enabledButtons).toEqual(['Cancel']);
+        });
+
+        it('have a loading indicator', async () => {
+            expect(dialog.hasLoadingIndicator).toBeTrue();
+        });
+    });
+
+    describe('when no data is entered', () => {
+        it('only the Cancel button should be enabled', async () => {
+            expect(dialog.enabledButtons).toEqual(['Cancel']);
+        });
+
+        describe('logIn', () => {
+            let logInSpy: jasmine.Spy;
+
+            beforeEach(() => {
+                logInSpy = spyOn(authenticationService, 'logIn');
+                component.logIn();
             });
 
             it('should not try to log in', () => {
                 expect(logInSpy).not.toHaveBeenCalled();
             });
         });
-
-        describe('when the login is successful', () => {
-            let busyWhileLoggingIn: boolean;
-            const userAuth: AuthenticatedUser = {
-                authData: 'authData',
-                sessionToken: 'sessionToken',
-                username: 'username',
-            };
-            let dialogCloseSpy: jasmine.Spy;
-
-            beforeEach(async () => {
-                logInSpy = logInSpy.and.callFake(() => {
-                    busyWhileLoggingIn = component.busy;
-                    return userAuth;
-                });
-                dialogCloseSpy = spyOn(dialogRef, 'close');
-                await component.logIn();
-            });
-
-            describe('during the login itself', () => {
-                it('should be busy', () => {
-                    expect(busyWhileLoggingIn).toBeTrue();
-                });
-            });
-
-            it('should have attempted to log in with the correct parameters', () => {
-                expect(logInSpy).toHaveBeenCalledWith('username', 'password');
-            });
-
-            it('should close with the user authentication as a result', () => {
-                expect(dialogCloseSpy).toHaveBeenCalledWith(userAuth);
-            });
-
-            it('should not be busy', () => {
-                expect(component.busy).toBeFalse();
-            });
-        });
-
-        describe('when the login fails with status code [400]', () => {
-            beforeEach(async () => {
-                logInSpy = logInSpy.and.throwError(new HttpErrorResponse({ status: 400 }));
-                await component.logIn();
-            });
-
-            it('should set the error message key', () => {
-                expect(component.errorMessageKey).toEqual('authentication.dialog.errors.bad-request');
-            });
-
-            it('should not be busy', () => {
-                expect(component.busy).toBeFalse();
-            });
-        });
-
-        describe('when the login fails with status code [401]', () => {
-            beforeEach(async () => {
-                logInSpy = logInSpy.and.throwError(new HttpErrorResponse({ status: 401 }));
-                await component.logIn();
-            });
-
-            it('should set the error message key', () => {
-                expect(component.errorMessageKey).toEqual('authentication.dialog.errors.unauthorized');
-            });
-
-            it('should not be busy', () => {
-                expect(component.busy).toBeFalse();
-            });
-        });
-
-        describe('when the login fails with an undefined status code', () => {
-            let error: Error;
-
-            beforeEach(async () => {
-                logInSpy = logInSpy.and.throwError((error = new HttpErrorResponse({})));
-            });
-
-            it('should throw the error', async () => {
-                expect(await component.logIn().catch((e) => e)).toBe(error);
-            });
-
-            it('should not be busy', () => {
-                expect(component.busy).toBeFalse();
-            });
-        });
-
-        describe('when the login fails with a non-HTTP error', () => {
-            let error: Error;
-
-            beforeEach(async () => {
-                logInSpy = logInSpy.and.throwError((error = new Error()));
-            });
-
-            it('should throw the error', async () => {
-                expect(await component.logIn().catch((e) => e)).toBe(error);
-            });
-
-            it('should not be busy', () => {
-                expect(component.busy).toBeFalse();
-            });
-        });
     });
 
-    // Signing up reuses the same code as logging in
-    describe('when singing up', () => {
-        let signUpSpy: jasmine.Spy;
-
-        beforeEach(async () => {
-            signUpSpy = spyOn(authenticationService, 'signUp');
+    describe('when valid data is entered', () => {
+        beforeEach(() => {
             component.usernameFormControl.setValue('username');
             component.passwordFormControl.setValue('password');
+            fixture.detectChanges();
         });
 
-        describe('when the signup is successful', () => {
-            let busyWhileSigningUp: boolean;
-            const userAuth: AuthenticatedUser = {
-                authData: 'authData',
-                sessionToken: 'sessionToken',
-                username: 'username',
-            };
-            let dialogCloseSpy: jasmine.Spy;
+        it('all buttons should be enabled', async () => {
+            expect(dialog.enabledButtons).toEqual(['Cancel', 'Sign up', 'Log in']);
+        });
+
+        describe('when "Log in" is clicked', () => {
+            let logInSpy: jasmine.Spy;
+
+            beforeEach(() => {
+                logInSpy = spyOn(authenticationService, 'logIn');
+            });
+
+            describe('when the login is successful', () => {
+                let busyWhileLoggingIn: boolean;
+                const userAuth: AuthenticatedUser = {
+                    authData: 'authData',
+                    sessionToken: 'sessionToken',
+                    username: 'username',
+                };
+                let dialogCloseSpy: jasmine.Spy;
+
+                beforeEach(() => {
+                    logInSpy = logInSpy.and.callFake(() => {
+                        busyWhileLoggingIn = component.loading;
+                        return userAuth;
+                    });
+                    dialogCloseSpy = spyOn(dialogRef, 'close');
+                    dialog.clickButton('Log in');
+                });
+
+                describe('during the login itself', () => {
+                    it('should be busy', () => {
+                        expect(busyWhileLoggingIn).toBeTrue();
+                    });
+                });
+
+                it('should have attempted to log in with the correct parameters', () => {
+                    expect(logInSpy).toHaveBeenCalledWith('username', 'password');
+                });
+
+                it('should close with the user authentication as a result', () => {
+                    expect(dialogCloseSpy).toHaveBeenCalledWith(userAuth);
+                });
+
+                it('should not have a loading indicator', async () => {
+                    expect(dialog.hasLoadingIndicator).toBeFalse();
+                });
+            });
+
+            describe('when the login fails with status code [400]', () => {
+                beforeEach(() => {
+                    logInSpy = logInSpy.and.throwError(new HttpErrorResponse({ status: 400 }));
+                    dialog.clickButton('Log in');
+                });
+
+                it('should set the error message key', () => {
+                    expect(component.errorMessageKey).toEqual('authentication.dialog.errors.bad-request');
+                });
+
+                it('should not have a loading indicator', async () => {
+                    expect(dialog.hasLoadingIndicator).toBeFalse();
+                });
+            });
+
+            describe('when the login fails with status code [401]', () => {
+                beforeEach(() => {
+                    logInSpy = logInSpy.and.throwError(new HttpErrorResponse({ status: 401 }));
+                    dialog.clickButton('Log in');
+                });
+
+                it('should set the error message key', () => {
+                    expect(component.errorMessageKey).toEqual('authentication.dialog.errors.unauthorized');
+                });
+
+                it('should not have a loading indicator', async () => {
+                    expect(dialog.hasLoadingIndicator).toBeFalse();
+                });
+            });
+
+            describe('when the login fails with an undefined status code', () => {
+                let error: Error;
+                let showErrorSpy: jasmine.Spy<(error: Error) => void>;
+
+                beforeEach(() => {
+                    showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                    logInSpy = logInSpy.and.throwError((error = new HttpErrorResponse({})));
+                    dialog.clickButton('Log in');
+                });
+
+                it('should show the error', async () => {
+                    expect(showErrorSpy).toHaveBeenCalledOnceWith(error);
+                });
+
+                it('should not have a loading indicator', async () => {
+                    expect(dialog.hasLoadingIndicator).toBeFalse();
+                });
+            });
+
+            describe('when the login fails with a non-HTTP error', () => {
+                let error: Error;
+                let showErrorSpy: jasmine.Spy<(error: Error) => void>;
+
+                beforeEach(() => {
+                    showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                    logInSpy = logInSpy.and.throwError((error = new Error()));
+                    dialog.clickButton('Log in');
+                });
+
+                it('should show the error', async () => {
+                    expect(showErrorSpy).toHaveBeenCalledOnceWith(error);
+                });
+
+                it('should not have a loading indicator', async () => {
+                    expect(dialog.hasLoadingIndicator).toBeFalse();
+                });
+            });
+        });
+
+        // Signing up reuses the same code as logging in
+        describe('when singing up', () => {
+            let signUpSpy: jasmine.Spy;
 
             beforeEach(async () => {
-                signUpSpy = signUpSpy.and.callFake(() => {
-                    busyWhileSigningUp = component.busy;
-                    return userAuth;
+                signUpSpy = spyOn(authenticationService, 'signUp');
+                component.usernameFormControl.setValue('username');
+                component.passwordFormControl.setValue('password');
+                fixture.detectChanges();
+            });
+
+            describe('when the signup is successful', () => {
+                let busyWhileSigningUp: boolean;
+                const userAuth: AuthenticatedUser = {
+                    authData: 'authData',
+                    sessionToken: 'sessionToken',
+                    username: 'username',
+                };
+                let dialogCloseSpy: jasmine.Spy;
+
+                beforeEach(() => {
+                    signUpSpy = signUpSpy.and.callFake(() => {
+                        busyWhileSigningUp = component.loading;
+                        return userAuth;
+                    });
+                    dialogCloseSpy = spyOn(dialogRef, 'close');
+                    dialog.clickButton('Sign up');
                 });
-                dialogCloseSpy = spyOn(dialogRef, 'close');
-                await component.signUp();
-            });
 
-            describe('during the signup itself', () => {
-                it('should be busy', () => {
-                    expect(busyWhileSigningUp).toBeTrue();
+                describe('during the signup itself', () => {
+                    it('should be busy', () => {
+                        expect(busyWhileSigningUp).toBeTrue();
+                    });
                 });
-            });
 
-            it('should have attempted to sign up with the correct parameters', () => {
-                expect(signUpSpy).toHaveBeenCalledWith('username', 'password');
-            });
+                it('should have attempted to sign up with the correct parameters', () => {
+                    expect(signUpSpy).toHaveBeenCalledWith('username', 'password');
+                });
 
-            it('should close with the user authentication as a result', () => {
-                expect(dialogCloseSpy).toHaveBeenCalledWith(userAuth);
-            });
+                it('should close with the user authentication as a result', () => {
+                    expect(dialogCloseSpy).toHaveBeenCalledWith(userAuth);
+                });
 
-            it('should not be busy', () => {
-                expect(component.busy).toBeFalse();
+                it('should not have a loading indicator', async () => {
+                    expect(dialog.hasLoadingIndicator).toBeFalse();
+                });
             });
         });
     });

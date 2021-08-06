@@ -45,10 +45,9 @@ export class MaterialSelectionListInfo implements SelectionListInfo {
         for (const optionToClick of optionsToClick) {
             const optionElement = optionMap.get(optionToClick);
             if (!optionElement) {
+                const optionString = this.options.join(', ');
                 throw new Error(
-                    `Cannot click option '${optionToClick}' because it does not exist. The options are: ${this.options.join(
-                        ', '
-                    )}`
+                    `Cannot click option '${optionToClick}' because it does not exist. The options are: ${optionString}`
                 );
             }
             optionElement.click();
@@ -82,7 +81,7 @@ export class MaterialSelectionListInfo implements SelectionListInfo {
     private getListElement(): Element {
         const fieldElement = this.rootElement.getElementsByClassName('mat-selection-list').item(0);
         if (!fieldElement) {
-            throw new Error(`There is no Material selection list`);
+            throw new Error('There is no Material selection list');
         }
         return fieldElement;
     }
