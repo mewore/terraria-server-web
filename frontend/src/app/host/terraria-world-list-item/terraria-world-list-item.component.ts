@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { TerrariaWorldEntity } from 'src/generated/backend';
 
 @Component({

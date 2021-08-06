@@ -20,6 +20,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
+                        "allowedCommonJsDependencies": ["sockjs-client"],
                         "outputPath": "dist/terraria-server-web",
                         "index": "src/index.html",
                         "main": "src/main.ts",
@@ -51,8 +52,8 @@
                             "budgets": [
                                 {
                                     "type": "initial",
-                                    "maximumWarning": "1mb",
-                                    "maximumError": "2mb"
+                                    "maximumWarning": "1.5mb",
+                                    "maximumError": "3mb"
                                 },
                                 {
                                     "type": "anyComponentStyle",
