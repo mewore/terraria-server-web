@@ -15,7 +15,6 @@ import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
 import io.github.mewore.tsw.services.util.process.TmuxService;
@@ -38,7 +37,7 @@ class TerrariaInstanceInputServiceTest {
     private TerrariaInstanceInputService terrariaInstanceInputService;
 
     @Mock
-    private TerrariaInstanceEventRepository terrariaInstanceEventRepository;
+    private TerrariaInstanceService terrariaInstanceService;
 
     @Mock
     private TerrariaInstanceEventService terrariaInstanceEventService;
@@ -57,7 +56,7 @@ class TerrariaInstanceInputServiceTest {
                 instance);
 
         terrariaInstanceInputService.sendBreakToInstance(instance, Duration.ofMinutes(10), TerrariaInstanceState.IDLE);
-        verify(terrariaInstanceEventRepository).save(eventCaptor.capture());
+        verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
         assertEquals("^C\n", eventCaptor.getValue().getText());
         verify(tmuxService, only()).sendCtrlC(INSTANCE_UUID.toString());
     }
@@ -76,7 +75,7 @@ class TerrariaInstanceInputServiceTest {
                 Duration.ofMinutes(10), TerrariaInstanceState.IDLE);
         assertSame(awaitedInstance, result);
 
-        verify(terrariaInstanceEventRepository).save(eventCaptor.capture());
+        verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
         assertEquals("input\n", eventCaptor.getValue().getText());
         verify(tmuxService, only()).sendInput(INSTANCE_UUID.toString(), "input\n");
     }
@@ -91,7 +90,7 @@ class TerrariaInstanceInputServiceTest {
 
         terrariaInstanceInputService.sendInputToInstance(instance, "sensitive input", Duration.ofMinutes(10), true,
                 TerrariaInstanceState.IDLE);
-        verify(terrariaInstanceEventRepository).save(eventCaptor.capture());
+        verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
         assertEquals("[REDACTED]\n", eventCaptor.getValue().getText());
         verify(tmuxService, only()).sendInput(INSTANCE_UUID.toString(), "sensitive input\n");
     }

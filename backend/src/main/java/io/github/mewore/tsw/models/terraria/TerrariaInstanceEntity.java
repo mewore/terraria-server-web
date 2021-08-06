@@ -109,13 +109,14 @@ public class TerrariaInstanceEntity {
     @Enumerated(EnumType.STRING)
     private @Nullable TerrariaInstanceAction currentAction;
 
-    @JsonIgnore
     @Builder.Default
+    @JsonIgnore
     @Column(nullable = false)
     @ColumnDefault("0")
     private @NonNull Long nextOutputBytePosition = 0L;
 
     @Builder.Default
+    @JsonIgnore
     @Column(nullable = false)
     @ColumnDefault("8")
     private @Positive @Max(1000) @NonNull Integer maxPlayers = 8;
@@ -126,11 +127,13 @@ public class TerrariaInstanceEntity {
     private @Positive @NonNull Integer port = 7777;
 
     @Builder.Default
+    @JsonIgnore
     @Column(nullable = false)
     @ColumnDefault("false")
     private @NonNull Boolean automaticallyForwardPort = true;
 
     @Builder.Default
+    @JsonIgnore
     @Column(nullable = false)
     @ColumnDefault("''")
     private @NonNull String password = "";

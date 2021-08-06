@@ -17,7 +17,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventType;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.LocalHostService;
 import io.github.mewore.tsw.services.util.AsyncService;
@@ -46,8 +45,6 @@ public class TerrariaInstanceMonitoringService {
     private final @NonNull TerrariaInstanceOutputService terrariaInstanceOutputService;
 
     private final @NonNull TerrariaInstanceRepository terrariaInstanceRepository;
-
-    private final @NonNull TerrariaInstanceEventRepository terrariaInstanceEventRepository;
 
     private final @NonNull AsyncService asyncService;
 
@@ -178,7 +175,6 @@ public class TerrariaInstanceMonitoringService {
         instance.setState(newState);
         instance.setError(event.getText());
 
-        terrariaInstanceEventRepository.save(event);
-        terrariaInstanceService.saveInstance(instance);
+        terrariaInstanceService.saveInstanceAndEvent(instance, event);
     }
 }

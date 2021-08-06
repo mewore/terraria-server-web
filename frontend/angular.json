@@ -85,11 +85,12 @@
                     "options": {
                         "main": "src/test.ts",
                         "codeCoverageExclude": [
-                            "test.ts",
+                            "src/test.ts",
+                            "src/polyfills.ts",
                             "**/*.stub.*",
-                            "**/generated/**/*",
-                            "**/stubs/**/*",
-                            "**/test-util/**/*"
+                            "src/generated/**/*",
+                            "src/stubs/**/*",
+                            "src/test-util/**/*"
                         ],
                         "polyfills": "src/polyfills.ts",
                         "tsConfig": "tsconfig.spec.json",

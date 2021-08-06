@@ -74,7 +74,7 @@ describe('AuthenticationService', () => {
         });
 
         it('canManageHosts should return false', () => {
-            expect(service.canManageHosts).toBeFalse();
+            expect(instantiate().canManageHosts).toBeFalse();
         });
 
         describe('when there is an unsure notification', () => {

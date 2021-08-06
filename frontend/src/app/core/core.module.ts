@@ -9,6 +9,8 @@ import { SessionInterceptor } from './incerceptors/session.interceptor';
 import { AuthenticationStateService, AuthenticationStateServiceImpl } from './services/authentication-state.service';
 import { AuthenticationService, AuthenticationServiceImpl } from './services/authentication.service';
 import { ErrorService, ErrorServiceImpl } from './services/error.service';
+import { MessageService, MessageServiceImpl } from './services/message.service';
+import { StompService, StompServiceImpl } from './services/stomp.service';
 import { StorageService, StorageServiceImpl } from './services/storage.service';
 import { SimpleDialogComponent } from './simple-dialog/simple-dialog.component';
 import { SimpleDialogService, SimpleDialogServiceImpl } from './simple-dialog/simple-dialog.service';
@@ -30,6 +32,8 @@ import { SimpleDialogService, SimpleDialogServiceImpl } from './simple-dialog/si
         { provide: ErrorService, useClass: ErrorServiceImpl },
         { provide: StorageService, useClass: StorageServiceImpl },
         { provide: SimpleDialogService, useClass: SimpleDialogServiceImpl },
+        { provide: StompService, useClass: StompServiceImpl },
+        { provide: MessageService, useClass: MessageServiceImpl },
     ],
 })
 export class CoreModule {}

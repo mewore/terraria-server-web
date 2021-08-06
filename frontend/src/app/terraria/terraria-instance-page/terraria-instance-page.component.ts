@@ -1,8 +1,11 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { webSocket } from 'rxjs/webSocket';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { ErrorService } from 'src/app/core/services/error.service';
+import { MessageService } from 'src/app/core/services/message.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { SimpleDialogService } from 'src/app/core/simple-dialog/simple-dialog.service';
 import {
@@ -10,6 +13,8 @@ import {
     TerrariaInstanceAction,
     TerrariaInstanceEntity,
     TerrariaInstanceEventEntity,
+    TerrariaInstanceEventMessage,
+    TerrariaInstanceMessage,
     TerrariaInstanceState,
 } from 'src/generated/backend';
 import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.service';
@@ -32,7 +37,7 @@ interface ButtonDefinition {
     templateUrl: './terraria-instance-page.component.html',
     styleUrls: ['./terraria-instance-page.component.sass'],
 })
-export class TerrariaInstancePageComponent implements AfterViewInit {
+export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     private readonly RUNNING_STATES = new Set<TerrariaInstanceState>([
         'BOOTING_UP',
         'WORLD_MENU',
@@ -100,6 +105,10 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
 
     instanceId = 0;
 
+    private instanceMessageSubscription?: Subscription;
+
+    private instanceEventMessageSubscription?: Subscription;
+
     constructor(
         private readonly restApi: RestApiService,
         private readonly activatedRoute: ActivatedRoute,
@@ -108,7 +117,8 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         private readonly translateService: TranslateService,
         private readonly runServerDialogService: RunServerDialogService,
         private readonly setInstanceModsDialogService: SetInstanceModsDialogService,
-        private readonly simpleDialogService: SimpleDialogService
+        private readonly simpleDialogService: SimpleDialogService,
+        private readonly messageService: MessageService
     ) {}
 
     ngAfterViewInit(): void {
@@ -126,14 +136,48 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
                 }
                 const hostId = parseInt(hostIdParam, 10);
                 const instanceId = parseInt(instanceIdParam, 10);
-                await this.fetchData(hostId, instanceId);
+                const instance = await this.fetchData(hostId, instanceId);
+                this.instanceMessageSubscription = this.messageService.watchInstanceChanges(instance).subscribe({
+                    next: (instanceMessage) => this.updateInstance(instanceMessage),
+                });
+                this.instanceEventMessageSubscription = this.messageService.watchInstanceEvents(instance).subscribe({
+                    next: (eventMessage) => this.addInstanceEvent(eventMessage),
+                });
             } finally {
                 this.loading = false;
             }
         });
     }
 
-    private async fetchData(hostId: number, instanceId: number): Promise<void> {
+    ngOnDestroy(): void {
+        this.instanceMessageSubscription?.unsubscribe();
+        this.instanceEventMessageSubscription?.unsubscribe();
+    }
+
+    private updateInstance(instanceMessage: TerrariaInstanceMessage): void {
+        const instance: TerrariaInstanceEntity | undefined = this.instance;
+        if (instance) {
+            this.instance = {
+                ...instance,
+                ...instanceMessage,
+            };
+        }
+    }
+
+    private addInstanceEvent(eventMessage: TerrariaInstanceEventMessage): void {
+        const event: TerrariaInstanceEventEntity = {
+            timestamp: '',
+            ...eventMessage,
+        };
+        this.instanceEvents?.push(event);
+        const logPart = this.eventToLogPart(event);
+        if (logPart) {
+            this.logParts.push(logPart);
+            this.scrollToBottom();
+        }
+    }
+
+    private async fetchData(hostId: number, instanceId: number): Promise<TerrariaInstanceEntity> {
         this.instanceId = instanceId;
         const [host, instances, instanceDetails] = await Promise.all([
             this.restApi.getHost(hostId),
@@ -144,57 +188,62 @@ export class TerrariaInstancePageComponent implements AfterViewInit {
         this.otherInstances = instances.filter((instance) => instance.id !== instanceId);
         this.instance = instanceDetails.instance;
         this.instanceEvents = instanceDetails.events;
-        this.logParts = instanceDetails.events
-            .map((event): LogPart | undefined => {
-                switch (event.type) {
-                    case 'APPLICATION_START': {
-                        return {
-                            className: 'application-start green',
-                            text: this.translateService.instant('terraria.instance.events.' + event.type),
-                        };
-                    }
-                    case 'APPLICATION_END': {
-                        return {
-                            className: 'application-end yellow',
-                            text: this.translateService.instant('terraria.instance.events.' + event.type),
-                        };
-                    }
-                    case 'OUTPUT': {
-                        return {
-                            className: 'preformatted',
-                            text: event.text,
-                        };
-                    }
-                    case 'IMPORTANT_OUTPUT': {
-                        return {
-                            className: 'important preformatted',
-                            text: event.text,
-                        };
-                    }
-                    case 'ERROR':
-                    case 'TSW_INTERRUPTED':
-                    case 'INVALID_INSTANCE': {
-                        return {
-                            className: 'error orange',
-                            text: this.translateService.instant('terraria.instance.events.' + event.type, {
-                                error: event.text,
-                            }),
-                        };
-                    }
-                    case 'INPUT': {
-                        return {
-                            className: 'input preformatted cyan',
-                            text: event.text,
-                        };
-                    }
-                    default: {
-                        return undefined;
-                    }
-                }
-            })
-            .filter((part) => !!part);
+        this.logParts = instanceDetails.events.map((event) => this.eventToLogPart(event)).filter((part) => !!part);
+        this.scrollToBottom();
+        return instanceDetails.instance;
+    }
+
+    private scrollToBottom(): void {
         const panel = document.getElementById('instance-log-panel') as HTMLDivElement;
         setTimeout(() => panel.scrollTo({ top: panel.scrollHeight }), 100);
+    }
+
+    private eventToLogPart(event: TerrariaInstanceEventEntity): LogPart | undefined {
+        switch (event.type) {
+            case 'APPLICATION_START': {
+                return {
+                    className: 'application-start green',
+                    text: this.translateService.instant('terraria.instance.events.' + event.type),
+                };
+            }
+            case 'APPLICATION_END': {
+                return {
+                    className: 'application-end yellow',
+                    text: this.translateService.instant('terraria.instance.events.' + event.type),
+                };
+            }
+            case 'OUTPUT': {
+                return {
+                    className: 'preformatted',
+                    text: event.text,
+                };
+            }
+            case 'IMPORTANT_OUTPUT': {
+                return {
+                    className: 'important preformatted',
+                    text: event.text,
+                };
+            }
+            case 'ERROR':
+            case 'TSW_INTERRUPTED':
+            case 'INVALID_INSTANCE': {
+                return {
+                    className: 'error orange',
+                    text: this.translateService.instant('terraria.instance.events.' + event.type, {
+                        error: event.text,
+                    }),
+                };
+            }
+            case 'INPUT': {
+                return {
+                    className: 'input preformatted cyan',
+                    text: event.text,
+                };
+            }
+            default: {
+                return undefined;
+            }
+        }
     }
 
     get hasAction(): boolean {

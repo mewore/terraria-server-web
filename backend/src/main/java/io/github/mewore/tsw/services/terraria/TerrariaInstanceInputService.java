@@ -9,7 +9,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventType;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
 import io.github.mewore.tsw.services.util.process.TmuxService;
@@ -22,7 +21,7 @@ public class TerrariaInstanceInputService {
 
     private static final String CTRL_C = "^C";
 
-    private final TerrariaInstanceEventRepository terrariaInstanceEventRepository;
+    private final TerrariaInstanceService terrariaInstanceService;
 
     private final TerrariaInstanceEventService terrariaInstanceEventService;
 
@@ -56,7 +55,7 @@ public class TerrariaInstanceInputService {
                 .type(TerrariaInstanceEventType.INPUT)
                 .build();
 
-        terrariaInstanceEventRepository.save(instanceEvent);
+        terrariaInstanceService.saveEvent(instanceEvent);
         try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceEventService.subscribe(
                 instance)) {
             if (input.equals(CTRL_C)) {

@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.FileTail;
@@ -60,9 +59,6 @@ class TerrariaInstanceOutputServiceTest {
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
     @Mock
-    private TerrariaInstanceEventRepository terrariaInstanceEventRepository;
-
-    @Mock
     private TerrariaInstanceService terrariaInstanceService;
 
     @Mock
@@ -72,7 +68,10 @@ class TerrariaInstanceOutputServiceTest {
     private ArgumentCaptor<FileTailEventConsumer> tailEventConsumerCaptor;
 
     @Captor
-    private ArgumentCaptor<Iterable<TerrariaInstanceEventEntity>> instanceEventCaptor;
+    private ArgumentCaptor<List<TerrariaInstanceEventEntity>> instanceEventCaptor;
+
+    @Captor
+    private ArgumentCaptor<TerrariaInstanceEventEntity> singleInstanceEventCaptor;
 
     @Test
     void testTrackInstance() {
@@ -121,10 +120,25 @@ class TerrariaInstanceOutputServiceTest {
         verify(terrariaInstanceRepository).getOne(INSTANCE_ID);
     }
 
+    private static String serializeEvents(final Iterable<TerrariaInstanceEventEntity> events) {
+        return StreamSupport.stream(events.spliterator(), false)
+                .map(TerrariaInstanceOutputServiceTest::serializeEvent)
+                .collect(Collectors.joining(" "));
+    }
+
+    private static String serializeEvent(final TerrariaInstanceEventEntity event) {
+        return event.getType() + "<" + event.getText() + ">";
+    }
+
+    private static <T> List<T> iterableToList(final Iterable<T> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
+    }
+
     @Test
     void testTrack_bootUp() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         simulateText(tail, "Terraria ",
                 "Server v1.3.5.3 - tModLoader v0.11.8.4\n\n1\t\tWorld1\n2\t\tWorld2\nn\tNew World\nd <number>Delete " +
                         "World\nm\t\tMods Menu\nb\t\tMod Browser\n\nChoose ", "");
@@ -142,6 +156,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_goToModMenu() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         simulateText(tail, "a\n\n1\t\tMod (enabled)\n ", "\n\nType");
         assertSame(TerrariaInstanceState.WORLD_MENU, instance.getState());
         simulateText(tail, " a command: ");
@@ -152,6 +167,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_goFromModMenuToWorldMenu() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.MOD_MENU);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         simulateText(tail, "Choose World: ");
         assertSame(TerrariaInstanceState.WORLD_MENU, instance.getState());
     }
@@ -160,6 +176,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_options() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         simulateText(tail, "1\t\tOldOption1\n", "");
         assertEquals(Map.of(1, "OldOption1"), instance.getPendingOptions());
 
@@ -173,6 +190,7 @@ class TerrariaInstanceOutputServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.acknowledgeMenuOption(1, "Option1");
         instance.acknowledgeMenuOption(2, "Option2");
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
 
         final FileTailEventConsumer tail = track(instance);
         simulateText(tail, "Choose World: ");
@@ -180,25 +198,16 @@ class TerrariaInstanceOutputServiceTest {
         assertEquals(Map.of(1, "Option1", 2, "Option2"), instance.getOptions());
     }
 
-    private static <T> List<T> iterableToList(final Iterable<T> iterable) {
-        return StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
-    }
-
-    private static String serializeEvents(final Iterable<TerrariaInstanceEventEntity> events) {
-        return StreamSupport.stream(events.spliterator(), false)
-                .map(event -> event.getType() + "<" + event.getText() + ">")
-                .collect(Collectors.joining(" "));
-    }
-
     @Test
     void testTrack_events() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         final String[] textParts = new String[]{"\t\tOption1\n2\t\tOpt", "ion2\n", "Choose World:   \n",
                 "\n\nType a " + "command:", "a"};
         simulateText(tail, textParts);
-        verify(terrariaInstanceEventRepository, times(5)).saveAll(instanceEventCaptor.capture());
-        final List<Iterable<TerrariaInstanceEventEntity>> eventCalls = instanceEventCaptor.getAllValues();
+        verify(terrariaInstanceService, times(5)).saveInstanceAndEvents(any(), instanceEventCaptor.capture());
+        final List<List<TerrariaInstanceEventEntity>> eventCalls = instanceEventCaptor.getAllValues();
 
         assertEquals(5, eventCalls.size());
         assertEquals("OUTPUT<\t\tOption1\n>", serializeEvents(eventCalls.get(0)));
@@ -213,6 +222,7 @@ class TerrariaInstanceOutputServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.setModLoaderVersion("1.2.3");
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         simulateText(tail, "Loading: Mod v1\n", "Loading: ModLoader v1.2.3\n", "Loading: ModLoader v1.2.4\n",
                 "Loading: ModWithoutVersion\n", "Loading: OtherMod v2\n");
         assertEquals(Set.of("Mod v1", "ModLoader v1.2.4", "OtherMod v2"), instance.getLoadedMods());
@@ -222,6 +232,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_mods_unloadingMods() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.setLoadedMods(Set.of("Mod v1"));
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
 
         simulateText(track(instance), "Unloading mods...\n");
         assertEquals(Collections.emptySet(), instance.getLoadedMods());
@@ -231,6 +242,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_mods_findingMods() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.setLoadedMods(Set.of("Mod v1"));
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
 
         simulateText(track(instance), "Finding Mods...\n");
         assertEquals(Collections.emptySet(), instance.getLoadedMods());
@@ -240,6 +252,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_mods_instantiatingMods() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.setLoadedMods(Set.of("Mod v1"));
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
 
         simulateText(track(instance), "Instantiating Mods...\n");
         assertEquals(Collections.emptySet(), instance.getLoadedMods());
@@ -249,6 +262,7 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_mods_unloadingMods_running() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.RUNNING);
         instance.setLoadedMods(Set.of("Mod v1"));
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
 
         simulateText(track(instance), "Unloading mods...\nUnloading mods...");
         assertEquals(Set.of("Mod v1"), instance.getLoadedMods());
@@ -258,9 +272,10 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_events_detailed() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.PASSWORD_PROMPT);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         final String[] textParts = new String[]{"a: 5%\n" + "b\nc\n" + "d: 10%\ne: 1%"};
         simulateText(tail, textParts);
-        verify(terrariaInstanceEventRepository).saveAll(instanceEventCaptor.capture());
+        verify(terrariaInstanceService).saveInstanceAndEvents(same(instance), instanceEventCaptor.capture());
         final List<TerrariaInstanceEventEntity> events = iterableToList(instanceEventCaptor.getValue());
         assertEquals("DETAILED_OUTPUT<a: 5%\n> OUTPUT<b\nc\n> DETAILED_OUTPUT<d: 10%\n>", serializeEvents(events));
     }
@@ -269,11 +284,12 @@ class TerrariaInstanceOutputServiceTest {
     void testTrack_events_startingServer() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.PASSWORD_PROMPT);
         final FileTailEventConsumer tail = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
         final String[] textParts = new String[]{"Starting server...\n", "Server started\nRunning one update...\n\n\n"
                 , "Listening on", " port 7777", "\n"};
         simulateText(tail, textParts);
-        verify(terrariaInstanceEventRepository, times(5)).saveAll(instanceEventCaptor.capture());
-        final List<Iterable<TerrariaInstanceEventEntity>> eventCalls = instanceEventCaptor.getAllValues();
+        verify(terrariaInstanceService, times(5)).saveInstanceAndEvents(same(instance), instanceEventCaptor.capture());
+        final List<List<TerrariaInstanceEventEntity>> eventCalls = instanceEventCaptor.getAllValues();
 
         assertEquals(5, eventCalls.size());
         assertEquals("OUTPUT<Starting server...\n>", serializeEvents(eventCalls.get(0)));
@@ -288,15 +304,15 @@ class TerrariaInstanceOutputServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         instance.setLoadedMods(Set.of("Mod v1"));
         final FileTailEventConsumer tailEventConsumer = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvent(same(instance), any())).thenReturn(instance);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(true);
 
         tailEventConsumer.onFileCreated();
-        verify(terrariaInstanceService).saveInstance(instance);
         assertSame(TerrariaInstanceState.BOOTING_UP, instance.getState());
         assertEquals(Collections.emptySet(), instance.getLoadedMods());
 
-        verify(terrariaInstanceEventRepository).saveAll(instanceEventCaptor.capture());
-        assertEquals("APPLICATION_START<>", serializeEvents(instanceEventCaptor.getValue()));
+        verify(terrariaInstanceService).saveInstanceAndEvent(same(instance), singleInstanceEventCaptor.capture());
+        assertEquals("APPLICATION_START<>", serializeEvent(singleInstanceEventCaptor.getValue()));
     }
 
     @Test
@@ -304,10 +320,10 @@ class TerrariaInstanceOutputServiceTest {
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         final FileTailEventConsumer tailEventConsumer = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvent(same(instance), any())).thenReturn(instance);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(false);
 
         tailEventConsumer.onFileCreated();
-        verify(terrariaInstanceService).saveInstance(instance);
         assertSame(TerrariaInstanceState.BROKEN, instance.getState());
         assertEquals(instance.getError(), "The output file has been created but the instance isn't running");
     }
@@ -317,16 +333,16 @@ class TerrariaInstanceOutputServiceTest {
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         final FileTailEventConsumer tailEventConsumer = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvent(same(instance), any())).thenReturn(instance);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenThrow(mock(ProcessFailureException.class));
 
         tailEventConsumer.onFileCreated();
-        verify(terrariaInstanceService).saveInstance(instance);
         assertSame(TerrariaInstanceState.BROKEN, instance.getState());
         assertEquals(instance.getError(),
                 "The output file has been created but it's unknown if the instance is running or not");
 
-        verify(terrariaInstanceEventRepository).saveAll(instanceEventCaptor.capture());
-        assertEquals("ERROR<" + instance.getError() + ">", serializeEvents(instanceEventCaptor.getValue()));
+        verify(terrariaInstanceService).saveInstanceAndEvent(same(instance), singleInstanceEventCaptor.capture());
+        assertEquals("ERROR<" + instance.getError() + ">", serializeEvent(singleInstanceEventCaptor.getValue()));
     }
 
     @Test
@@ -334,15 +350,15 @@ class TerrariaInstanceOutputServiceTest {
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         final FileTailEventConsumer tailEventConsumer = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvent(same(instance), any())).thenReturn(instance);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenThrow(new InterruptedException());
 
         tailEventConsumer.onFileCreated();
-        verify(terrariaInstanceService).saveInstance(instance);
         assertSame(TerrariaInstanceState.BROKEN, instance.getState());
         assertEquals(instance.getError(), "TSW has been interrupted");
 
-        verify(terrariaInstanceEventRepository).saveAll(instanceEventCaptor.capture());
-        assertEquals("TSW_INTERRUPTED<>", serializeEvents(instanceEventCaptor.getValue()));
+        verify(terrariaInstanceService).saveInstanceAndEvent(same(instance), singleInstanceEventCaptor.capture());
+        assertEquals("TSW_INTERRUPTED<>", serializeEvent(singleInstanceEventCaptor.getValue()));
     }
 
     @Test
@@ -350,15 +366,15 @@ class TerrariaInstanceOutputServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
         instance.setLoadedMods(Set.of("Mod v1"));
         final FileTailEventConsumer tailEventConsumer = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvent(same(instance), any())).thenReturn(instance);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(false);
 
         tailEventConsumer.onFileDeleted();
-        verify(terrariaInstanceService).saveInstance(instance);
         assertSame(TerrariaInstanceState.IDLE, instance.getState());
         assertEquals(Collections.emptySet(), instance.getLoadedMods());
 
-        verify(terrariaInstanceEventRepository).saveAll(instanceEventCaptor.capture());
-        assertEquals("APPLICATION_END<>", serializeEvents(instanceEventCaptor.getValue()));
+        verify(terrariaInstanceService).saveInstanceAndEvent(same(instance), singleInstanceEventCaptor.capture());
+        assertEquals("APPLICATION_END<>", serializeEvent(singleInstanceEventCaptor.getValue()));
     }
 
     @Test
@@ -366,10 +382,11 @@ class TerrariaInstanceOutputServiceTest {
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
         final FileTailEventConsumer tailEventConsumer = track(instance);
+        when(terrariaInstanceService.saveInstanceAndEvent(same(instance), any())).thenReturn(instance);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(true);
 
         tailEventConsumer.onFileDeleted();
-        verify(terrariaInstanceService).saveInstance(instance);
+        verify(terrariaInstanceService).saveInstanceAndEvent(same(instance), any());
         assertSame(TerrariaInstanceState.BROKEN, instance.getState());
         assertEquals(instance.getError(), "The output file has been deleted but the instance is still running");
     }
@@ -377,7 +394,6 @@ class TerrariaInstanceOutputServiceTest {
     private FileTailEventConsumer track(final TerrariaInstanceEntity initialInstance) {
         terrariaInstanceOutputService.trackInstance(initialInstance);
         when(terrariaInstanceRepository.getOne(INSTANCE_ID)).thenReturn(initialInstance);
-        when(terrariaInstanceService.saveInstance(initialInstance)).thenReturn(initialInstance);
         verify(fileService).tail(any(), anyLong(), tailEventConsumerCaptor.capture());
         return tailEventConsumerCaptor.getValue();
     }

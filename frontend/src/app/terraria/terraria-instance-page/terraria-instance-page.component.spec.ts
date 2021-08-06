@@ -4,11 +4,13 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { Subject } from 'rxjs';
+import { EMPTY, Observable, Subject } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticationServiceStub } from 'src/app/core/services/authentication.service.stub';
 import { ErrorService } from 'src/app/core/services/error.service';
 import { ErrorServiceStub } from 'src/app/core/services/error.service.stub';
+import { MessageService } from 'src/app/core/services/message.service';
+import { MessageServiceStub } from 'src/app/core/services/message.service.stub';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { SimpleDialogInput } from 'src/app/core/simple-dialog/simple-dialog.component';
@@ -21,6 +23,9 @@ import {
     TerrariaInstanceDetailsViewModel,
     TerrariaInstanceEntity,
     TerrariaInstanceEventEntity,
+    TerrariaInstanceEventMessage,
+    TerrariaInstanceEventType,
+    TerrariaInstanceMessage,
 } from 'src/generated/backend';
 import { FakeParamMap } from 'src/stubs/fake-param-map';
 import { TranslatePipeStub } from 'src/stubs/translate.pipe.stub';
@@ -46,6 +51,7 @@ describe('TerrariaInstancePageComponent', () => {
     let runServerDialogService: RunServerDialogService;
     let setInstanceModsDialogService: SetInstanceModsDialogService;
     let simpleDialogService: SimpleDialogService;
+    let messageService: MessageService;
 
     let authenticatedUser: AuthenticatedUser | undefined;
 
@@ -63,6 +69,13 @@ describe('TerrariaInstancePageComponent', () => {
     let getHostSpy: jasmine.Spy<(hostId: number) => Promise<HostEntity>>;
     let getInstancesSpy: jasmine.Spy<(hostId: number) => Promise<TerrariaInstanceEntity[]>>;
     let getInstanceDetailsSpy: jasmine.Spy<(instanceId: number) => Promise<TerrariaInstanceDetailsViewModel>>;
+
+    let watchInstanceChangesSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<TerrariaInstanceMessage>>;
+    let instanceMessageSubject: Subject<TerrariaInstanceMessage>;
+    let watchInstanceEventsSpy: jasmine.Spy<
+        (instance: TerrariaInstanceEntity) => Observable<TerrariaInstanceEventMessage>
+    >;
+    let eventMessageSubject: Subject<TerrariaInstanceEventMessage>;
 
     function inputEvent(text: string): TerrariaInstanceEventEntity {
         return { text, type: 'INPUT' } as TerrariaInstanceEventEntity;
@@ -87,6 +100,7 @@ describe('TerrariaInstancePageComponent', () => {
                 { provide: RunServerDialogService, useClass: RunServerDialogServiceStub },
                 { provide: SetInstanceModsDialogService, useClass: SetInstanceModsDialogServiceStub },
                 { provide: SimpleDialogService, useClass: SimpleDialogServiceStub },
+                { provide: MessageService, useClass: MessageServiceStub },
             ],
         }).compileComponents();
 
@@ -97,6 +111,7 @@ describe('TerrariaInstancePageComponent', () => {
         runServerDialogService = TestBed.inject(RunServerDialogService);
         setInstanceModsDialogService = TestBed.inject(SetInstanceModsDialogService);
         simpleDialogService = TestBed.inject(SimpleDialogService);
+        messageService = TestBed.inject(MessageService);
 
         instanceEvents = [];
         instance = { id: 20, state: 'DEFINED' } as TerrariaInstanceEntity;
@@ -118,6 +133,15 @@ describe('TerrariaInstancePageComponent', () => {
             },
         } as AuthenticatedUser;
         spyOnProperty(authenticationService, 'currentUser', 'get').and.callFake(() => authenticatedUser);
+
+        instanceMessageSubject = new Subject();
+        watchInstanceChangesSpy = spyOn(messageService, 'watchInstanceChanges').and.returnValue(
+            instanceMessageSubject.asObservable()
+        );
+        eventMessageSubject = new Subject();
+        watchInstanceEventsSpy = spyOn(messageService, 'watchInstanceEvents').and.returnValue(
+            eventMessageSubject.asObservable()
+        );
 
         await instantiate();
     });
@@ -144,6 +168,8 @@ describe('TerrariaInstancePageComponent', () => {
                 expect(getHostSpy).not.toHaveBeenCalled();
                 expect(getInstancesSpy).not.toHaveBeenCalled();
                 expect(getInstanceDetailsSpy).not.toHaveBeenCalled();
+                expect(watchInstanceChangesSpy).not.toHaveBeenCalled();
+                expect(watchInstanceEventsSpy).not.toHaveBeenCalled();
             });
         });
 
@@ -204,6 +230,119 @@ describe('TerrariaInstancePageComponent', () => {
 
     describe('when there is minimal data', () => {
         beforeEach(initializeWithRoute);
+
+        describe('when there is an instance change message', () => {
+            beforeEach(fakeAsync(() => {
+                instanceMessageSubject.next({
+                    state: 'BOOTING_UP',
+                    currentAction: 'BOOT_UP',
+                    pendingAction: 'RUN_SERVER',
+                    options: { 1: 'option' },
+                });
+                tick(1000);
+            }));
+
+            it('should update the instance', () => {
+                expect(component.instance?.state).toBe('BOOTING_UP');
+                expect(component.instance?.currentAction).toBe('BOOT_UP');
+                expect(component.instance?.pendingAction).toBe('RUN_SERVER');
+                expect(component.instance?.options).toEqual({ 1: 'option' });
+            });
+        });
+
+        describe('when the instance property is not defined', () => {
+            beforeEach(() => {
+                component.instance = undefined;
+            });
+
+            describe('when there is an instance change message', () => {
+                beforeEach(fakeAsync(() => {
+                    instanceMessageSubject.next({
+                        state: 'BOOTING_UP',
+                        currentAction: 'BOOT_UP',
+                        pendingAction: 'RUN_SERVER',
+                        options: { 1: 'option' },
+                    });
+                    tick(1000);
+                }));
+
+                it('should not update the instance', () => {
+                    expect(component.instance).toBeUndefined();
+                });
+            });
+        });
+
+        describe('when there is an instance event message', () => {
+            beforeEach(fakeAsync(() => {
+                eventMessageSubject.next({
+                    text: 'new output\n',
+                    type: 'OUTPUT',
+                });
+                tick(1000);
+            }));
+
+            it('should update the event array', () => {
+                expect(component.instanceEvents).toEqual([
+                    {
+                        text: 'new output\n',
+                        type: 'OUTPUT',
+                        timestamp: '',
+                    },
+                ]);
+                expect(component.logParts).toEqual([
+                    {
+                        text: 'new output\n',
+                        className: 'preformatted',
+                    },
+                ]);
+            });
+        });
+
+        describe('when the instanceEvents property is not defined', () => {
+            beforeEach(() => {
+                component.instanceEvents = undefined;
+            });
+
+            describe('when there is an instance event message', () => {
+                beforeEach(fakeAsync(() => {
+                    eventMessageSubject.next({
+                        text: 'new output\n',
+                        type: 'OUTPUT',
+                    });
+                    tick(1000);
+                }));
+
+                it('should update only the log part array', () => {
+                    expect(component.logParts).toEqual([
+                        {
+                            text: 'new output\n',
+                            className: 'preformatted',
+                        },
+                    ]);
+                });
+            });
+        });
+
+        describe('when there is an instance event message with an unknown type', () => {
+            beforeEach(fakeAsync(() => {
+                eventMessageSubject.next({
+                    text: 'new output\n',
+                    type: 'INVALID_TYPE' as TerrariaInstanceEventType,
+                });
+                tick(1000);
+            }));
+
+            it('should not update only the event array', () => {
+                expect(component.instanceEvents).toEqual([
+                    {
+                        text: 'new output\n',
+                        type: 'INVALID_TYPE' as TerrariaInstanceEventType,
+                        timestamp: '',
+                    },
+                ]);
+                expect(component.logParts).toEqual([]);
+            });
+        });
 
         it('should fetch the data', () => {
             expect(getHostSpy).toHaveBeenCalledOnceWith(10);

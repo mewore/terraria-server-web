@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.services.terraria;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,7 +21,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventType;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.FileTail;
@@ -49,8 +47,6 @@ public class TerrariaInstanceOutputService {
     private final FileService fileService;
 
     private final TerrariaInstanceRepository terrariaInstanceRepository;
-
-    private final TerrariaInstanceEventRepository terrariaInstanceEventRepository;
 
     private final TerrariaInstanceService terrariaInstanceService;
 
@@ -90,13 +86,6 @@ public class TerrariaInstanceOutputService {
         }
         tail.stop();
         outputTailMap.remove(instance.getId());
-    }
-
-    @Transactional
-    private TerrariaInstanceEntity saveInstanceAndEvents(final TerrariaInstanceEntity instance,
-            final TerrariaInstanceEventEntity... events) {
-        terrariaInstanceEventRepository.saveAll(Arrays.asList(events));
-        return terrariaInstanceService.saveInstance(instance);
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -187,7 +176,7 @@ public class TerrariaInstanceOutputService {
                     outputTextBuffer = new StringBuilder(remainingText);
                 }
             }
-            instance = saveInstanceAndEvents(instance, combineEvents().toArray(new TerrariaInstanceEventEntity[0]));
+            instance = terrariaInstanceService.saveInstanceAndEvents(instance, combineEvents());
             events = new ArrayList<>();
         }
 
@@ -312,7 +301,7 @@ public class TerrariaInstanceOutputService {
                 logger.warn("Interrupted while checking for the session of instance " + instance.getUuid(), e);
                 instance.setState(TerrariaInstanceState.BROKEN);
                 instance.setError("TSW has been interrupted");
-                instance = saveInstanceAndEvents(instance,
+                instance = terrariaInstanceService.saveInstanceAndEvent(instance,
                         eventBuilder.type(TerrariaInstanceEventType.TSW_INTERRUPTED).build());
                 Thread.currentThread().interrupt();
                 return;
@@ -334,7 +323,7 @@ public class TerrariaInstanceOutputService {
                 instance.setError(error);
                 event = eventBuilder.type(TerrariaInstanceEventType.ERROR).text(error).build();
             }
-            instance = saveInstanceAndEvents(instance, event);
+            instance = terrariaInstanceService.saveInstanceAndEvent(instance, event);
         }
     }
 }
