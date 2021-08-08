@@ -1,4 +1,4 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
@@ -14,7 +14,7 @@ import {
 } from 'src/generated/backend';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { DialogInfo, MaterialDialogInfo } from 'src/test-util/dialog-info';
 
 import {
@@ -125,8 +125,7 @@ describe('CreateTerrariaInstanceDialogComponent', () => {
     describe('while loading', () => {
         beforeEach(fakeAsync(() => {
             component.loading = true;
-            fixture.detectChanges();
-            tick();
+            refreshFixture(fixture);
         }));
 
         it('only the Cancel button should be enabled', () => {

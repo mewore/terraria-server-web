@@ -1,4 +1,4 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -7,10 +7,10 @@ import { ErrorService } from 'src/app/core/services/error.service';
 import { ErrorServiceStub } from 'src/app/core/services/error.service.stub';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
-import { TerrariaInstanceEntity } from 'src/generated/backend';
+import { TerrariaInstanceEntity, TerrariaInstanceUpdateModel } from 'src/generated/backend';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { DialogInfo, MaterialDialogInfo as MaterialDialogInfo } from 'src/test-util/dialog-info';
 import { MaterialSelectionListInfo, SelectionListInfo } from 'src/test-util/selection-list-info';
 import { SetInstanceModsDialogComponent, SetInstanceModsDialogOutput } from './set-instance-mods-dialog.component';
@@ -91,8 +91,7 @@ describe('SetInstanceModsDialogComponent', () => {
     describe('while loading', () => {
         beforeEach(fakeAsync(() => {
             component.loading = true;
-            fixture.detectChanges();
-            tick();
+            refreshFixture(fixture);
         }));
 
         it('only the cancel button should be enabled', () => {
@@ -133,15 +132,15 @@ describe('SetInstanceModsDialogComponent', () => {
         });
 
         describe('when Set is clicked', () => {
-            let setInstanceModsSpy: jasmine.Spy<
-                (instanceId: number, mods: string[]) => Promise<TerrariaInstanceEntity>
+            let updateInstanceSpy: jasmine.Spy<
+                (instanceId: number, model: TerrariaInstanceUpdateModel) => Promise<TerrariaInstanceEntity>
             >;
             let loadingWhileSettingMods: boolean;
             const result: TerrariaInstanceEntity = {} as TerrariaInstanceEntity;
             let closeDialogSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => void>;
 
             beforeEach(() => {
-                setInstanceModsSpy = spyOn(restApiService, 'setInstanceMods').and.callFake(() => {
+                updateInstanceSpy = spyOn(restApiService, 'updateInstance').and.callFake(() => {
                     loadingWhileSettingMods = component.loading;
                     return Promise.resolve(result);
                 });
@@ -150,7 +149,7 @@ describe('SetInstanceModsDialogComponent', () => {
             });
 
             it('should set the mods', () => {
-                expect(setInstanceModsSpy).toHaveBeenCalledOnceWith(2, ['second', 'third']);
+                expect(updateInstanceSpy).toHaveBeenCalledOnceWith(2, { newMods: ['second', 'third'] });
             });
 
             it('should be loading while setting the mods', () => {

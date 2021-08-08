@@ -77,6 +77,10 @@ describe('AuthenticationService', () => {
             expect(instantiate().canManageHosts).toBeFalse();
         });
 
+        it('canManageTerraria should return false', () => {
+            expect(instantiate().canManageTerraria).toBeFalse();
+        });
+
         describe('when there is an unsure notification', () => {
             let pingSpy: jasmine.Spy<() => void>;
 
@@ -159,6 +163,16 @@ describe('AuthenticationService', () => {
 
                     it('canManageHosts should return true', () => {
                         expect(service.canManageHosts).toBeTrue();
+                    });
+                });
+
+                describe('when the user is able to Terraria instances', () => {
+                    beforeEach(() => {
+                        accountType.ableToManageTerraria = true;
+                    });
+
+                    it('canManageTerraria should return true', () => {
+                        expect(service.canManageTerraria).toBeTrue();
                     });
                 });
             });

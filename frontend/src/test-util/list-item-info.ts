@@ -1,11 +1,16 @@
-import { ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
+import { refreshFixture } from './angular-test-util';
 
 export interface ListItemInfo {
-    getLines(): string[];
+    readonly lines: string[];
+    readonly buttonLabels: string[] | undefined;
+    readonly disabled: boolean | undefined;
+
     getLinkAtLine(lineIndex: number, linkLabel: string): string | undefined;
-    isDisabled(): boolean | undefined;
+    getButton(label: string): HTMLButtonElement | undefined;
 
     click(): Promise<void>;
+    clickButton(label: string): void;
 }
 
 export class MaterialListItemInfo implements ListItemInfo {
@@ -15,13 +20,18 @@ export class MaterialListItemInfo implements ListItemInfo {
         this.rootElement = fixture.nativeElement;
     }
 
-    getLines(): string[] {
-        const lineElements = this.rootElement.getElementsByClassName('mat-line');
-        const lines: string[] = [];
-        for (let i = 0; i < lineElements.length; i++) {
-            lines.push(lineElements.item(i)?.textContent?.trim().replace(/\s+/g, ' ') || '');
-        }
-        return lines;
+    get lines(): string[] {
+        return Array.from(this.rootElement.querySelectorAll<HTMLElement>('.mat-line')).map((line) =>
+            line.innerText.trim().replace(/\s+/g, ' ')
+        );
+    }
+
+    get buttonLabels(): string[] | undefined {
+        return this.getButtons()?.map((button) => button.innerText.trim());
+    }
+
+    get disabled(): boolean | undefined {
+        return this.getItemElement()?.classList.contains('mat-list-item-disabled');
     }
 
     getLinkAtLine(lineIndex: number, linkLabel: string): string | undefined {
@@ -38,8 +48,8 @@ export class MaterialListItemInfo implements ListItemInfo {
         throw new Error(`There is no link with label '${linkLabel}' at line ${lineIndex}`);
     }
 
-    isDisabled(): boolean | undefined {
-        return this.getItemElement()?.classList.contains('mat-list-item-disabled');
+    getButton(label: string): HTMLButtonElement | undefined {
+        return this.getButtons()?.find(button => button.innerText.trim() === label);
     }
 
     click(): Promise<void> {
@@ -52,7 +62,26 @@ export class MaterialListItemInfo implements ListItemInfo {
         return this.fixture.whenStable();
     }
 
-    private getItemElement(): HTMLElement | null {
-        return this.rootElement.getElementsByClassName('mat-list-item').item(0) as HTMLElement | null;
+    clickButton(label: string): void {
+        const buttonToClick = this.getButtons()?.find(button => button.innerText?.trim() === label);
+        if (!buttonToClick) {
+            throw new Error(`There is no button with label "${label}"`);
+        }
+        if (buttonToClick.disabled) {
+            throw new Error(`Cannot click the button with label "${label}" because it is disabled`);
+        }
+        fakeAsync(() => {
+            buttonToClick.click();
+            refreshFixture(this.fixture);
+        })();
+    }
+
+    private getButtons(): HTMLButtonElement[] | undefined {
+        const result = this.getItemElement()?.querySelectorAll('button');
+        return result ? Array.from(result) : undefined;
+    }
+
+    private getItemElement(): HTMLElement | undefined {
+        return this.rootElement.querySelector<HTMLElement>('.mat-list-item') || undefined;
     }
 }

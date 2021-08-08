@@ -11,12 +11,7 @@ export const initComponent = async <T>(
         if (afterInstantiation) {
             afterInstantiation(fixture.componentInstance);
         }
-
-        fixture.detectChanges();
-        tick(1000);
-
-        fixture.detectChanges();
-        tick(1000);
+        refreshFixture(fixture);
     })();
 
     if (!fixture) {
@@ -26,4 +21,12 @@ export const initComponent = async <T>(
     await fixture.whenStable();
     await fixture.whenRenderingDone();
     return [fixture, fixture.componentInstance];
+};
+
+export const refreshFixture = (fixture: ComponentFixture<any>): void => {
+    fixture.detectChanges();
+    tick(1000);
+
+    fixture.detectChanges();
+    tick(1000);
 };

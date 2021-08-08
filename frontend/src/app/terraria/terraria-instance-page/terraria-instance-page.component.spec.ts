@@ -26,6 +26,7 @@ import {
     TerrariaInstanceEventMessage,
     TerrariaInstanceEventType,
     TerrariaInstanceMessage,
+    TerrariaInstanceUpdateModel,
 } from 'src/generated/backend';
 import { FakeParamMap } from 'src/stubs/fake-param-map';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
@@ -398,10 +399,7 @@ describe('TerrariaInstancePageComponent', () => {
         });
     });
 
-    type RequestActionFn = (
-        instanceId: number,
-        queryParams: { action: TerrariaInstanceAction }
-    ) => Promise<TerrariaInstanceEntity>;
+    type UpdateInstanceFn = (instanceId: number, model: TerrariaInstanceUpdateModel) => Promise<TerrariaInstanceEntity>;
 
     describe('when there is no account', () => {
         beforeEach(() => {
@@ -411,7 +409,7 @@ describe('TerrariaInstancePageComponent', () => {
 
         describe('the "Delete" button', () => {
             it('should be disabled', () => {
-                expect(getButton('Delete').getAttribute('disabled')).toBe('true');
+                expect(getButton('Delete').disabled).toBeTrue();
             });
         });
     });
@@ -424,7 +422,7 @@ describe('TerrariaInstancePageComponent', () => {
 
         describe('the "Delete" button', () => {
             it('should be disabled', () => {
-                expect(getButton('Delete').getAttribute('disabled')).toBe('true');
+                expect(getButton('Delete').disabled).toBeTrue();
             });
         });
     });
@@ -443,7 +441,7 @@ describe('TerrariaInstancePageComponent', () => {
 
         describe('the "Delete" button', () => {
             it('should be disabled', () => {
-                expect(getButton('Delete').getAttribute('disabled')).toBe('true');
+                expect(getButton('Delete').disabled).toBeTrue();
             });
         });
     });
@@ -500,7 +498,7 @@ describe('TerrariaInstancePageComponent', () => {
         describe('when the "Delete" button is clicked', () => {
             describe('when the confirmation dialog is confirmed', () => {
                 let simpleDialogData: SimpleDialogInput<TerrariaInstanceEntity>;
-                let requestActionSpy: jasmine.Spy<RequestActionFn>;
+                let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
                 const newInstance = {} as TerrariaInstanceEntity;
 
                 beforeEach(fakeAsync(() => {
@@ -508,7 +506,7 @@ describe('TerrariaInstancePageComponent', () => {
                         simpleDialogData = data as SimpleDialogInput<any>;
                         return await data.primaryButton.onClicked();
                     });
-                    requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                    requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                     getButton('Delete').click();
                     tick();
                 }));
@@ -532,7 +530,7 @@ describe('TerrariaInstancePageComponent', () => {
                 });
 
                 it('should request to delete the instance', () => {
-                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'DELETE' });
+                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'DELETE' });
                 });
 
                 it('should update the instance', () => {
@@ -629,17 +627,17 @@ describe('TerrariaInstancePageComponent', () => {
         });
 
         describe('when the "Boot up" button is clicked', () => {
-            let requestActionSpy: jasmine.Spy<RequestActionFn>;
+            let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
             const newInstance = {} as TerrariaInstanceEntity;
 
             beforeEach(fakeAsync(() => {
-                requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                 getButton('Boot up').click();
                 tick();
             }));
 
             it('should request to boot up the instance', () => {
-                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'BOOT_UP' });
+                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'BOOT_UP' });
             });
 
             it('should update the instance', () => {
@@ -665,7 +663,7 @@ describe('TerrariaInstancePageComponent', () => {
         describe('when the "Terminate" button is clicked', () => {
             describe('when the confirmation dialog is confirmed', () => {
                 let simpleDialogData: SimpleDialogInput<TerrariaInstanceEntity>;
-                let requestActionSpy: jasmine.Spy<RequestActionFn>;
+                let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
                 const newInstance = {} as TerrariaInstanceEntity;
 
                 beforeEach(fakeAsync(() => {
@@ -673,7 +671,7 @@ describe('TerrariaInstancePageComponent', () => {
                         simpleDialogData = data as SimpleDialogInput<any>;
                         return await data.primaryButton.onClicked();
                     });
-                    requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                    requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                     getButton('Terminate').click();
                     tick();
                 }));
@@ -697,7 +695,7 @@ describe('TerrariaInstancePageComponent', () => {
                 });
 
                 it('should request to terminate the instance', () => {
-                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'TERMINATE' });
+                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'TERMINATE' });
                 });
 
                 it('should update the instance', () => {
@@ -734,17 +732,17 @@ describe('TerrariaInstancePageComponent', () => {
         });
 
         describe('when the "Go to the Mods menu" button is clicked', () => {
-            let requestActionSpy: jasmine.Spy<RequestActionFn>;
+            let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
             const newInstance = {} as TerrariaInstanceEntity;
 
             beforeEach(fakeAsync(() => {
-                requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                 getButton('Go to the Mods menu').click();
                 tick();
             }));
 
             it('should request to go to the Mods menu', () => {
-                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'GO_TO_MOD_MENU' });
+                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'GO_TO_MOD_MENU' });
             });
 
             it('should update the instance', () => {
@@ -816,17 +814,17 @@ describe('TerrariaInstancePageComponent', () => {
         });
 
         describe('when the "Shut down" button is clicked', () => {
-            let requestActionSpy: jasmine.Spy<RequestActionFn>;
+            let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
             const newInstance = {} as TerrariaInstanceEntity;
 
             beforeEach(fakeAsync(() => {
-                requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                 getButton('Shut down').click();
                 tick();
             }));
 
             it('should request to shut down the instance', () => {
-                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'SHUT_DOWN' });
+                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'SHUT_DOWN' });
             });
 
             it('should update the instance', () => {
@@ -1007,7 +1005,7 @@ describe('TerrariaInstancePageComponent', () => {
         describe('when the "Shut down" button is clicked', () => {
             describe('when the confirmation dialog is confirmed', () => {
                 let simpleDialogData: SimpleDialogInput<TerrariaInstanceEntity>;
-                let requestActionSpy: jasmine.Spy<RequestActionFn>;
+                let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
                 const newInstance = {} as TerrariaInstanceEntity;
 
                 beforeEach(fakeAsync(() => {
@@ -1015,7 +1013,7 @@ describe('TerrariaInstancePageComponent', () => {
                         simpleDialogData = data as SimpleDialogInput<any>;
                         return await data.primaryButton.onClicked();
                     });
-                    requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                    requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                     getButton('Shut down').click();
                     tick();
                 }));
@@ -1043,7 +1041,7 @@ describe('TerrariaInstancePageComponent', () => {
                 });
 
                 it('should request to delete the instance', () => {
-                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'SHUT_DOWN' });
+                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'SHUT_DOWN' });
                 });
 
                 it('should update the instance', () => {
@@ -1052,7 +1050,7 @@ describe('TerrariaInstancePageComponent', () => {
             });
 
             describe('when the extra button (shut down without saving) is clicked', () => {
-                let requestActionSpy: jasmine.Spy<RequestActionFn>;
+                let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
                 const newInstance = {} as TerrariaInstanceEntity;
 
                 beforeEach(fakeAsync(() => {
@@ -1063,13 +1061,13 @@ describe('TerrariaInstancePageComponent', () => {
                         }
                         return await extraButton.onClicked();
                     });
-                    requestActionSpy = spyOn(restApiService, 'requestActionForInstance').and.resolveTo(newInstance);
+                    requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
                     getButton('Shut down').click();
                     tick();
                 }));
 
                 it('should request to delete the instance', () => {
-                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { action: 'SHUT_DOWN_NO_SAVE' });
+                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'SHUT_DOWN_NO_SAVE' });
                 });
 
                 it('should update the instance', () => {

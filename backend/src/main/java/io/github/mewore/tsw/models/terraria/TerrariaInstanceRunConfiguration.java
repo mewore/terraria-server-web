@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class TerrariaInstanceRunServerModel {
+public class TerrariaInstanceRunConfiguration {
 
     private final @PositiveOrZero int maxPlayers;
 

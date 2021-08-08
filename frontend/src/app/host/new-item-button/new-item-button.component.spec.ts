@@ -49,7 +49,7 @@ describe('NewItemButtonComponent', () => {
 
     describe('when there are no required permissions', () => {
         it('should not be disabled', () => {
-            expect(listItemInfo.isDisabled()).toBeFalse();
+            expect(listItemInfo.disabled).toBeFalse();
         });
 
         it('should have an undefined disabled reason', () => {
@@ -74,7 +74,7 @@ describe('NewItemButtonComponent', () => {
 
         describe('when there is no account', () => {
             it('should be disabled', () => {
-                expect(listItemInfo.isDisabled()).toBeTrue();
+                expect(listItemInfo.disabled).toBeTrue();
             });
 
             it('should have a disabled reason for both required permissions', () => {
@@ -109,7 +109,7 @@ describe('NewItemButtonComponent', () => {
             });
 
             it('should be disabled', () => {
-                expect(listItemInfo.isDisabled()).toBeTrue();
+                expect(listItemInfo.disabled).toBeTrue();
             });
 
             it('should have a disabled reason only for the missing permission', () => {
@@ -139,7 +139,7 @@ describe('NewItemButtonComponent', () => {
             });
 
             it('should not be disabled', () => {
-                expect(listItemInfo.isDisabled()).toBeFalse();
+                expect(listItemInfo.disabled).toBeFalse();
             });
 
             it('should have an undefined disabled reason', () => {

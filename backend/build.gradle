@@ -116,8 +116,7 @@ generateTypeScript {
     classPatterns = ['io.github.mewore.tsw.controllers.**']
     classesWithAnnotations = ['io.github.mewore.tsw.models.MessageModel']
 
-    optionalAnnotations = ['org.springframework.lang.Nullable']
-    nullableAnnotations = ['org.checkerframework.checker.nullness.qual.Nullable']
+    optionalAnnotations = ['org.springframework.lang.Nullable', 'org.checkerframework.checker.nullness.qual.Nullable']
 
     customTypeMappings = ['java.nio.file.Path:string', 'java.time.Instant:string', 'java.time.Duration:undefined']
 

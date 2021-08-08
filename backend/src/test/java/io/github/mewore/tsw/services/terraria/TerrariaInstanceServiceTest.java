@@ -21,8 +21,9 @@ import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunServerModel;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunConfiguration;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceUpdateModel;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
@@ -190,83 +191,112 @@ class TerrariaInstanceServiceTest {
     }
 
     @Test
-    public void testRequestActionForInstance() throws NotFoundException, InvalidRequestException {
+    public void testUpdateInstance_noUpdate() throws NotFoundException, InvalidRequestException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
         when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
 
-        final TerrariaInstanceEntity result = terrariaInstanceService.requestActionForInstance(8L,
-                TerrariaInstanceAction.BOOT_UP);
+        final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
+                new TerrariaInstanceUpdateModel());
+        assertSame(instance, result);
+    }
+
+    @Test
+    public void testUpdateInstance_setName() throws NotFoundException, InvalidRequestException {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
+        when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
+        when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
+
+        final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
+                TerrariaInstanceUpdateModel.builder().newName("New name").build());
+        assertSame(instance, result);
+        assertSame("New name", result.getName());
+    }
+
+    @Test
+    public void testUpdateInstance_requestAction() throws NotFoundException, InvalidRequestException {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
+        when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
+        when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
+
+        final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
+                TerrariaInstanceUpdateModel.builder().newAction(TerrariaInstanceAction.BOOT_UP).build());
         assertSame(instance, result);
         assertSame(TerrariaInstanceAction.BOOT_UP, result.getPendingAction());
     }
 
     @Test
-    public void testRequestActionForInstance_alreadyWithPendingAction() {
+    public void testUpdateInstance_requestAction_alreadyWithPendingAction() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         instance.setPendingAction(TerrariaInstanceAction.DELETE);
         when(terrariaInstanceRepository.findById(anyLong())).thenReturn(Optional.of(instance));
 
         final Exception exception = assertThrows(InvalidRequestException.class,
-                () -> terrariaInstanceService.requestActionForInstance(8L, TerrariaInstanceAction.BOOT_UP));
+                () -> terrariaInstanceService.updateInstance(8L,
+                        TerrariaInstanceUpdateModel.builder().newAction(TerrariaInstanceAction.BOOT_UP).build()));
         assertEquals("Cannot apply an action to an instance that already has a pending action", exception.getMessage());
     }
 
     @Test
-    public void testRequestActionForInstance_inapplicableAction() {
+    public void testUpdateInstance_requestAction_inapplicableAction() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.RUNNING);
         when(terrariaInstanceRepository.findById(anyLong())).thenReturn(Optional.of(instance));
 
         final Exception exception = assertThrows(InvalidRequestException.class,
-                () -> terrariaInstanceService.requestActionForInstance(8L, TerrariaInstanceAction.BOOT_UP));
+                () -> terrariaInstanceService.updateInstance(8L,
+                        TerrariaInstanceUpdateModel.builder().newAction(TerrariaInstanceAction.BOOT_UP).build()));
         assertEquals("Cannot apply action BOOT_UP to an instance with the state RUNNING", exception.getMessage());
     }
 
     @Test
-    public void testRequestEnableInstanceMods() throws NotFoundException, InvalidRequestException {
+    public void testUpdateInstance_setMods() throws NotFoundException, InvalidRequestException {
         final TerrariaInstanceEntity instance = makeInstanceAtModMenu("Mod1 (enabled)");
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
         when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
 
-        final TerrariaInstanceEntity result = terrariaInstanceService.requestEnableInstanceMods(8L, Set.of("Mod1"));
+        final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
+                TerrariaInstanceUpdateModel.builder().newMods(Set.of("Mod1")).build());
         assertSame(instance, result);
         assertSame(TerrariaInstanceAction.SET_LOADED_MODS, result.getPendingAction());
     }
 
     @Test
-    public void testRequestEnableInstanceMods_invalidModOption() {
+    public void testUpdateInstance_setMods_invalidModOption() {
         final TerrariaInstanceEntity instance = makeInstanceAtModMenu("Mod1 (disabled)");
         when(terrariaInstanceRepository.findById(anyLong())).thenReturn(Optional.of(instance));
 
         final Exception exception = assertThrows(InvalidRequestException.class,
-                () -> terrariaInstanceService.requestEnableInstanceMods(8L, Set.of("Mod1", "Mod2", "Mod3")));
+                () -> terrariaInstanceService.updateInstance(8L,
+                        TerrariaInstanceUpdateModel.builder().newMods(Set.of("Mod1", "Mod2", "Mod3")).build()));
         assertEquals("Cannot enable the following mods because they aren't in the list of known options: Mod2, Mod3",
                 exception.getMessage());
     }
 
     @Test
-    public void testRequestEnableInstanceMods_exceptionWithNoMessage() {
+    public void testUpdateInstance_setMods_exceptionWithNoMessage() {
         final TerrariaInstanceEntity instance = spy(makeInstanceAtModMenu("Mod1 (disabled)"));
         when(instance.getOptions()).thenThrow(new IllegalArgumentException());
         when(terrariaInstanceRepository.findById(anyLong())).thenReturn(Optional.of(instance));
 
         final Exception exception = assertThrows(InvalidRequestException.class,
-                () -> terrariaInstanceService.requestEnableInstanceMods(8L, Set.of("Mod1", "Mod2", "Mod3")));
+                () -> terrariaInstanceService.updateInstance(8L,
+                        TerrariaInstanceUpdateModel.builder().newMods(Set.of("Mod1", "Mod2", "Mod3")).build()));
         assertEquals("Failed to map the requested enabled mods to the list of options", exception.getMessage());
     }
 
     @Test
-    public void testRequestRunInstance() throws NotFoundException, InvalidRequestException {
+    public void testUpdateInstance_runInstance() throws NotFoundException, InvalidRequestException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
         when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
-        final TerrariaInstanceRunServerModel model = new TerrariaInstanceRunServerModel(10, 7777, false, "password",
-                11L);
 
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
         when(terrariaWorldRepository.findById(11L)).thenReturn(Optional.of(world));
 
-        final TerrariaInstanceEntity result = terrariaInstanceService.requestRunInstance(8L, model);
+        final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
+                TerrariaInstanceUpdateModel.builder()
+                        .runConfiguration(new TerrariaInstanceRunConfiguration(10, 7777, false, "password", 11L))
+                        .build());
         assertSame(instance, result);
         assertSame(TerrariaInstanceAction.RUN_SERVER, result.getPendingAction());
         assertEquals(10, result.getMaxPlayers());
@@ -277,16 +307,16 @@ class TerrariaInstanceServiceTest {
     }
 
     @Test
-    public void testRequestRunInstance_noWorld() {
+    public void testUpdateInstance_runInstance_noWorld() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
-        final TerrariaInstanceRunServerModel model = new TerrariaInstanceRunServerModel(10, 7777, false, "password",
-                11L);
 
         when(terrariaWorldRepository.findById(11L)).thenReturn(Optional.empty());
 
         final Exception exception = assertThrows(InvalidRequestException.class,
-                () -> terrariaInstanceService.requestRunInstance(8L, model));
+                () -> terrariaInstanceService.updateInstance(8L, TerrariaInstanceUpdateModel.builder()
+                        .runConfiguration(new TerrariaInstanceRunConfiguration(10, 7777, false, "password", 11L))
+                        .build()));
         assertEquals("There is no world with ID 11", exception.getMessage());
     }
 

@@ -18,7 +18,8 @@ import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunServerModel;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunConfiguration;
+import io.github.mewore.tsw.models.terraria.TerrariaInstanceUpdateModel;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
@@ -84,58 +85,60 @@ public class TerrariaInstanceService {
     }
 
     @Transactional
-    public TerrariaInstanceEntity requestActionForInstance(final long instanceId,
-            final TerrariaInstanceAction newAction) throws NotFoundException, InvalidRequestException {
-        return saveInstance(assignActionForInstance(instanceId, newAction));
-    }
-
-    @Transactional
-    public TerrariaInstanceEntity requestEnableInstanceMods(final long instanceId, final Set<String> modsToEnable)
+    public TerrariaInstanceEntity updateInstance(final long instanceId, final TerrariaInstanceUpdateModel model)
             throws NotFoundException, InvalidRequestException {
-        final TerrariaInstanceEntity instance = assignActionForInstance(instanceId,
-                TerrariaInstanceAction.SET_LOADED_MODS);
-        instance.setModsToEnable(modsToEnable);
-        try {
-            getDesiredModOption(instance);
-        } catch (final IllegalArgumentException e) {
-            final @Nullable String message = e.getMessage();
-            throw new InvalidRequestException(
-                    message == null ? "Failed to map the requested enabled mods to the list of options" : message);
-        }
-        return saveInstance(instance);
-    }
-
-    @Transactional
-    public TerrariaInstanceEntity requestRunInstance(final long instanceId,
-            final TerrariaInstanceRunServerModel runServerModel) throws NotFoundException, InvalidRequestException {
-        final TerrariaInstanceEntity instance = assignActionForInstance(instanceId, TerrariaInstanceAction.RUN_SERVER);
-        final TerrariaWorldEntity world = terrariaWorldRepository.findById(runServerModel.getWorldId())
-                .orElseThrow(
-                        () -> new InvalidRequestException("There is no world with ID " + runServerModel.getWorldId()));
-        instance.setMaxPlayers(runServerModel.getMaxPlayers());
-        instance.setPort(runServerModel.getPort());
-        instance.setAutomaticallyForwardPort(runServerModel.isAutomaticallyForwardPort());
-        instance.setPassword(runServerModel.getPassword());
-        instance.setWorld(world);
-        return saveInstance(instance);
-    }
-
-    @Transactional
-    private TerrariaInstanceEntity assignActionForInstance(final long instanceId,
-            final TerrariaInstanceAction newAction) throws NotFoundException, InvalidRequestException {
         final TerrariaInstanceEntity instance = getInstance(instanceId);
-        if (instance.getPendingAction() != null) {
-            throw new InvalidRequestException(
-                    "Cannot apply an action to an instance that already has a pending action");
-        }
-        if (!newAction.isApplicableTo(instance.getState())) {
-            throw new InvalidRequestException(
-                    "Cannot apply action " + newAction + " to an instance with the state " + instance.getState());
-        }
-        instance.setPendingAction(newAction);
-        return instance;
-    }
+        @Nullable TerrariaInstanceAction actionToApply = null;
 
+        final @Nullable String newName = model.getNewName();
+        if (newName != null) {
+            instance.setName(newName);
+        }
+
+        final @Nullable Set<String> newMods = model.getNewMods();
+        if (newMods != null) {
+            instance.setModsToEnable(newMods);
+            try {
+                getDesiredModOption(instance);
+            } catch (final IllegalArgumentException e) {
+                final @Nullable String message = e.getMessage();
+                throw new InvalidRequestException(
+                        message == null ? "Failed to map the requested enabled mods to the list of options" : message);
+            }
+            actionToApply = TerrariaInstanceAction.SET_LOADED_MODS;
+        }
+
+        final @Nullable TerrariaInstanceRunConfiguration runConfiguration = model.getRunConfiguration();
+        if (runConfiguration != null) {
+            final TerrariaWorldEntity world = terrariaWorldRepository.findById(runConfiguration.getWorldId())
+                    .orElseThrow(() -> new InvalidRequestException(
+                            "There is no world with ID " + runConfiguration.getWorldId()));
+            instance.setMaxPlayers(runConfiguration.getMaxPlayers());
+            instance.setPort(runConfiguration.getPort());
+            instance.setAutomaticallyForwardPort(runConfiguration.isAutomaticallyForwardPort());
+            instance.setPassword(runConfiguration.getPassword());
+            instance.setWorld(world);
+            actionToApply = TerrariaInstanceAction.RUN_SERVER;
+        }
+
+        if (model.getNewAction() != null) {
+            actionToApply = model.getNewAction();
+        }
+        if (actionToApply != null) {
+            if (instance.getPendingAction() != null) {
+                throw new InvalidRequestException(
+                        "Cannot apply an action to an instance that already has a pending action");
+            }
+            if (!actionToApply.isApplicableTo(instance.getState())) {
+                throw new InvalidRequestException(
+                        "Cannot apply action " + actionToApply + " to an instance with the state " +
+                                instance.getState());
+            }
+            instance.setPendingAction(actionToApply);
+        }
+
+        return saveInstance(instance);
+    }
 
     public @Nullable Integer getDesiredModOption(final TerrariaInstanceEntity instance) {
         final Set<String> selectableMods = instance.getOptions()

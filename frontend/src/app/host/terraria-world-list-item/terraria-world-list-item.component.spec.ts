@@ -1,10 +1,10 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TerrariaWorldEntity } from 'src/generated/backend';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { ListItemInfo, MaterialListItemInfo } from 'src/test-util/list-item-info';
 
 import { TerrariaWorldListItemComponent } from './terraria-world-list-item.component';
@@ -34,11 +34,11 @@ describe('TerrariaWorldListItemComponent', () => {
     });
 
     it('should have two lines', () => {
-        expect(listItemInfo.getLines().length).toBe(2);
+        expect(listItemInfo.lines.length).toBe(2);
     });
 
     it('should have the world name in the first line', () => {
-        expect(listItemInfo.getLines()[0]).toBe('Test World');
+        expect(listItemInfo.lines[0]).toBe('Test World');
     });
 
     describe('lastModifiedString', () => {
@@ -56,12 +56,11 @@ describe('TerrariaWorldListItemComponent', () => {
     describe('when the world is undefined', () => {
         beforeEach(fakeAsync(() => {
             component.world = undefined;
-            fixture.detectChanges();
-            tick();
+            refreshFixture(fixture);
         }));
 
         it('should have no lines', () => {
-            expect(listItemInfo.getLines()).toEqual([]);
+            expect(listItemInfo.lines).toEqual([]);
         });
 
         describe('lastModifiedString', () => {

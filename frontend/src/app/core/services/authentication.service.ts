@@ -11,6 +11,7 @@ export abstract class AuthenticationService {
     abstract readonly userObservable: Observable<AuthenticatedUser | undefined>;
     abstract readonly currentUser: AuthenticatedUser | undefined;
     abstract readonly canManageHosts: boolean;
+    abstract readonly canManageTerraria: boolean;
 
     abstract logIn(username: string, password: string): Promise<AuthenticatedUser>;
 
@@ -59,6 +60,10 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
 
     get canManageHosts(): boolean {
         return this.currentUser?.accountType?.ableToManageHosts || false;
+    }
+
+    get canManageTerraria(): boolean {
+        return this.currentUser?.accountType?.ableToManageTerraria || false;
     }
 
     async logIn(username: string, password: string): Promise<AuthenticatedUser> {

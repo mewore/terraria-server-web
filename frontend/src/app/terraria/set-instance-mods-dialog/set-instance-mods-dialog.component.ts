@@ -59,7 +59,7 @@ export class SetInstanceModsDialogComponent {
 
         this.loading = true;
         try {
-            const newInstance = await this.restApi.setInstanceMods(this.instance.id, selectedMods);
+            const newInstance = await this.restApi.updateInstance(this.instance.id, { newMods: selectedMods });
             this.dialog.close(newInstance);
         } finally {
             this.loading = false;

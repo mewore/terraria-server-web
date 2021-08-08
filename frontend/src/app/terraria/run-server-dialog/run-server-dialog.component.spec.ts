@@ -1,4 +1,4 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -10,10 +10,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
-import { TerrariaInstanceEntity, TerrariaInstanceRunServerModel, TerrariaWorldEntity } from 'src/generated/backend';
+import { TerrariaInstanceEntity, TerrariaInstanceUpdateModel, TerrariaWorldEntity } from 'src/generated/backend';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { DialogInfo, MaterialDialogInfo } from 'src/test-util/dialog-info';
 import { FormFieldInfo, MatFormFieldInfo } from 'src/test-util/form-field-info';
 import { RunServerDialogComponent, RunServerDialogInput, RunServerDialogOutput } from './run-server-dialog.component';
@@ -389,8 +389,7 @@ describe('RunServerDialogComponent', () => {
                 component.automaticallyForwardPortInput.setValue(false);
                 component.passwordInput.setValue('test-password');
                 component.worldInput.setValue(worldWithMatchingModsId);
-                fixture.detectChanges();
-                tick();
+                refreshFixture(fixture);
             }));
 
             it('should have a valid form', () => {
@@ -402,15 +401,15 @@ describe('RunServerDialogComponent', () => {
             });
 
             describe('clicking on Run', () => {
-                let runInstanceSpy: jasmine.Spy<
-                    (instanceId: number, model: TerrariaInstanceRunServerModel) => Promise<TerrariaInstanceEntity>
+                let updateInstanceSpy: jasmine.Spy<
+                    (instanceId: number, model: TerrariaInstanceUpdateModel) => Promise<TerrariaInstanceEntity>
                 >;
                 let loadingWhileRunningInstance: boolean;
                 const result: TerrariaInstanceEntity = {} as TerrariaInstanceEntity;
                 let closeDialogSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => void>;
 
                 beforeEach(() => {
-                    runInstanceSpy = spyOn(restApiService, 'runInstance').and.callFake(() => {
+                    updateInstanceSpy = spyOn(restApiService, 'updateInstance').and.callFake(() => {
                         loadingWhileRunningInstance = component.loading;
                         return Promise.resolve(result);
                     });
@@ -419,12 +418,14 @@ describe('RunServerDialogComponent', () => {
                 });
 
                 it('should run the instance and close the dialog', () => {
-                    expect(runInstanceSpy).toHaveBeenCalledOnceWith(2, {
-                        maxPlayers: 1,
-                        port: 9999,
-                        automaticallyForwardPort: false,
-                        password: 'test-password',
-                        worldId: worldWithMatchingModsId,
+                    expect(updateInstanceSpy).toHaveBeenCalledOnceWith(2, {
+                        runConfiguration: {
+                            maxPlayers: 1,
+                            port: 9999,
+                            automaticallyForwardPort: false,
+                            password: 'test-password',
+                            worldId: worldWithMatchingModsId,
+                        },
                     });
                 });
 
@@ -446,8 +447,7 @@ describe('RunServerDialogComponent', () => {
             beforeEach(fakeAsync(() => {
                 component.maxPlayersInput.setValue(-1);
                 component.portInput.setValue(0);
-                fixture.detectChanges();
-                tick();
+                refreshFixture(fixture);
             }));
 
             it('should have an invalid form', () => {
@@ -459,15 +459,15 @@ describe('RunServerDialogComponent', () => {
             });
 
             describe('onRunClicked', () => {
-                let runInstanceSpy: jasmine.Spy;
+                let updateInstanceSpy: jasmine.Spy;
 
                 beforeEach(() => {
-                    runInstanceSpy = spyOn(restApiService, 'runInstance');
+                    updateInstanceSpy = spyOn(restApiService, 'updateInstance');
                     component.onRunClicked();
                 });
 
                 it('should do nothing', () => {
-                    expect(runInstanceSpy).not.toHaveBeenCalled();
+                    expect(updateInstanceSpy).not.toHaveBeenCalled();
                 });
             });
         });

@@ -10,7 +10,11 @@ export class AuthenticationServiceStub implements AuthenticationService {
     }
 
     public get canManageHosts(): boolean {
-        return false;
+        return true;
+    }
+
+    public get canManageTerraria(): boolean {
+        return true;
     }
 
     public get userObservable(): Observable<AuthenticatedUser | undefined> {

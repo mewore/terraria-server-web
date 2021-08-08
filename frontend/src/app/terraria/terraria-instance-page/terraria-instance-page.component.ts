@@ -162,11 +162,11 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     }
 
     bootUp(): void {
-        this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'BOOT_UP' }));
+        this.doWhileLoading(() => this.restApi.updateInstance(this.instanceId, { newAction: 'BOOT_UP' }));
     }
 
     goToModMenu(): void {
-        this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'GO_TO_MOD_MENU' }));
+        this.doWhileLoading(() => this.restApi.updateInstance(this.instanceId, { newAction: 'GO_TO_MOD_MENU' }));
     }
 
     setEnabledMods(): void {
@@ -199,7 +199,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
             return this.errorService.showError('The instance is not defined!');
         }
         if (instance.state !== 'RUNNING') {
-            this.doWhileLoading(() => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }));
+            this.doWhileLoading(() => this.restApi.updateInstance(this.instanceId, { newAction: 'SHUT_DOWN' }));
             return;
         }
         this.doWhileLoading(() =>
@@ -208,13 +208,13 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 descriptionKey: 'terraria.instance.dialog.shut-down.description',
                 primaryButton: {
                     labelKey: 'terraria.instance.dialog.shut-down.confirm',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN' }),
+                    onClicked: () => this.restApi.updateInstance(this.instanceId, { newAction: 'SHUT_DOWN' }),
                 },
                 extraButtons: [
                     {
                         labelKey: 'terraria.instance.dialog.shut-down.confirm-no-save',
                         onClicked: () =>
-                            this.restApi.requestActionForInstance(this.instanceId, { action: 'SHUT_DOWN_NO_SAVE' }),
+                            this.restApi.updateInstance(this.instanceId, { newAction: 'SHUT_DOWN_NO_SAVE' }),
                     },
                 ],
             })
@@ -228,7 +228,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 descriptionKey: 'terraria.instance.dialog.terminate.description',
                 primaryButton: {
                     labelKey: 'terraria.instance.dialog.terminate.confirm',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'TERMINATE' }),
+                    onClicked: () => this.restApi.updateInstance(this.instanceId, { newAction: 'TERMINATE' }),
                 },
                 warn: true,
             })
@@ -242,7 +242,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 descriptionKey: 'terraria.instance.dialog.delete.description',
                 primaryButton: {
                     labelKey: 'terraria.instance.dialog.delete.confirm',
-                    onClicked: () => this.restApi.requestActionForInstance(this.instanceId, { action: 'DELETE' }),
+                    onClicked: () => this.restApi.updateInstance(this.instanceId, { newAction: 'DELETE' }),
                 },
                 warn: true,
             })

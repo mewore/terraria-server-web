@@ -46,7 +46,7 @@ describe('HostListItemComponent', () => {
     });
 
     it('should have the correct lines', () => {
-        expect(listItemInfo.getLines()).toEqual(['[No name]', 'uuid']);
+        expect(listItemInfo.lines).toEqual(['[No name]', 'uuid']);
     });
 
     describe('when the host has a name', () => {
@@ -56,7 +56,7 @@ describe('HostListItemComponent', () => {
         });
 
         it('should have the correct lines', () => {
-            expect(listItemInfo.getLines()).toEqual(['name', 'uuid']);
+            expect(listItemInfo.lines).toEqual(['name', 'uuid']);
         });
     });
 
@@ -81,7 +81,7 @@ describe('HostListItemComponent', () => {
         });
 
         it('should have the correct lines', () => {
-            expect(listItemInfo.getLines()).toEqual(['[Loading]', '']);
+            expect(listItemInfo.lines).toEqual(['[Loading]', '']);
         });
     });
 });

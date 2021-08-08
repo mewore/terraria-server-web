@@ -9,9 +9,29 @@
         fit_screen
     </mat-icon>
 
+    <div *ngIf="renaming" mat-line>
+        <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Name</mat-label>
+            <input
+                #nameInputElement
+                (keydown.enter)="onRenameConfirmed($event)"
+                (keydown.escape)="onRenameCancelled()"
+                [formControl]="nameInput"
+                [placeholder]="instance?.name || ''"
+                matInput
+                type="text"
+            />
+            <mat-error *ngIf="nameInput.hasError('permission')">
+                {{ 'no-permission.ableToManageTerraria' | translate }}
+            </mat-error>
+            <mat-hint>{{ 'terraria.instance.list-item.rename.hint' | translate }}</mat-hint>
+        </mat-form-field>
+    </div>
+
     <a
+        *ngIf="!renaming"
         [class.disabled]="!instance || !host"
-        [routerLink]="(instance && host) ? ['/', 'hosts', host.id, 'instances', instance.id] : undefined"
+        [routerLink]="instance && host ? ['/', 'hosts', host.id, 'instances', instance.id] : undefined"
         class="tsw-name"
         mat-line
     >
@@ -20,29 +40,33 @@
     </a>
 
     <div mat-line>
-        {{ 'terraria.instance.list-item.description.mod-loader-label' | translate }}
-        <a
-            [href]="instance?.modLoaderReleaseUrl || 'https://github.com/tModLoader/tModLoader/releases'"
-            class="tsw-version-label"
-            target="_blank"
-        >
-            {{ instance?.modLoaderVersion != undefined ? instance?.modLoaderVersion : '?' }}
-        </a>
-        <a *ngIf="instance?.modLoaderArchiveUrl" [href]="instance?.modLoaderArchiveUrl">
-            ({{ 'terraria.instance.list-item.description.buttons.download' | translate }})
-        </a>
+        <span *ngIf="!renaming">
+            {{ 'terraria.instance.list-item.description.mod-loader-label' | translate }}
+            <a
+                [href]="instance?.modLoaderReleaseUrl || 'https://github.com/tModLoader/tModLoader/releases'"
+                class="tsw-version-label"
+                target="_blank"
+            >
+                {{ instance?.modLoaderVersion != undefined ? instance?.modLoaderVersion : '?' }}
+            </a>
+            <a *ngIf="instance?.modLoaderArchiveUrl" [href]="instance?.modLoaderArchiveUrl">
+                ({{ 'terraria.instance.list-item.description.buttons.download' | translate }})
+            </a>
+        </span>
     </div>
     <div mat-line>
-        {{ 'terraria.instance.list-item.description.server-label' | translate }}
-        <a class="tsw-version-label" href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
-            {{ instance?.terrariaVersion != undefined ? instance?.terrariaVersion : '?' }}
-        </a>
-        <a *ngIf="instance?.terrariaServerUrl" [href]="instance?.terrariaServerUrl">
-            ({{ 'terraria.instance.list-item.description.buttons.download' | translate }})
-        </a>
+        <span *ngIf="!renaming">
+            {{ 'terraria.instance.list-item.description.server-label' | translate }}
+            <a class="tsw-version-label" href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
+                {{ instance?.terrariaVersion != undefined ? instance?.terrariaVersion : '?' }}
+            </a>
+            <a *ngIf="instance?.terrariaServerUrl" [href]="instance?.terrariaServerUrl">
+                ({{ 'terraria.instance.list-item.description.buttons.download' | translate }})
+            </a>
+        </span>
     </div>
 
-    <span [matTooltip]="'general.not-implemented' | translate" class="action-buttons">
+    <span [matTooltip]="'general.not-implemented' | translate" class="unimplemented-action-buttons">
         <button
             [disabled]="true"
             [matTooltip]="'terraria.instance.list-item.buttons.delete' | translate"
@@ -50,8 +74,20 @@
         >
             <mat-icon>delete</mat-icon>
         </button>
-        <button [disabled]="true" [matTooltip]="'terraria.instance.list-item.buttons.edit' | translate" mat-icon-button>
-            <mat-icon>edit</mat-icon>
+    </span>
+    <span
+        *ngIf="!(renaming && loading)"
+        [matTooltipDisabled]="canManageTerraria"
+        [matTooltip]="'no-permission.ableToManageTerraria' | translate"
+    >
+        <button
+            (click)="renaming ? onRenameConfirmed($event) : onRenameClicked()"
+            [disabled]="!instance || !canManageTerraria || (renaming && this.nameInput.invalid)"
+            [matTooltip]="('terraria.instance.list-item.buttons.' + (renaming ? 'confirm' : 'rename')) | translate"
+            mat-icon-button
+        >
+            <mat-icon>{{ renaming ? 'check' : 'edit' }}</mat-icon>
         </button>
     </span>
+    <mat-progress-spinner *ngIf="loading" [diameter]="40" color="primary" mode="indeterminate"></mat-progress-spinner>
 </mat-list-item>

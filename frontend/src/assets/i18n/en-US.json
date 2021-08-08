@@ -212,8 +212,9 @@
             },
             "list-item": {
                 "buttons": {
+                    "confirm": "Confirm",
                     "delete": "Delete",
-                    "edit": "Edit"
+                    "rename": "Rename"
                 },
                 "description": {
                     "mod-loader-label": "TModLoader: ",
@@ -223,6 +224,9 @@
                         "mod-loader-link": "GitHub release page",
                         "server-link": "Wiki page"
                     }
+                },
+                "rename": {
+                    "hint": "[Enter]: Rename | [Escape]: Cancel"
                 },
                 "status": {
                     "loading": "Loading..."

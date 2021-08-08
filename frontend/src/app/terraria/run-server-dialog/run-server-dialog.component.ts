@@ -144,12 +144,14 @@ export class RunServerDialogComponent implements OnInit {
 
         this.loading = true;
         try {
-            const newInstance = await this.restApi.runInstance(this.instanceId, {
-                maxPlayers: this.maxPlayersInput.value,
-                port: this.portInput.value,
-                automaticallyForwardPort: this.automaticallyForwardPortInput.value,
-                password: this.passwordInput.value,
-                worldId: this.worldInput.value,
+            const newInstance = await this.restApi.updateInstance(this.instanceId, {
+                runConfiguration: {
+                    maxPlayers: this.maxPlayersInput.value,
+                    port: this.portInput.value,
+                    automaticallyForwardPort: this.automaticallyForwardPortInput.value,
+                    password: this.passwordInput.value,
+                    worldId: this.worldInput.value,
+                },
             });
             this.dialog.close(newInstance);
         } finally {

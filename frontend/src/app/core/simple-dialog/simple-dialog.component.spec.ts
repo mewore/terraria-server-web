@@ -1,10 +1,10 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialogRefStub } from 'src/stubs/mat-dialog-ref.stub';
-import { NoLanguageTranslatePipeStub, EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { NoLanguageTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { DialogInfo, MaterialDialogInfo } from 'src/test-util/dialog-info';
 import { SimpleDialogComponent, SimpleDialogInput } from './simple-dialog.component';
 
@@ -83,8 +83,7 @@ describe('SimpleDialogComponent', () => {
     describe('while loading', () => {
         beforeEach(fakeAsync(() => {
             component.loading = true;
-            fixture.detectChanges();
-            tick();
+            refreshFixture(fixture);
         }));
 
         it('only the cancel button should be enabled', () => {
