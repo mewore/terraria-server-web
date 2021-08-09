@@ -27,7 +27,7 @@ final String[] COMMON_ROOT_SOURCE_FILES = ['build.gradle', 'angular.json', 'pack
 task frontendLint(type: NpmTask, dependsOn: [npmInstall, getBackendDefinitions]) {
     inputs.dir('src')
     inputs.files(COMMON_ROOT_SOURCE_FILES)
-    inputs.files('tslint.json')
+    inputs.files('.eslintrc.json')
     outputs.upToDateWhen { true }
     args = ['run', 'lint']
     description('Lints the frontend code.')
