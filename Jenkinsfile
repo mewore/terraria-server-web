@@ -15,10 +15,11 @@ pipeline {
                 sh 'java -version'
             }
         }
+        final GRADLE_SUFFIX = ' --no-daemon -PuseCheckerFramework'
         stage('Backend') {
             steps {
                 script {
-                    sh './gradlew backend:test --no-daemon -PuseCheckerFramework'
+                    sh './gradlew backend:test' + GRADLE_SUFFIX
                 }
                 jacoco([
                     classPattern: '**/backend/build/classes',
@@ -51,7 +52,7 @@ pipeline {
         stage('Frontend') {
             steps {
                 script {
-                    sh './gradlew frontend:frontendLint frontend:frontendBuildProd frontend:frontendTest --no-daemon'
+                    sh './gradlew frontend:frontendLint frontend:frontendBuildProd frontend:frontendTest' + GRADLE_SUFFIX
                 }
                 cobertura([
                     coberturaReportFile: '**/frontend/coverage/terraria-server-web/cobertura-coverage.xml',
@@ -64,7 +65,7 @@ pipeline {
         stage('Jar') {
             steps {
                 script {
-                    sh './gradlew jar --no-daemon'
+                    sh './gradlew jar' + GRADLE_SUFFIX
                 }
             }
         }

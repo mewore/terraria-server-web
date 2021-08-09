@@ -28,7 +28,7 @@ else
 fi
 
 # See if the full build with test+lint and packaging into a jar works
-./gradlew jar
+./gradlew jar -PuseCheckerFramework
 RESULT=$?
 
 exit $RESULT
