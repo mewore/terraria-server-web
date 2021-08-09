@@ -18,7 +18,7 @@ pipeline {
         stage('Backend') {
             steps {
                 script {
-                    sh './gradlew backend:cleanTest backend:test --no-daemon'
+                    sh './gradlew backend:test --no-daemon -PuseCheckerFramework'
                 }
                 jacoco([
                     classPattern: '**/backend/build/classes',
