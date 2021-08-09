@@ -16,6 +16,9 @@ pipeline {
             }
         }
         stage('Backend') {
+            when {
+                changeset "**/terraria-server-web/backend/**"
+            }
             steps {
                 script {
                     sh './gradlew backend:test --no-daemon -PuseCheckerFramework'
@@ -49,6 +52,9 @@ pipeline {
             }
         }
         stage('Frontend') {
+            when {
+                changeset "**/terraria-server-web/frontend/**"
+            }
             steps {
                 script {
                     sh './gradlew frontend:frontendLint frontend:frontendBuildProd frontend:frontendTest' +
