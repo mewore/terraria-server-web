@@ -44,6 +44,7 @@ checkerFramework {
             '-AsuppressWarnings=uninitialized,type.anno.before.modifier',
             '-AskipUses=^(org\\.mockito\\.|org\\.junit\\.jupiter\\.api\\.Assertions)',
     ]
+    skipCheckerFramework = !getGradle().getStartParameter().getTaskRequests().toString().contains("jar")
 }
 
 group = 'io.github.mewore.terraria'
