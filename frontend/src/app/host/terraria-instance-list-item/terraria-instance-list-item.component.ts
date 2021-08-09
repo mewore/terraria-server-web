@@ -1,9 +1,11 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit, Renderer2, ViewChild } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import { Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
+import { ErrorService } from 'src/app/core/services/error.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
-import { HostEntity, TerrariaInstanceEntity } from 'src/generated/backend';
+import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria-instance.service';
+import { HostEntity, TerrariaInstanceAction, TerrariaInstanceEntity } from 'src/generated/backend';
 
 @Component({
     selector: 'tsw-terraria-instance-list-item',
@@ -22,7 +24,7 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
 
     readonly nameInput = new FormControl('', [(_control) => (this.canManageTerraria ? null : { permission: true })]);
 
-    renaming = false;
+    action?: TerrariaInstanceAction | 'RENAME';
 
     loading = false;
 
@@ -30,7 +32,9 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
 
     constructor(
         private readonly authenticationService: AuthenticationService,
-        private readonly restApiService: RestApiService
+        private readonly restApi: RestApiService,
+        private readonly errorService: ErrorService,
+        private readonly terrariaInstanceService: TerrariaInstanceService
     ) {
         this.userSubscription = authenticationService.userObservable.subscribe({
             next: () => this.nameInput.updateValueAndValidity(),
@@ -41,8 +45,16 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
         this.userSubscription.unsubscribe();
     }
 
-    get canManageTerraria() {
+    get canManageTerraria(): boolean {
         return this.authenticationService.canManageTerraria;
+    }
+
+    get canDelete(): boolean {
+        return !this.action && !this.instance?.pendingAction && this.terrariaInstanceService.canDelete(this.instance);
+    }
+
+    get renaming(): boolean {
+        return this.action === 'RENAME';
     }
 
     onRenameClicked(): void {
@@ -50,7 +62,7 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
         if (!instance || !this.canManageTerraria) {
             return;
         }
-        this.renaming = true;
+        this.action = 'RENAME';
         this.nameInput.setValue(instance.name);
         this.nameInput.enable();
         setTimeout(() => this.focusOnNameInput());
@@ -63,7 +75,7 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
     }
 
     onRenameCancelled(): void {
-        this.renaming = false;
+        this.action = undefined;
     }
 
     onRenameConfirmed(event: Event): void {
@@ -76,26 +88,42 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
     }
 
     async renameInstance(): Promise<void> {
-        const instance = this.instance;
-        if (!instance) {
-            return;
-        }
         const newName = this.nameInput.value;
-        if (!newName || newName === instance.name) {
-            this.renaming = false;
+        if (!newName || newName === this.instance?.name) {
+            this.action = undefined;
             return;
         }
         if (!this.canManageTerraria) {
             this.nameInput.updateValueAndValidity();
             return;
         }
+        this.nameInput.disable();
+        this.performInstanceAction((instance) => this.restApi.updateInstance(instance.id, { newName }));
+    }
+
+    onDeleteClicked(): void {
+        this.action = 'DELETE';
+        this.performInstanceAction((instance) => this.terrariaInstanceService.delete(instance));
+    }
+
+    private async performInstanceAction(
+        action: (instance: TerrariaInstanceEntity) => Promise<TerrariaInstanceEntity | undefined>
+    ): Promise<void> {
+        if (this.loading) {
+            return this.errorService.showError('Already loading!');
+        }
+
+        const instance = this.instance;
+        if (!instance) {
+            return this.errorService.showError('The instance is not defined!');
+        }
+
+        this.loading = true;
         try {
-            this.nameInput.disable();
-            this.loading = true;
-            this.instance = await this.restApiService.updateInstance(instance.id, { newName });
+            this.instance = (await action(instance)) ?? this.instance;
         } finally {
             this.loading = false;
-            this.renaming = false;
+            this.action = undefined;
         }
     }
 }

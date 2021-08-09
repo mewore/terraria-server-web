@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
+import { TerrariaCoreModule } from '../terraria-core/terraria-core.module';
 import { CreateTerrariaInstanceDialogComponent } from './create-terraria-instance-dialog/create-terraria-instance-dialog.component';
 import {
     CreateTerrariaInstanceDialogService,
@@ -39,6 +40,7 @@ import { TerrariaWorldListItemComponent } from './terraria-world-list-item/terra
     ],
     imports: [
         CommonModule,
+        TerrariaCoreModule,
         HostRoutingModule,
         MatButtonModule,
         MatDialogModule,

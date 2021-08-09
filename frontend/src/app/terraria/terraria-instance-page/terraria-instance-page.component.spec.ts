@@ -17,6 +17,8 @@ import { SimpleDialogInput } from 'src/app/core/simple-dialog/simple-dialog.comp
 import { SimpleDialogService } from 'src/app/core/simple-dialog/simple-dialog.service';
 import { SimpleDialogServiceStub } from 'src/app/core/simple-dialog/simple-dialog.service.stub';
 import { AuthenticatedUser } from 'src/app/core/types';
+import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria-instance.service';
+import { TerrariaInstanceServiceStub } from 'src/app/terraria-core/services/terraria-instance.service.stub';
 import {
     HostEntity,
     TerrariaInstanceAction,
@@ -31,14 +33,13 @@ import {
 import { FakeParamMap } from 'src/stubs/fake-param-map';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
 import { EnUsTranslateServiceStub } from 'src/stubs/translate.service.stub';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { RunServerDialogInput } from '../run-server-dialog/run-server-dialog.component';
 import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.service';
 import { RunServerDialogServiceStub } from '../run-server-dialog/run-server-dialog.service.stub';
 import { SetInstanceModsDialogInput } from '../set-instance-mods-dialog/set-instance-mods-dialog.component';
 import { SetInstanceModsDialogService } from '../set-instance-mods-dialog/set-instance-mods-dialog.service';
 import { SetInstanceModsDialogServiceStub } from '../set-instance-mods-dialog/set-instance-mods-dialog.service.stub';
-
 import { TerrariaInstancePageComponent } from './terraria-instance-page.component';
 
 describe('TerrariaInstancePageComponent', () => {
@@ -53,6 +54,7 @@ describe('TerrariaInstancePageComponent', () => {
     let runServerDialogService: RunServerDialogService;
     let setInstanceModsDialogService: SetInstanceModsDialogService;
     let simpleDialogService: SimpleDialogService;
+    let terrariaInstanceService: TerrariaInstanceService;
     let messageService: MessageService;
 
     let authenticatedUser: AuthenticatedUser | undefined;
@@ -90,6 +92,7 @@ describe('TerrariaInstancePageComponent', () => {
                 { provide: RunServerDialogService, useClass: RunServerDialogServiceStub },
                 { provide: SetInstanceModsDialogService, useClass: SetInstanceModsDialogServiceStub },
                 { provide: SimpleDialogService, useClass: SimpleDialogServiceStub },
+                { provide: TerrariaInstanceService, useClass: TerrariaInstanceServiceStub },
                 { provide: MessageService, useClass: MessageServiceStub },
             ],
         }).compileComponents();
@@ -101,6 +104,7 @@ describe('TerrariaInstancePageComponent', () => {
         runServerDialogService = TestBed.inject(RunServerDialogService);
         setInstanceModsDialogService = TestBed.inject(SetInstanceModsDialogService);
         simpleDialogService = TestBed.inject(SimpleDialogService);
+        terrariaInstanceService = TestBed.inject(TerrariaInstanceService);
         messageService = TestBed.inject(MessageService);
 
         instanceEvents = [];
@@ -446,7 +450,7 @@ describe('TerrariaInstancePageComponent', () => {
         });
     });
 
-    describe('when the instance has the action of the instance changes', () => {
+    describe('when the action of the instance changes', () => {
         beforeEach(() => {
             initializeWithRoute();
         });
@@ -481,6 +485,26 @@ describe('TerrariaInstancePageComponent', () => {
         });
     });
 
+    describe('while the component is loading', () => {
+        beforeEach(fakeAsync(() => {
+            component.loading = true;
+            refreshFixture(fixture);
+        }));
+
+        describe('performing an action', () => {
+            let showErrorSpy: jasmine.Spy<(error: Error | string) => void>;
+
+            beforeEach(() => {
+                showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                component.deleteInstance();
+            });
+
+            it('should show an error', () => {
+                expect(showErrorSpy).toHaveBeenCalledOnceWith('Already loading!');
+            });
+        });
+    });
+
     describe('when the instance is in the DEFINED state', () => {
         beforeEach(() => {
             instance.state = 'DEFINED';
@@ -496,41 +520,20 @@ describe('TerrariaInstancePageComponent', () => {
         });
 
         describe('when the "Delete" button is clicked', () => {
-            describe('when the confirmation dialog is confirmed', () => {
-                let simpleDialogData: SimpleDialogInput<TerrariaInstanceEntity>;
-                let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
+            describe('when the deletion request is successful', () => {
+                let deleteSpy: jasmine.Spy<(instance?: TerrariaInstanceEntity) => Promise<TerrariaInstanceEntity>>;
+                let oldInstance: TerrariaInstanceEntity | undefined;
                 const newInstance = {} as TerrariaInstanceEntity;
 
                 beforeEach(fakeAsync(() => {
-                    spyOn(simpleDialogService, 'openDialog').and.callFake(async <T>(data: SimpleDialogInput<T>) => {
-                        simpleDialogData = data as SimpleDialogInput<any>;
-                        return await data.primaryButton.onClicked();
-                    });
-                    requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
+                    oldInstance = component.instance;
+                    deleteSpy = spyOn(terrariaInstanceService, 'delete').and.resolveTo(newInstance);
                     getButton('Delete').click();
                     tick();
                 }));
 
-                it('should open the confirmation dialog with the correct data', () => {
-                    expect([
-                        translateService.instant(simpleDialogData.titleKey),
-                        translateService.instant(simpleDialogData.descriptionKey || 'NO_DESCRIPTION_KEY'),
-                        `[${translateService.instant(simpleDialogData.primaryButton.labelKey)}]`,
-                    ]).toEqual([
-                        'Delete the instance?',
-                        'This is irreversible. ' +
-                            'The executable files and output history of this instance will be deleted forever.',
-                        '[Delete]',
-                    ]);
-                    expect(simpleDialogData.extraButtons).toBeUndefined();
-                });
-
-                it('should open the confirmation dialog as a warning', () => {
-                    expect(simpleDialogData.warn).toBeTrue();
-                });
-
                 it('should request to delete the instance', () => {
-                    expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'DELETE' });
+                    expect(deleteSpy).toHaveBeenCalledOnceWith(oldInstance);
                 });
 
                 it('should update the instance', () => {
@@ -538,30 +541,15 @@ describe('TerrariaInstancePageComponent', () => {
                 });
             });
 
-            describe('when the confirmation dialog is cancelled', () => {
+            describe('when the deletion request is unsuccessful', () => {
                 beforeEach(fakeAsync(() => {
-                    spyOn(simpleDialogService, 'openDialog').and.resolveTo(undefined);
+                    spyOn(terrariaInstanceService, 'delete').and.resolveTo(undefined);
                     getButton('Delete').click();
                     tick();
                 }));
 
                 it('should keep the instance', () => {
                     expect(component.instance).toBe(instance);
-                });
-            });
-
-            describe('when the component is already loading', () => {
-                let showErrorSpy: jasmine.Spy<(error: Error | string) => void>;
-
-                beforeEach(fakeAsync(() => {
-                    component.loading = true;
-                    showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
-                    getButton('Delete').click();
-                    tick();
-                }));
-
-                it('should show an error', () => {
-                    expect(showErrorSpy).toHaveBeenCalledOnceWith('Already loading!');
                 });
             });
         });

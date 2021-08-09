@@ -10,14 +10,17 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { Subject } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticationServiceStub } from 'src/app/core/services/authentication.service.stub';
+import { ErrorService } from 'src/app/core/services/error.service';
+import { ErrorServiceStub } from 'src/app/core/services/error.service.stub';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { AuthenticatedUser } from 'src/app/core/types';
+import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria-instance.service';
+import { TerrariaInstanceServiceStub } from 'src/app/terraria-core/services/terraria-instance.service.stub';
 import { HostEntity, TerrariaInstanceEntity, TerrariaInstanceUpdateModel } from 'src/generated/backend';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
 import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { ListItemInfo, MaterialListItemInfo } from 'src/test-util/list-item-info';
-
 import { TerrariaInstanceListItemComponent } from './terraria-instance-list-item.component';
 
 describe('TerrariaInstanceListItemComponent', () => {
@@ -32,6 +35,8 @@ describe('TerrariaInstanceListItemComponent', () => {
     let authenticationService: AuthenticationService;
 
     let restApiService: RestApiService;
+    let terrariaInstanceService: TerrariaInstanceService;
+    let errorService: ErrorService;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -49,6 +54,8 @@ describe('TerrariaInstanceListItemComponent', () => {
             providers: [
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
                 { provide: RestApiService, useClass: RestApiServiceStub },
+                { provide: TerrariaInstanceService, useClass: TerrariaInstanceServiceStub },
+                { provide: ErrorService, useClass: ErrorServiceStub },
             ],
         }).compileComponents();
 
@@ -57,6 +64,8 @@ describe('TerrariaInstanceListItemComponent', () => {
         spyOnProperty(authenticationService, 'userObservable', 'get').and.returnValue(userSubject.asObservable());
 
         restApiService = TestBed.inject(RestApiService);
+        terrariaInstanceService = TestBed.inject(TerrariaInstanceService);
+        errorService = TestBed.inject(ErrorService);
 
         [fixture, component] = await initComponent(TerrariaInstanceListItemComponent);
         listItemInfo = new MaterialListItemInfo(fixture);
@@ -123,11 +132,49 @@ describe('TerrariaInstanceListItemComponent', () => {
         });
     });
 
+    describe('when the instance has a pending action', () => {
+        beforeEach(fakeAsync(() => {
+            instance.pendingAction = 'BOOT_UP';
+        }));
+
+        describe('when terrariaInstanceService#canDelete returns true', () => {
+            beforeEach(fakeAsync(() => {
+                spyOn(terrariaInstanceService, 'canDelete').and.returnValue(true);
+                refreshFixture(fixture);
+            }));
+
+            describe('canDelete', () => {
+                it('should be false', () => {
+                    expect(component.canDelete).toBeFalse();
+                });
+            });
+        });
+    });
+
     describe('when there is no instance', () => {
         beforeEach(fakeAsync(() => {
             component.instance = undefined;
             refreshFixture(fixture);
         }));
+
+        describe('the Delete button', () => {
+            it('should be disabled', () => {
+                expect(listItemInfo.getButton('delete')?.disabled).toBeTrue();
+            });
+        });
+
+        describe('when terrariaInstanceService#canDelete returns true', () => {
+            beforeEach(fakeAsync(() => {
+                spyOn(terrariaInstanceService, 'canDelete').and.returnValue(true);
+                refreshFixture(fixture);
+            }));
+
+            describe('canDelete', () => {
+                it('should be true', () => {
+                    expect(component.canDelete).toBeTrue();
+                });
+            });
+        });
 
         describe('the Rename button', () => {
             it('should be disabled', () => {
@@ -147,14 +194,29 @@ describe('TerrariaInstanceListItemComponent', () => {
 
         describe('renameInstance', () => {
             let updateSpy: jasmine.Spy;
+            let showErrorSpy: jasmine.Spy<(error: string) => void>;
 
-            beforeEach(() => {
-                updateSpy = spyOn(restApiService, 'updateInstance');
+            beforeEach(async () => {
+                component.nameInput.setValue('Some new name');
+                showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                await component.renameInstance();
             });
 
-            it('should not do anything', async () => {
-                await component.renameInstance();
-                expect(updateSpy).not.toHaveBeenCalled();
+            it('should show an error', () => {
+                expect(showErrorSpy).toHaveBeenCalledOnceWith('The instance is not defined!');
+            });
+        });
+
+        describe('onDeleteClicked', () => {
+            let showErrorSpy: jasmine.Spy<(error: string) => void>;
+
+            beforeEach(() => {
+                showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                component.onDeleteClicked();
+            });
+
+            it('should show an error', () => {
+                expect(showErrorSpy).toHaveBeenCalledOnceWith('The instance is not defined!');
             });
         });
     });
@@ -198,7 +260,7 @@ describe('TerrariaInstanceListItemComponent', () => {
 
         describe('when renaming', () => {
             beforeEach(fakeAsync(() => {
-                component.renaming = true;
+                component.action = 'RENAME';
                 refreshFixture(fixture);
             }));
 
@@ -218,6 +280,10 @@ describe('TerrariaInstanceListItemComponent', () => {
     });
 
     describe('while loading', () => {
+        beforeEach(() => {
+            component.loading = true;
+        });
+
         describe('onRenameConfirmed', () => {
             let eventMock: Event;
 
@@ -229,6 +295,19 @@ describe('TerrariaInstanceListItemComponent', () => {
                 component.onRenameConfirmed(eventMock);
                 expect(eventMock.stopPropagation).not.toHaveBeenCalled();
                 expect(eventMock.preventDefault).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('onDeleteClicked', () => {
+            let showErrorSpy: jasmine.Spy<(error: string) => void>;
+
+            beforeEach(() => {
+                showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                component.onDeleteClicked();
+            });
+
+            it('should show an error', () => {
+                expect(showErrorSpy).toHaveBeenCalledOnceWith('Already loading!');
             });
         });
     });
@@ -258,8 +337,43 @@ describe('TerrariaInstanceListItemComponent', () => {
         });
     });
 
+    describe('when the Delete button is clicked', () => {
+        let deleteSpy: jasmine.Spy<(instance?: TerrariaInstanceEntity) => Promise<TerrariaInstanceEntity | undefined>>;
+        let oldInstance: TerrariaInstanceEntity | undefined;
+
+        describe('when the deletion returns undefined', () => {
+            beforeEach(() => {
+                oldInstance = component.instance;
+                deleteSpy = spyOn(terrariaInstanceService, 'delete').and.resolveTo(undefined);
+                listItemInfo.clickButton('delete');
+            });
+
+            it('should keep the instance', () => {
+                expect(component.instance).toBe(oldInstance);
+            });
+        });
+
+        describe('', () => {
+            const returnedInstance = {} as TerrariaInstanceEntity;
+
+            beforeEach(() => {
+                oldInstance = component.instance;
+                deleteSpy = spyOn(terrariaInstanceService, 'delete').and.resolveTo(returnedInstance);
+                listItemInfo.clickButton('delete');
+            });
+
+            it('should request to delete the instance', () => {
+                expect(deleteSpy).toHaveBeenCalledOnceWith(oldInstance);
+            });
+
+            it('should update the instance', () => {
+                expect(component.instance).toBe(returnedInstance);
+            });
+        });
+    });
+
     describe('when renaming', () => {
-        beforeEach(() => (component.renaming = true));
+        beforeEach(() => (component.action = 'RENAME'));
 
         describe('onRenameCancelled', () => {
             beforeEach(() => component.onRenameCancelled());

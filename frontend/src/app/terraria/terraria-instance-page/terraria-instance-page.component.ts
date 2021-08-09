@@ -7,6 +7,7 @@ import { ErrorService } from 'src/app/core/services/error.service';
 import { MessageService } from 'src/app/core/services/message.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { SimpleDialogService } from 'src/app/core/simple-dialog/simple-dialog.service';
+import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria-instance.service';
 import {
     HostEntity,
     TerrariaInstanceAction,
@@ -60,18 +61,18 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         },
         {
             action: 'SHUT_DOWN',
-            isDisplayed: () => !!this.instance && this.RUNNING_STATES.has(this.instance.state),
+            isDisplayed: () => !!this.instance && this.terarriaInstanceService.isRunning(this.instance),
             onClick: () => this.shutDown(),
         },
         {
             action: 'TERMINATE',
-            isDisplayed: () => !!this.instance && this.RUNNING_STATES.has(this.instance.state),
+            isDisplayed: () => !!this.instance && this.terarriaInstanceService.isRunning(this.instance),
             onClick: () => this.terminate(),
             isWarn: true,
         },
         {
             action: 'DELETE',
-            isDisplayed: () => !!this.instance && !this.RUNNING_STATES.has(this.instance.state),
+            isDisplayed: () => this.terarriaInstanceService.canDelete(this.instance),
             onClick: () => this.deleteInstance(),
             isWarn: true,
         },
@@ -117,6 +118,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         private readonly runServerDialogService: RunServerDialogService,
         private readonly setInstanceModsDialogService: SetInstanceModsDialogService,
         private readonly simpleDialogService: SimpleDialogService,
+        private readonly terarriaInstanceService: TerrariaInstanceService,
         private readonly messageService: MessageService
     ) {}
 
@@ -236,17 +238,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     }
 
     deleteInstance(): void {
-        this.doWhileLoading(() =>
-            this.simpleDialogService.openDialog<TerrariaInstanceEntity>({
-                titleKey: 'terraria.instance.dialog.delete.title',
-                descriptionKey: 'terraria.instance.dialog.delete.description',
-                primaryButton: {
-                    labelKey: 'terraria.instance.dialog.delete.confirm',
-                    onClicked: () => this.restApi.updateInstance(this.instanceId, { newAction: 'DELETE' }),
-                },
-                warn: true,
-            })
-        );
+        this.doWhileLoading(() => this.terarriaInstanceService.delete(this.instance));
     }
 
     private updateInstance(instanceMessage: TerrariaInstanceMessage): void {

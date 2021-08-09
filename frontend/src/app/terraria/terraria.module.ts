@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
+import { TerrariaCoreModule } from '../terraria-core/terraria-core.module';
 import { RunServerDialogComponent } from './run-server-dialog/run-server-dialog.component';
 import { RunServerDialogService, RunServerDialogServiceImpl } from './run-server-dialog/run-server-dialog.service';
 import { SetInstanceModsDialogComponent } from './set-instance-mods-dialog/set-instance-mods-dialog.component';
@@ -27,6 +28,7 @@ import { TerrariaRoutingModule } from './terraria-routing.module';
     declarations: [TerrariaInstancePageComponent, SetInstanceModsDialogComponent, RunServerDialogComponent],
     imports: [
         CommonModule,
+        TerrariaCoreModule,
         TerrariaRoutingModule,
         MatTooltipModule,
         MatButtonModule,

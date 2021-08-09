@@ -66,28 +66,35 @@
         </span>
     </div>
 
-    <span [matTooltip]="'general.not-implemented' | translate" class="unimplemented-action-buttons">
+    <span [matTooltipDisabled]="canManageTerraria" [matTooltip]="'no-permission.ableToManageTerraria' | translate">
         <button
-            [disabled]="true"
-            [matTooltip]="'terraria.instance.list-item.buttons.delete' | translate"
             mat-icon-button
+            (click)="onDeleteClicked()"
+            [disabled]="!instance || !canManageTerraria || loading || !canDelete"
+            [matTooltip]="'terraria.instance.list-item.buttons.delete' | translate"
+            color="warn"
         >
             <mat-icon>delete</mat-icon>
         </button>
     </span>
-    <span
-        *ngIf="!(renaming && loading)"
-        [matTooltipDisabled]="canManageTerraria"
-        [matTooltip]="'no-permission.ableToManageTerraria' | translate"
-    >
-        <button
-            (click)="renaming ? onRenameConfirmed($event) : onRenameClicked()"
-            [disabled]="!instance || !canManageTerraria || (renaming && this.nameInput.invalid)"
-            [matTooltip]="('terraria.instance.list-item.buttons.' + (renaming ? 'confirm' : 'rename')) | translate"
-            mat-icon-button
-        >
-            <mat-icon>{{ renaming ? 'check' : 'edit' }}</mat-icon>
-        </button>
-    </span>
-    <mat-progress-spinner *ngIf="loading" [diameter]="40" color="primary" mode="indeterminate"></mat-progress-spinner>
+
+    <mat-progress-spinner
+        *ngIf="renaming && loading; else renameButton"
+        [diameter]="40"
+        color="primary"
+        mode="indeterminate"
+    ></mat-progress-spinner>
+    <ng-template #renameButton>
+        <span [matTooltipDisabled]="canManageTerraria" [matTooltip]="'no-permission.ableToManageTerraria' | translate">
+            <button
+                (click)="renaming ? onRenameConfirmed($event) : onRenameClicked()"
+                [disabled]="!instance || !canManageTerraria || loading || (renaming && this.nameInput.invalid)"
+                [matTooltip]="'terraria.instance.list-item.buttons.' + (renaming ? 'confirm' : 'rename') | translate"
+                color="primary"
+                mat-icon-button
+            >
+                <mat-icon>{{ renaming ? 'check' : 'edit' }}</mat-icon>
+            </button>
+        </span>
+    </ng-template>
 </mat-list-item>
