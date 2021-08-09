@@ -12,6 +12,7 @@ class ApplicationIT {
 
     @Test
     void testRun() {
+        System.out.println("Test");
         // The application has started successfully
     }
 }
