@@ -17,8 +17,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.file.FileDataRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
@@ -49,11 +47,7 @@ public class TerrariaInstanceExecutionService {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final TerrariaInstanceRepository terrariaInstanceRepository;
-
     private final TerrariaInstanceService terrariaInstanceService;
-
-    private final TerrariaInstanceEventRepository terrariaInstanceEventRepository;
 
     private final TerrariaInstanceEventService terrariaInstanceEventService;
 
@@ -287,11 +281,6 @@ public class TerrariaInstanceExecutionService {
                             "anyway...", instance.getUuid());
         }
 
-        logger.info("Clearing instance {} events...", instance.getUuid());
-        final long deletedEventCount = terrariaInstanceEventRepository.deleteByInstance(instance);
-        logger.info("Deleted {} events of instance {}", deletedEventCount, instance.getUuid());
-
-        terrariaInstanceRepository.delete(instance);
-        logger.info("Done deleting instance {}", instance.getUuid());
+        terrariaInstanceService.deleteInstance(instance);
     }
 }

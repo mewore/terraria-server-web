@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -318,6 +319,16 @@ class TerrariaInstanceServiceTest {
                         .runConfiguration(new TerrariaInstanceRunConfiguration(10, 7777, false, "password", 11L))
                         .build()));
         assertEquals("There is no world with ID 11", exception.getMessage());
+    }
+
+    @Test
+    public void testDeleteInstance() {
+        final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
+
+        terrariaInstanceService.deleteInstance(instance);
+        verify(terrariaInstanceEventRepository, only()).deleteByInstance(instance);
+        verify(terrariaInstanceRepository, only()).delete(instance);
+        verify(terrariaMessageService, only()).broadcastInstanceDeletion(instance);
     }
 
     @Test

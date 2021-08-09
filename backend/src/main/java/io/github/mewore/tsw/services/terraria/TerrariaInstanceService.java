@@ -8,6 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Service
 public class TerrariaInstanceService {
+
+    private final Logger logger = LogManager.getLogger(getClass());
 
     private final TerrariaInstanceRepository terrariaInstanceRepository;
 
@@ -140,6 +144,17 @@ public class TerrariaInstanceService {
         return saveInstance(instance);
     }
 
+    @Transactional
+    public void deleteInstance(final TerrariaInstanceEntity instance) {
+        logger.info("Clearing instance {} events...", instance.getUuid());
+        final long deletedEventCount = terrariaInstanceEventRepository.deleteByInstance(instance);
+        logger.info("Deleted {} events of instance {}", deletedEventCount, instance.getUuid());
+
+        terrariaInstanceRepository.delete(instance);
+        logger.info("Done deleting instance {}", instance.getUuid());
+        terrariaMessageService.broadcastInstanceDeletion(instance);
+    }
+
     public @Nullable Integer getDesiredModOption(final TerrariaInstanceEntity instance) {
         final Set<String> selectableMods = instance.getOptions()
                 .values()
@@ -147,8 +162,7 @@ public class TerrariaInstanceService {
                 .map(ModOptionInfo::fromLabel)
                 .map(ModOptionInfo::getModName)
                 .collect(Collectors.toUnmodifiableSet());
-        final List<String> unselectableMods = instance.getModsToEnable()
-                .stream()
+        final List<String> unselectableMods = instance.getModsToEnable().stream()
                 .filter(mod -> !selectableMods.contains(mod))
                 .sorted()
                 .collect(Collectors.toUnmodifiableList());

@@ -28,8 +28,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.file.FileDataRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.FileTail;
@@ -59,13 +57,7 @@ class TerrariaInstanceExecutionServiceTest {
     private TerrariaInstanceExecutionService terrariaInstanceExecutionService;
 
     @Mock
-    private TerrariaInstanceRepository terrariaInstanceRepository;
-
-    @Mock
     private TerrariaInstanceService terrariaInstanceService;
-
-    @Mock
-    private TerrariaInstanceEventRepository terrariaInstanceEventRepository;
 
     @Mock
     private TerrariaInstanceEventService terrariaInstanceEventService;
@@ -544,8 +536,7 @@ class TerrariaInstanceExecutionServiceTest {
 
         terrariaInstanceExecutionService.deleteInstance(instance);
         verify(terrariaInstanceOutputService).stopTrackingInstance(instance);
-        verify(terrariaInstanceEventRepository).deleteByInstance(instance);
-        verify(terrariaInstanceRepository).delete(instance);
+        verify(terrariaInstanceService).deleteInstance(instance);
     }
 
     @Test

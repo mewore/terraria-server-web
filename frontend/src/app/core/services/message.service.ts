@@ -10,6 +10,7 @@ import { StompService } from './stomp.service';
 
 export abstract class MessageService {
     abstract watchInstanceChanges(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceMessage>;
+    abstract watchInstanceDeletion(instance: TerrariaInstanceEntity): Observable<void>;
     abstract watchInstanceEvents(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceEventMessage>;
 }
 
@@ -43,15 +44,15 @@ export class MessageServiceImpl implements MessageService, OnDestroy {
     }
 
     public watchInstanceChanges(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceMessage> {
-        return this.rxStomp
-            .watch(`/topic/instances/${instance.id}`)
-            .pipe(MessageServiceImpl.messageParser());
+        return this.rxStomp.watch(`/topic/instances/${instance.id}`).pipe(MessageServiceImpl.messageParser());
+    }
+
+    public watchInstanceDeletion(instance: TerrariaInstanceEntity): Observable<void> {
+        return this.rxStomp.watch(`/topic/instances/${instance.id}/deletion`).pipe(map(() => undefined));
     }
 
     public watchInstanceEvents(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceEventMessage> {
-        return this.rxStomp
-            .watch(`/topic/instances/${instance.id}/events`)
-            .pipe(MessageServiceImpl.messageParser());
+        return this.rxStomp.watch(`/topic/instances/${instance.id}/events`).pipe(MessageServiceImpl.messageParser());
     }
 
     ngOnDestroy(): void {

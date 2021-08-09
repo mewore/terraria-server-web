@@ -68,7 +68,9 @@ describe('TerrariaInstancePageComponent', () => {
     let getInstanceDetailsSpy: jasmine.Spy<(instanceId: number) => Promise<TerrariaInstanceDetailsViewModel>>;
 
     let watchInstanceChangesSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<TerrariaInstanceMessage>>;
+    let watchInstanceDeletionSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<void>>;
     let instanceMessageSubject: Subject<TerrariaInstanceMessage>;
+    let instanceDeletionSubject: Subject<void>;
     let watchInstanceEventsSpy: jasmine.Spy<
         (instance: TerrariaInstanceEntity) => Observable<TerrariaInstanceEventMessage>
     >;
@@ -132,6 +134,10 @@ describe('TerrariaInstancePageComponent', () => {
         watchInstanceChangesSpy = spyOn(messageService, 'watchInstanceChanges').and.returnValue(
             instanceMessageSubject.asObservable()
         );
+        instanceDeletionSubject = new Subject();
+        watchInstanceDeletionSpy = spyOn(messageService, 'watchInstanceDeletion').and.returnValue(
+            instanceDeletionSubject.asObservable()
+        );
         eventMessageSubject = new Subject();
         watchInstanceEventsSpy = spyOn(messageService, 'watchInstanceEvents').and.returnValue(
             eventMessageSubject.asObservable()
@@ -159,6 +165,7 @@ describe('TerrariaInstancePageComponent', () => {
                 expect(getInstancesSpy).not.toHaveBeenCalled();
                 expect(getInstanceDetailsSpy).not.toHaveBeenCalled();
                 expect(watchInstanceChangesSpy).not.toHaveBeenCalled();
+                expect(watchInstanceDeletionSpy).not.toHaveBeenCalled();
                 expect(watchInstanceEventsSpy).not.toHaveBeenCalled();
             });
         });
@@ -219,7 +226,7 @@ describe('TerrariaInstancePageComponent', () => {
                     pendingAction: 'RUN_SERVER',
                     options: { 1: 'option' },
                 });
-                tick(1000);
+                refreshFixture(fixture);
             }));
 
             it('should update the instance', () => {
@@ -227,6 +234,22 @@ describe('TerrariaInstancePageComponent', () => {
                 expect(component.instance?.currentAction).toBe('BOOT_UP');
                 expect(component.instance?.pendingAction).toBe('RUN_SERVER');
                 expect(component.instance?.options).toEqual({ 1: 'option' });
+            });
+        });
+
+        describe('when there is an instance deletion message', () => {
+            beforeEach(fakeAsync(() => {
+                instanceDeletionSubject.next();
+                refreshFixture(fixture);
+            }));
+
+            it('should update the instance', () => {
+                expect(component.deleted).toBeTrue();
+                expect(component.instance).toBeUndefined();
+            });
+
+            it('should update the instance info text', () => {
+                expect(getInstanceInfoText()).toBe('The instance has been deleted.');
             });
         });
 
@@ -243,7 +266,7 @@ describe('TerrariaInstancePageComponent', () => {
                         pendingAction: 'RUN_SERVER',
                         options: { 1: 'option' },
                     });
-                    tick(1000);
+                    refreshFixture(fixture);
                 }));
 
                 it('should not update the instance', () => {

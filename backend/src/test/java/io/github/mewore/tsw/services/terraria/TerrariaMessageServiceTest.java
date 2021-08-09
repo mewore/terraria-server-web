@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import io.github.mewore.tsw.models.EmptyMessage;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
@@ -21,6 +22,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceBuilder;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
@@ -55,6 +57,12 @@ class TerrariaMessageServiceTest {
         assertSame(instance.getCurrentAction(), sentMessage.getCurrentAction());
         assertSame(instance.getPendingAction(), sentMessage.getPendingAction());
         assertSame(instance.getOptions(), sentMessage.getOptions());
+    }
+
+    @Test
+    void testBroadcastInstanceDeletion() {
+        terrariaMessageService.broadcastInstanceDeletion(makeInstanceBuilder().id(8L).build());
+        verify(brokerMessagingTemplate).send(eq("/topic/instances/8/deletion"), any(EmptyMessage.class));
     }
 
     @Test

@@ -233,6 +233,7 @@
                 }
             },
             "states": {
+                "deleted": "The instance has been deleted.",
                 "DEFINED": "The instance has been defined.",
                 "VALID": "The instance has passed validation.",
                 "IDLE": "The instance is ready to be started.",

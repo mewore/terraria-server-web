@@ -80,6 +80,8 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
 
     loading = true;
 
+    deleted = false;
+
     host?: HostEntity;
 
     otherInstances?: TerrariaInstanceEntity[];
@@ -106,7 +108,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     ]);
 
     private instanceMessageSubscription?: Subscription;
-
+    private instanceDeletionSubscription?: Subscription;
     private instanceEventMessageSubscription?: Subscription;
 
     constructor(
@@ -141,6 +143,9 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 this.instanceMessageSubscription = this.messageService.watchInstanceChanges(instance).subscribe({
                     next: (instanceMessage) => this.updateInstance(instanceMessage),
                 });
+                this.instanceDeletionSubscription = this.messageService.watchInstanceDeletion(instance).subscribe({
+                    next: () => ((this.deleted = true), (this.instance = undefined)),
+                });
                 this.instanceEventMessageSubscription = this.messageService.watchInstanceEvents(instance).subscribe({
                     next: (eventMessage) => this.addInstanceEvent(eventMessage),
                 });
@@ -152,6 +157,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.instanceMessageSubscription?.unsubscribe();
+        this.instanceDeletionSubscription?.unsubscribe();
         this.instanceEventMessageSubscription?.unsubscribe();
     }
 

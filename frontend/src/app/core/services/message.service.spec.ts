@@ -124,6 +124,31 @@ describe('MessageService', () => {
         });
     });
 
+    describe('watchInstanceDeletion', () => {
+        let watchSpy: jasmine.Spy<(destinationOrOptions: string | IWatchParams, headers?: any) => Subject<IMessage>>;
+        let result: boolean;
+
+        beforeEach(fakeAsync(() => {
+            watchSpy = spyOn(stompClient, 'watch').and.returnValue(
+                new BehaviorSubject<IMessage>({} as IMessage).asObservable()
+            );
+            result = false;
+            const subscription = service.watchInstanceDeletion({ id: 8 } as TerrariaInstanceEntity).subscribe({
+                next: () => (result = true),
+            });
+            tick(1000);
+            subscription.unsubscribe();
+        }));
+
+        it('should watch for instance changes at the correct destination', () => {
+            expect(watchSpy).toHaveBeenCalledOnceWith('/topic/instances/8/deletion');
+        });
+
+        it('should track the instance messages', () => {
+            expect(result).toBeTrue();
+        });
+    });
+
     describe('watchInstanceEvents', () => {
         let watchSpy: jasmine.Spy<(destinationOrOptions: string | IWatchParams, headers?: any) => Subject<IMessage>>;
         let result: TerrariaInstanceEventMessage;
