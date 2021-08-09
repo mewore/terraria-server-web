@@ -77,7 +77,6 @@ pipeline {
                 artifacts: 'build/libs/**/*.jar',
                 fingerprint: true,
             ])
-            junit 'backend/build/test-results/**/*.xml'
         }
     }
 }
