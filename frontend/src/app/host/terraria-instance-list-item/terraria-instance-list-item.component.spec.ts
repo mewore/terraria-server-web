@@ -26,7 +26,7 @@ import { MatFormFieldInfo } from 'src/test-util/form-field-info';
 import { ListItemInfo, MaterialListItemInfo } from 'src/test-util/list-item-info';
 import { TerrariaInstanceListItemComponent } from './terraria-instance-list-item.component';
 
-fdescribe('TerrariaInstanceListItemComponent', () => {
+describe('TerrariaInstanceListItemComponent', () => {
     let fixture: ComponentFixture<TerrariaInstanceListItemComponent>;
     let component: TerrariaInstanceListItemComponent;
     let listItemInfo: ListItemInfo;

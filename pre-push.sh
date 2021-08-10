@@ -41,7 +41,7 @@ grep -Eo -m 4 '[0-9.]+%' ./frontend/coverage/terraria-server-web/index.html | wh
   comparison_result=`compareNumbers "${coverage}" "${FRONTEND_COVERAGE_TARGET}"`
   if [ "${comparison_result}" = '<' ]; then
     printError "Frontend coverage target has not been met: ${coverage}% < ${FRONTEND_COVERAGE_TARGET}%"
-    result=1
+    exit 1
   fi
 done
 
