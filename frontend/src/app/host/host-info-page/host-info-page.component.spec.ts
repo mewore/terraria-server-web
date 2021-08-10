@@ -11,6 +11,7 @@ import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { HostEntity, TerrariaInstanceEntity, TerrariaWorldEntity } from 'src/generated/backend';
 import { FakeParamMap } from 'src/stubs/fake-param-map';
+import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
 import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 import { CreateTerrariaInstanceDialogServiceStub } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service.stub';
@@ -45,6 +46,7 @@ describe('HostInfoComponent', () => {
                 TerrariaInstanceListItemStubComponent,
                 TerrariaWorldListItemStubComponent,
                 NewItemButtonStubComponent,
+                EnUsTranslatePipeStub,
             ],
             providers: [
                 { provide: RestApiService, useClass: RestApiServiceStub },

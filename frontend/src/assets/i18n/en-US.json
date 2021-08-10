@@ -56,6 +56,11 @@
         "other-hosts-title": "Other hosts",
         "no-other-hosts-placeholder": "No other hosts"
     },
+    "host-info-page": {
+        "host": "Host",
+        "instances": "Instances",
+        "worlds": "Worlds"
+    },
     "input": {
         "errors": {
             "blank": "* Required (and whitespace-only values are not allowed)",
