@@ -1,8 +1,9 @@
-import { Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { ErrorService } from 'src/app/core/services/error.service';
+import { MessageService } from 'src/app/core/services/message.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria-instance.service';
 import { HostEntity, TerrariaInstanceAction, TerrariaInstanceEntity } from 'src/generated/backend';
@@ -17,32 +18,65 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
     host?: HostEntity;
 
     @Input()
-    instance?: TerrariaInstanceEntity;
+    set instance(newInstance: TerrariaInstanceEntity | undefined) {
+        this.privateInstance = newInstance;
+        if (newInstance) {
+            const instanceId = newInstance.id;
+            this.subscriptions.push(
+                this.messageService.watchInstanceDeletion(newInstance).subscribe({
+                    next: () => (
+                        this.deletedInstanceIds.add(instanceId),
+                        this.nameInput.updateValueAndValidity(),
+                        this.nameInput.markAsTouched()
+                    ),
+                })
+            );
+        }
+    }
+
+    get instance(): TerrariaInstanceEntity | undefined {
+        return this.privateInstance;
+    }
 
     @ViewChild('nameInputElement')
     nameInputElement?: ElementRef<HTMLInputElement>;
 
-    readonly nameInput = new FormControl('', [(_control) => (this.canManageTerraria ? null : { permission: true })]);
+    readonly nameInput = new FormControl('', [
+        () => (this.canManageTerraria ? null : { permission: true }),
+        () => (this.deleted ? { deleted: true } : null),
+    ]);
 
     action?: TerrariaInstanceAction | 'RENAME';
 
     loading = false;
 
-    private readonly userSubscription: Subscription;
+    private readonly deletedInstanceIds = new Set<number>();
+
+    private readonly subscriptions: Subscription[] = [];
+
+    private privateInstance?: TerrariaInstanceEntity;
 
     constructor(
         private readonly authenticationService: AuthenticationService,
         private readonly restApi: RestApiService,
         private readonly errorService: ErrorService,
+        private readonly messageService: MessageService,
         private readonly terrariaInstanceService: TerrariaInstanceService
     ) {
-        this.userSubscription = authenticationService.userObservable.subscribe({
-            next: () => this.nameInput.updateValueAndValidity(),
-        });
+        this.subscriptions.push(
+            authenticationService.userObservable.subscribe({
+                next: () => this.nameInput.updateValueAndValidity(),
+            })
+        );
     }
 
     ngOnDestroy(): void {
-        this.userSubscription.unsubscribe();
+        this.subscriptions.forEach((subscription) => subscription.unsubscribe());
+    }
+
+    get deleted(): boolean {
+        const instance = this.instance;
+        return !!instance && this.deletedInstanceIds.has(instance.id);
     }
 
     get canManageTerraria(): boolean {
@@ -50,7 +84,12 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
     }
 
     get canDelete(): boolean {
-        return !this.action && !this.instance?.pendingAction && this.terrariaInstanceService.canDelete(this.instance);
+        return (
+            !this.action &&
+            !this.deleted &&
+            !this.instance?.pendingAction &&
+            this.terrariaInstanceService.canDelete(this.instance)
+        );
     }
 
     get renaming(): boolean {

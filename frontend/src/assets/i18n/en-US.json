@@ -71,6 +71,7 @@
         "new-item": "New"
     },
     "list-item": {
+        "deleted": "(DELETED)",
         "no-name": "[No name]",
         "name-loading": "[Loading]"
     },
@@ -224,6 +225,9 @@
                         "mod-loader-link": "GitHub release page",
                         "server-link": "Wiki page"
                     }
+                },
+                "errors": {
+                    "deleted": "The instance has been deleted"
                 },
                 "rename": {
                     "hint": "[Enter]: Rename | [Escape]: Cancel"

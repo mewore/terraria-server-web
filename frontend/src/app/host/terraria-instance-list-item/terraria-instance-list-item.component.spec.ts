@@ -1,4 +1,4 @@
-import { ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -7,11 +7,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { AuthenticationServiceStub } from 'src/app/core/services/authentication.service.stub';
 import { ErrorService } from 'src/app/core/services/error.service';
 import { ErrorServiceStub } from 'src/app/core/services/error.service.stub';
+import { MessageService } from 'src/app/core/services/message.service';
+import { MessageServiceStub } from 'src/app/core/services/message.service.stub';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { AuthenticatedUser } from 'src/app/core/types';
@@ -20,6 +22,7 @@ import { TerrariaInstanceServiceStub } from 'src/app/terraria-core/services/terr
 import { HostEntity, TerrariaInstanceEntity, TerrariaInstanceUpdateModel } from 'src/generated/backend';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
 import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
+import { MatFormFieldInfo } from 'src/test-util/form-field-info';
 import { ListItemInfo, MaterialListItemInfo } from 'src/test-util/list-item-info';
 import { TerrariaInstanceListItemComponent } from './terraria-instance-list-item.component';
 
@@ -36,7 +39,11 @@ describe('TerrariaInstanceListItemComponent', () => {
 
     let restApiService: RestApiService;
     let terrariaInstanceService: TerrariaInstanceService;
+    let messageService: MessageService;
     let errorService: ErrorService;
+
+    let instanceDeletionSubject: Subject<void>;
+    let watchInstanceDeletionSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<void>>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -55,6 +62,7 @@ describe('TerrariaInstanceListItemComponent', () => {
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
                 { provide: RestApiService, useClass: RestApiServiceStub },
                 { provide: TerrariaInstanceService, useClass: TerrariaInstanceServiceStub },
+                { provide: MessageService, useClass: MessageServiceStub },
                 { provide: ErrorService, useClass: ErrorServiceStub },
             ],
         }).compileComponents();
@@ -65,6 +73,7 @@ describe('TerrariaInstanceListItemComponent', () => {
 
         restApiService = TestBed.inject(RestApiService);
         terrariaInstanceService = TestBed.inject(TerrariaInstanceService);
+        messageService = TestBed.inject(MessageService);
         errorService = TestBed.inject(ErrorService);
 
         [fixture, component] = await initComponent(TerrariaInstanceListItemComponent);
@@ -85,6 +94,10 @@ describe('TerrariaInstanceListItemComponent', () => {
             terrariaServerUrl: 'server-url',
         } as TerrariaInstanceEntity;
 
+        instanceDeletionSubject = new Subject();
+        watchInstanceDeletionSpy = spyOn(messageService, 'watchInstanceDeletion').and.returnValue(
+            instanceDeletionSubject.asObservable()
+        );
         component.instance = instance;
         fakeAsync(() => refreshFixture(fixture))();
     });
@@ -106,6 +119,10 @@ describe('TerrariaInstanceListItemComponent', () => {
 
     it('should not have an input', () => {
         expect(getInput()).toBeUndefined();
+    });
+
+    it('should watch for the deletion of the instance', () => {
+        expect(watchInstanceDeletionSpy).toHaveBeenCalledOnceWith(instance);
     });
 
     describe('the tModLoader version link', () => {
@@ -163,6 +180,12 @@ describe('TerrariaInstanceListItemComponent', () => {
             });
         });
 
+        describe('deleted', () => {
+            it('should be false', () => {
+                expect(component.deleted).toBeFalse();
+            });
+        });
+
         describe('when terrariaInstanceService#canDelete returns true', () => {
             beforeEach(fakeAsync(() => {
                 spyOn(terrariaInstanceService, 'canDelete').and.returnValue(true);
@@ -217,6 +240,64 @@ describe('TerrariaInstanceListItemComponent', () => {
 
             it('should show an error', () => {
                 expect(showErrorSpy).toHaveBeenCalledOnceWith('The instance is not defined!');
+            });
+        });
+    });
+
+    describe('when the instance is set to another one', () => {
+        const newInstance = { id: 5 } as TerrariaInstanceEntity;
+
+        beforeEach(fakeAsync(() => {
+            component.instance = newInstance;
+            refreshFixture(fixture);
+        }));
+
+        it('should watch for the deletion of the new instance', () => {
+            expect(watchInstanceDeletionSpy).toHaveBeenCalledWith(newInstance);
+        });
+    });
+
+    describe('when the instance is deleted', () => {
+        beforeEach(fakeAsync(() => {
+            instanceDeletionSubject.next();
+            refreshFixture(fixture);
+        }));
+
+        describe('deleted', () => {
+            it('should be true', () => {
+                expect(component.deleted).toBeTrue();
+            });
+        });
+
+        describe('the instance name line', () => {
+            it('should end with "(DELETED)"', () => {
+                expect(listItemInfo.lines[0]).toMatch(/ \(DELETED\)$/);
+            });
+        });
+
+        describe('when the instance is set to another one with the same ID', () => {
+            beforeEach(fakeAsync(() => {
+                component.instance = { id: instance.id } as TerrariaInstanceEntity;
+                refreshFixture(fixture);
+            }));
+
+            describe('deleted', () => {
+                it('should still be true', () => {
+                    expect(component.deleted).toBeTrue();
+                });
+            });
+        });
+
+        describe('when the instance is set to another one with a different ID', () => {
+            beforeEach(fakeAsync(() => {
+                component.instance = { id: instance.id + 1 } as TerrariaInstanceEntity;
+                refreshFixture(fixture);
+            }));
+
+            describe('deleted', () => {
+                it('should be false', () => {
+                    expect(component.deleted).toBeFalse();
+                });
             });
         });
     });
@@ -380,6 +461,21 @@ describe('TerrariaInstanceListItemComponent', () => {
 
             it('should stop the renaming', () => {
                 expect(component.renaming).toBeFalse();
+            });
+        });
+
+        describe('when the instance is deleted', () => {
+            beforeEach(fakeAsync(() => {
+                instanceDeletionSubject.next();
+                refreshFixture(fixture);
+            }));
+
+            describe('the name input', () => {
+                it('should have an error', () => {
+                    expect(new MatFormFieldInfo(fixture, 0, component.nameInput).errors).toEqual([
+                        'The instance has been deleted',
+                    ]);
+                });
             });
         });
     });

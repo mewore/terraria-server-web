@@ -24,18 +24,24 @@
             <mat-error *ngIf="nameInput.hasError('permission')">
                 {{ 'no-permission.ableToManageTerraria' | translate }}
             </mat-error>
+            <mat-error *ngIf="nameInput.hasError('deleted')">
+                {{ 'terraria.instance.list-item.errors.deleted' | translate }}
+            </mat-error>
             <mat-hint>{{ 'terraria.instance.list-item.rename.hint' | translate }}</mat-hint>
         </mat-form-field>
     </div>
 
     <a
         *ngIf="!renaming"
-        [class.disabled]="!instance || !host"
-        [routerLink]="instance && host ? ['/', 'hosts', host.id, 'instances', instance.id] : undefined"
+        [class.disabled]="!instance || !host || deleted"
+        [routerLink]="instance && host && !deleted ? ['/', 'hosts', host.id, 'instances', instance.id] : undefined"
         class="tsw-name"
         mat-line
     >
-        <span *ngIf="instance; else loadingName">{{ instance?.name || ('list-item.no-name' | translate) }}</span>
+        <span *ngIf="instance; else loadingName">
+            {{ instance?.name || ('list-item.no-name' | translate) }}
+            <ng-container *ngIf="deleted">{{ 'list-item.deleted' | translate }}</ng-container>
+        </span>
         <ng-template #loadingName>{{ 'list-item.name-loading' | translate }}</ng-template>
     </a>
 
