@@ -16,7 +16,12 @@ public class TerrariaMessageService {
 
     private final SimpMessagingTemplate brokerMessagingTemplate;
 
-    public void broadcastInstance(final TerrariaInstanceEntity instance) {
+    public void broadcastInstanceCreation(final TerrariaInstanceEntity instance) {
+        brokerMessagingTemplate.convertAndSend(String.format("/topic/hosts/%d/instances", instance.getHost().getId()),
+                instance);
+    }
+
+    public void broadcastInstanceChange(final TerrariaInstanceEntity instance) {
         brokerMessagingTemplate.convertAndSend("/topic/instances/" + instance.getId(),
                 new TerrariaInstanceMessage(instance));
     }

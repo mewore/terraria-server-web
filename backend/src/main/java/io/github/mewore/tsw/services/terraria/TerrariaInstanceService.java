@@ -52,9 +52,15 @@ public class TerrariaInstanceService {
     }
 
     public TerrariaInstanceEntity saveInstance(final TerrariaInstanceEntity instance) {
+        final boolean isNew = instance.getId() == null;
         final TerrariaInstanceEntity result = terrariaInstanceRepository.save(instance);
         applicationEventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(result));
-        terrariaMessageService.broadcastInstance(result);
+
+        if (isNew) {
+            terrariaMessageService.broadcastInstanceCreation(result);
+        } else {
+            terrariaMessageService.broadcastInstanceChange(result);
+        }
         return result;
     }
 
@@ -162,7 +168,8 @@ public class TerrariaInstanceService {
                 .map(ModOptionInfo::fromLabel)
                 .map(ModOptionInfo::getModName)
                 .collect(Collectors.toUnmodifiableSet());
-        final List<String> unselectableMods = instance.getModsToEnable().stream()
+        final List<String> unselectableMods = instance.getModsToEnable()
+                .stream()
                 .filter(mod -> !selectableMods.contains(mod))
                 .sorted()
                 .collect(Collectors.toUnmodifiableList());

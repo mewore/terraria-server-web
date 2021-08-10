@@ -3,7 +3,12 @@ import { IWatchParams, RxStomp, RxStompConfig } from '@stomp/rx-stomp';
 import { IMessage } from '@stomp/stompjs/esm6/i-message';
 import { BehaviorSubject, Subject } from 'rxjs';
 import * as SockJS from 'sockjs-client';
-import { TerrariaInstanceEntity, TerrariaInstanceEventMessage, TerrariaInstanceMessage } from 'src/generated/backend';
+import {
+    HostEntity,
+    TerrariaInstanceEntity,
+    TerrariaInstanceEventMessage,
+    TerrariaInstanceMessage,
+} from 'src/generated/backend';
 import { RxStompStub } from 'src/stubs/rx-stomp.stub';
 import { MessageService, MessageServiceImpl } from './message.service';
 import { StompService } from './stomp.service';
@@ -16,7 +21,6 @@ describe('MessageService', () => {
     let stompService: StompService;
 
     let configuration: RxStompConfig;
-    let configureSpy: jasmine.Spy<(config: RxStompConfig) => void>;
     let activateSpy: jasmine.Spy<() => void>;
 
     beforeEach(() => {
@@ -25,7 +29,7 @@ describe('MessageService', () => {
         });
 
         stompClient = new RxStompStub().masked();
-        configureSpy = spyOn(stompClient, 'configure').and.callFake((newConfig: RxStompConfig) => {
+        spyOn(stompClient, 'configure').and.callFake((newConfig: RxStompConfig) => {
             configuration = newConfig;
         });
         activateSpy = spyOn(stompClient, 'activate').and.returnValue();
@@ -91,6 +95,31 @@ describe('MessageService', () => {
 
         it('should deactivate the STOMP client', () => {
             expect(deactivateSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('watchHostInstanceCreation', () => {
+        let watchSpy: jasmine.Spy<(destinationOrOptions: string | IWatchParams, headers?: any) => Subject<IMessage>>;
+        let result: TerrariaInstanceEntity;
+        const sentMessage = { id: 1 } as TerrariaInstanceEntity;
+
+        beforeEach(fakeAsync(() => {
+            watchSpy = spyOn(stompClient, 'watch').and.returnValue(
+                new BehaviorSubject<IMessage>({ body: JSON.stringify(sentMessage) } as IMessage).asObservable()
+            );
+            const subscription = service.watchHostInstanceCreation({ id: 8 } as HostEntity).subscribe({
+                next: (message) => (result = message),
+            });
+            tick(1000);
+            subscription.unsubscribe();
+        }));
+
+        it('should watch for instance changes at the correct destination', () => {
+            expect(watchSpy).toHaveBeenCalledOnceWith('/topic/hosts/8/instances');
+        });
+
+        it('should track the instance messages', () => {
+            expect(result).toEqual(sentMessage);
         });
     });
 

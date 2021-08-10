@@ -5,11 +5,13 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Subject } from 'rxjs';
 import { ErrorService } from 'src/app/core/services/error.service';
 import { ErrorServiceStub } from 'src/app/core/services/error.service.stub';
+import { MessageService } from 'src/app/core/services/message.service';
+import { MessageServiceStub } from 'src/app/core/services/message.service.stub';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub';
 import { HostEntity, TerrariaInstanceEntity, TerrariaWorldEntity } from 'src/generated/backend';
 import { FakeParamMap } from 'src/stubs/fake-param-map';
-import { initComponent } from 'src/test-util/angular-test-util';
+import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { CreateTerrariaInstanceDialogService } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service';
 import { CreateTerrariaInstanceDialogServiceStub } from '../create-terraria-instance-dialog/create-terraria-instance-dialog.service.stub';
 import { HostListItemStubComponent } from '../host-list-item/host-list-item.component.stub';
@@ -26,6 +28,10 @@ describe('HostInfoComponent', () => {
     let restApiService: RestApiService;
     let routeSubject: Subject<ParamMap>;
     let dialogService: CreateTerrariaInstanceDialogService;
+
+    let messageService: MessageService;
+    let instanceCreationSubject: Subject<TerrariaInstanceEntity>;
+
     let errorService: ErrorService;
 
     beforeEach(async () => {
@@ -44,12 +50,18 @@ describe('HostInfoComponent', () => {
                 { provide: RestApiService, useClass: RestApiServiceStub },
                 { provide: ActivatedRoute, useValue: { paramMap: routeSubject.asObservable() } },
                 { provide: CreateTerrariaInstanceDialogService, useClass: CreateTerrariaInstanceDialogServiceStub },
+                { provide: MessageService, useClass: MessageServiceStub },
                 { provide: ErrorService, useClass: ErrorServiceStub },
             ],
         }).compileComponents();
 
         restApiService = TestBed.inject(RestApiService);
         dialogService = TestBed.inject(CreateTerrariaInstanceDialogService);
+
+        messageService = TestBed.inject(MessageService);
+        instanceCreationSubject = new Subject();
+        spyOn(messageService, 'watchHostInstanceCreation').and.returnValue(instanceCreationSubject.asObservable());
+
         errorService = TestBed.inject(ErrorService);
 
         [fixture, component] = await initComponent(HostInfoPageComponent);
@@ -152,6 +164,41 @@ describe('HostInfoComponent', () => {
 
             it('should set the worlds', () => {
                 expect(component.worlds).toEqual([{ id: 3 } as TerrariaWorldEntity]);
+            });
+
+            describe('when there is another valid host route', () => {
+                beforeEach(fakeAsync(() => {
+                    routeSubject.next(new FakeParamMap({ hostId: '10' }));
+                    getInstancesSpy.and.resolveTo([{ id: 8 } as TerrariaInstanceEntity]);
+                    refreshFixture(fixture);
+                }));
+
+                it('should set the instances again', () => {
+                    instanceCreationSubject.next({ id: 8 } as TerrariaInstanceEntity);
+                });
+            });
+
+            describe('when there is a message for the creation of a new instance', () => {
+                beforeEach(fakeAsync(() => {
+                    instanceCreationSubject.next({ id: 8 } as TerrariaInstanceEntity);
+                }));
+
+                it('should save the new instance', () => {
+                    expect(component.instances).toEqual([
+                        { id: 2 } as TerrariaInstanceEntity,
+                        { id: 8 } as TerrariaInstanceEntity,
+                    ]);
+                });
+            });
+
+            describe('when there is a message for the creation of an already present instance', () => {
+                beforeEach(fakeAsync(() => {
+                    instanceCreationSubject.next({ id: 2, state: 'IDLE' } as TerrariaInstanceEntity);
+                }));
+
+                it('should save the replace the known instance with the new one', () => {
+                    expect(component.instances).toEqual([{ id: 2, state: 'IDLE' } as TerrariaInstanceEntity]);
+                });
             });
 
             describe('when the creation of a terraria instance has been requested', () => {

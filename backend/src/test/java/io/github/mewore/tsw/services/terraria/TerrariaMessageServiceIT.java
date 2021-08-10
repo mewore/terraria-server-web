@@ -25,7 +25,12 @@ class TerrariaMessageServiceIT {
     private TerrariaMessageService terrariaMessageService;
 
     @Test
-    void testBroadcastInstance() {
+    void testBroadcastInstanceCreation() {
+        terrariaMessageService.broadcastInstanceCreation(makeInstance());
+    }
+
+    @Test
+    void testBroadcastInstanceChange() {
         final TerrariaInstanceEntity instance = makeInstanceBuilder().id(8L)
                 .state(TerrariaInstanceState.IDLE)
                 .currentAction(TerrariaInstanceAction.BOOT_UP)
@@ -33,7 +38,7 @@ class TerrariaMessageServiceIT {
                 .options(Map.of(1, "option"))
                 .build();
 
-        terrariaMessageService.broadcastInstance(instance);
+        terrariaMessageService.broadcastInstanceChange(instance);
     }
 
     @Test

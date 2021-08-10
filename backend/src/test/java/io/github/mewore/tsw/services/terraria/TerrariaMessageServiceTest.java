@@ -20,6 +20,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventType;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceMessage;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 
+import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceBuilder;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,13 +37,27 @@ class TerrariaMessageServiceTest {
     private SimpMessagingTemplate brokerMessagingTemplate;
 
     @Captor
+    private ArgumentCaptor<TerrariaInstanceEntity> instanceCaptor;
+
+    @Captor
     private ArgumentCaptor<TerrariaInstanceMessage> instanceMessageCaptor;
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceEventMessage> eventMessageCaptor;
 
     @Test
-    void testBroadcastInstance() {
+    void testBroadcastInstanceCreation() {
+        final TerrariaInstanceEntity instance = makeInstanceBuilder().id(1L)
+                .host(makeHostBuilder().id(8L).build())
+                .build();
+
+        terrariaMessageService.broadcastInstanceCreation(instance);
+        verify(brokerMessagingTemplate).convertAndSend(eq("/topic/hosts/8/instances"), instanceCaptor.capture());
+        assertSame(instance, instanceCaptor.getValue());
+    }
+
+    @Test
+    void testBroadcastInstanceChange() {
         final TerrariaInstanceEntity instance = makeInstanceBuilder().id(8L)
                 .state(TerrariaInstanceState.IDLE)
                 .currentAction(TerrariaInstanceAction.BOOT_UP)
@@ -50,7 +65,7 @@ class TerrariaMessageServiceTest {
                 .options(Map.of(1, "option"))
                 .build();
 
-        terrariaMessageService.broadcastInstance(instance);
+        terrariaMessageService.broadcastInstanceChange(instance);
         verify(brokerMessagingTemplate).convertAndSend(eq("/topic/instances/8"), instanceMessageCaptor.capture());
         final TerrariaInstanceMessage sentMessage = instanceMessageCaptor.getValue();
         assertSame(instance.getState(), sentMessage.getState());
