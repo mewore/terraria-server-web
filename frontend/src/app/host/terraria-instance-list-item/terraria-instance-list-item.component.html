@@ -1,6 +1,7 @@
 <mat-list-item>
     <mat-icon
         [class.loading]="!instance"
+        [class.deleted]="deleted"
         [matTooltipDisabled]="!!instance"
         [matTooltip]="'terraria.instance.list-item.status.loading' | translate"
         class="unclickable-icon"
@@ -76,7 +77,7 @@
         <button
             mat-icon-button
             (click)="onDeleteClicked()"
-            [disabled]="!instance || !canManageTerraria || loading || !canDelete"
+            [disabled]="!instance || loading || !canDelete"
             [matTooltip]="'terraria.instance.list-item.buttons.delete' | translate"
             color="warn"
         >
@@ -94,7 +95,7 @@
         <span [matTooltipDisabled]="canManageTerraria" [matTooltip]="'no-permission.ableToManageTerraria' | translate">
             <button
                 (click)="renaming ? onRenameConfirmed($event) : onRenameClicked()"
-                [disabled]="!instance || !canManageTerraria || loading || (renaming && this.nameInput.invalid)"
+                [disabled]="!instance || loading || !canRename || (renaming && this.nameInput.invalid)"
                 [matTooltip]="'terraria.instance.list-item.buttons.' + (renaming ? 'confirm' : 'rename') | translate"
                 color="primary"
                 mat-icon-button

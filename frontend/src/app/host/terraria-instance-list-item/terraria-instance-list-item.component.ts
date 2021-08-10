@@ -83,11 +83,16 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
         return this.authenticationService.canManageTerraria;
     }
 
+    get canRename(): boolean {
+        return this.canManageTerraria && !this.deleted;
+    }
+
     get canDelete(): boolean {
         return (
             !this.action &&
             !this.deleted &&
             !this.instance?.pendingAction &&
+            this.canManageTerraria &&
             this.terrariaInstanceService.canDelete(this.instance)
         );
     }
@@ -98,7 +103,7 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
 
     onRenameClicked(): void {
         const instance = this.instance;
-        if (!instance || !this.canManageTerraria) {
+        if (!instance || !this.canRename) {
             return;
         }
         this.action = 'RENAME';
@@ -132,7 +137,7 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
             this.action = undefined;
             return;
         }
-        if (!this.canManageTerraria) {
+        if (!this.canRename) {
             this.nameInput.updateValueAndValidity();
             return;
         }

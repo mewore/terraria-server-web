@@ -434,7 +434,7 @@ describe('TerrariaInstanceListItemComponent', () => {
             });
         });
 
-        describe('', () => {
+        describe('when the deletion is confirmed', () => {
             const returnedInstance = {} as TerrariaInstanceEntity;
 
             beforeEach(() => {
@@ -450,11 +450,19 @@ describe('TerrariaInstanceListItemComponent', () => {
             it('should update the instance', () => {
                 expect(component.instance).toBe(returnedInstance);
             });
+
+            // The instance is not really deleted - only an action for its future deletion is requested
+            it('should not mark the instance as deleted yet', () => {
+                expect(component.deleted).toBeFalse();
+            });
         });
     });
 
     describe('when renaming', () => {
-        beforeEach(() => (component.action = 'RENAME'));
+        beforeEach(() => {
+            component.action = 'RENAME';
+            component.nameInput.setValue('New name');
+        });
 
         describe('onRenameCancelled', () => {
             beforeEach(() => component.onRenameCancelled());
@@ -475,6 +483,19 @@ describe('TerrariaInstanceListItemComponent', () => {
                     expect(new MatFormFieldInfo(fixture, 0, component.nameInput).errors).toEqual([
                         'The instance has been deleted',
                     ]);
+                });
+            });
+
+            describe('renameInstance', () => {
+                let updateSpy: jasmine.Spy;
+
+                beforeEach(() => {
+                    updateSpy = spyOn(restApiService, 'updateInstance');
+                    return component.renameInstance();
+                });
+
+                it('should not rename', () => {
+                    expect(updateSpy).not.toHaveBeenCalled();
                 });
             });
         });
