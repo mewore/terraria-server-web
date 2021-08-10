@@ -29,6 +29,20 @@ fi
 
 # See if the full build with test+lint and packaging into a jar works
 ./gradlew jar -PuseCheckerFramework
-RESULT=$?
+result=$?
 
-exit $RESULT
+compareNumbers() {
+  awk -v first="$1" -v second="$2" 'BEGIN {printf first < second ? "<" : ">="}'
+}
+
+FRONTEND_COVERAGE_TARGET=90
+grep -Eo -m 4 '[0-9.]+%' ./frontend/coverage/terraria-server-web/index.html | while read match; do
+  coverage=`echo "${match}" | sed 's/%//'`
+  comparison_result=`compareNumbers "${coverage}" "${FRONTEND_COVERAGE_TARGET}"`
+  if [ "${comparison_result}" = '<' ]; then
+    printError "Frontend coverage target has not been met: ${coverage}% < ${FRONTEND_COVERAGE_TARGET}%"
+    result=1
+  fi
+done
+
+exit $result
