@@ -46,7 +46,7 @@
         <ng-template #loadingName>{{ 'list-item.name-loading' | translate }}</ng-template>
     </a>
 
-    <div mat-line>
+    <div class="important-at-the-end" mat-line>
         <span *ngIf="!renaming">
             {{ 'terraria.instance.list-item.description.mod-loader-label' | translate }}
             <a
@@ -61,7 +61,7 @@
             </a>
         </span>
     </div>
-    <div mat-line>
+    <div class="important-at-the-end" mat-line>
         <span *ngIf="!renaming">
             {{ 'terraria.instance.list-item.description.server-label' | translate }}
             <a class="tsw-version-label" href="https://terraria.gamepedia.com/Server#Downloads" target="_blank">
