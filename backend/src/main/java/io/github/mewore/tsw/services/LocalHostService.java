@@ -100,7 +100,7 @@ public class LocalHostService {
     }
 
     private static @Nullable UUID getUuid(final FileService fileService) throws IOException {
-        if (!fileService.fileExists(UUID_FILE_PATH)) {
+        if (!fileService.exists(UUID_FILE_PATH)) {
             return null;
         }
 

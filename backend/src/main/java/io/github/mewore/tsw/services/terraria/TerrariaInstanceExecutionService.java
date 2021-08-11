@@ -257,6 +257,26 @@ public class TerrariaInstanceExecutionService {
         return instance;
     }
 
+    TerrariaInstanceEntity recreateInstance(final TerrariaInstanceEntity instance)
+            throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
+
+        if (tmuxService.hasSession(instance.getUuid().toString())) {
+            tmuxService.kill(instance.getUuid().toString());
+        }
+
+        if (terrariaInstanceOutputService.isTrackingInstance(instance)) {
+            terrariaInstanceOutputService.stopTrackingInstance(instance);
+        }
+
+        if (fileService.exists(instance.getLocation())) {
+            fileService.deleteRecursively(instance.getLocation());
+        }
+        instance.setState(TerrariaInstanceState.DEFINED);
+        instance.setPendingAction(TerrariaInstanceAction.SET_UP);
+
+        return instance;
+    }
+
     void deleteInstance(final TerrariaInstanceEntity instance)
             throws InterruptedException, ProcessFailureException, ProcessTimeoutException {
 
@@ -273,7 +293,7 @@ public class TerrariaInstanceExecutionService {
         }
 
         logger.info("Deleting instance {}...", instance.getUuid());
-        if (!fileService.fileExists(instance.getLocation())) {
+        if (!fileService.exists(instance.getLocation())) {
             logger.warn("The directory of instance {} already does not exist", instance.getUuid());
         } else if (!fileService.deleteRecursively(instance.getLocation())) {
             logger.warn(

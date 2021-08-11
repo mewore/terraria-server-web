@@ -41,7 +41,11 @@ public class FileService {
 
     private final AsyncService asyncService;
 
-    public boolean fileExists(final @NonNull Path filePath) {
+    public boolean exists(final @NonNull File file) {
+        return file.exists();
+    }
+
+    public boolean exists(final @NonNull Path filePath) {
         return Files.exists(filePath);
     }
 

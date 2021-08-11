@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.BOOT_UP;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.DELETE;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.GO_TO_MOD_MENU;
+import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.RECREATE;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.RUN_SERVER;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.SET_LOADED_MODS;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.SET_UP;
@@ -101,9 +102,9 @@ public enum TerrariaInstanceState {
     INVALID(false, DELETE),
 
     /**
-     * The instance has encountered an unknown exception. Its real state is unknown and it may be impossible to use.
+     * The instance has encountered an unknown exception. Its real state is unknown, and it may be impossible to use.
      */
-    BROKEN(false, DELETE);
+    BROKEN(false, RECREATE, DELETE);
 
     /**
      * Whether the instance is expected/assumed to be running as a process while it is in this state.

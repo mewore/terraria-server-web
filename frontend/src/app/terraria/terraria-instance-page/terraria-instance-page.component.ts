@@ -71,6 +71,11 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
             isWarn: true,
         },
         {
+            action: 'RECREATE',
+            isDisplayed: () => this.instance?.state === 'BROKEN',
+            onClick: () => this.recreateInstance(),
+        },
+        {
             action: 'DELETE',
             isDisplayed: () => this.terarriaInstanceService.canDelete(this.instance),
             onClick: () => this.deleteInstance(),
@@ -241,6 +246,10 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 warn: true,
             })
         );
+    }
+
+    recreateInstance(): void {
+        this.doWhileLoading(() => this.restApi.updateInstance(this.instanceId, { newAction: 'RECREATE' }));
     }
 
     deleteInstance(): void {

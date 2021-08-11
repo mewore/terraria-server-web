@@ -619,7 +619,26 @@ describe('TerrariaInstancePageComponent', () => {
         });
 
         it('should have the correct buttons', () => {
-            expect(getButtonLabels()).toEqual(['Delete']);
+            expect(getButtonLabels()).toEqual(['Recreate', 'Delete']);
+        });
+
+        describe('when the "Recreate" button is clicked', () => {
+            let requestActionSpy: jasmine.Spy<UpdateInstanceFn>;
+            const newInstance = {} as TerrariaInstanceEntity;
+
+            beforeEach(fakeAsync(() => {
+                requestActionSpy = spyOn(restApiService, 'updateInstance').and.resolveTo(newInstance);
+                getButton('Recreate').click();
+                tick();
+            }));
+
+            it('should request to recreate the instance', () => {
+                expect(requestActionSpy).toHaveBeenCalledOnceWith(20, { newAction: 'RECREATE' });
+            });
+
+            it('should update the instance', () => {
+                expect(component.instance).toBe(newInstance);
+            });
         });
     });
 

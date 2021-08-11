@@ -139,7 +139,7 @@ public class TerrariaInstanceService {
                 throw new InvalidRequestException(
                         "Cannot apply an action to an instance that already has a pending action");
             }
-            if (!actionToApply.isApplicableTo(instance.getState())) {
+            if (actionToApply.isInapplicableTo(instance.getState())) {
                 throw new InvalidRequestException(
                         "Cannot apply action " + actionToApply + " to an instance with the state " +
                                 instance.getState());

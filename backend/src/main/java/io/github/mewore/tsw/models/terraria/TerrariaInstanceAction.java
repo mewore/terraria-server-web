@@ -51,11 +51,16 @@ public enum TerrariaInstanceAction {
     TERMINATE,
 
     /**
+     * <b>Broken</b> -> <b>{@link TerrariaInstanceState#IDLE}</b> (the instance is killed forcefully if necessary)
+     */
+    RECREATE,
+
+    /**
      * <b>Any inactive state</b> -> <b>DELETED</b>
      */
     DELETE;
 
-    public boolean isApplicableTo(final TerrariaInstanceState state) {
-        return state.isActionApplicable(this);
+    public boolean isInapplicableTo(final TerrariaInstanceState state) {
+        return !state.isActionApplicable(this);
     }
 }

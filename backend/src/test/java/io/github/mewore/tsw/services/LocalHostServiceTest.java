@@ -1,6 +1,7 @@
 package io.github.mewore.tsw.services;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -74,7 +75,7 @@ class LocalHostServiceTest {
 
     @Test
     void testSetUp() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.exists(any(Path.class))).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -93,7 +94,7 @@ class LocalHostServiceTest {
 
     @Test
     void testSetUp_noUuidFile() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(false);
+        when(fileService.exists(any(Path.class))).thenReturn(false);
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
@@ -106,7 +107,7 @@ class LocalHostServiceTest {
 
     @Test
     void testSetUp_invalidUuidFile() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.exists(any(Path.class))).thenReturn(true);
         when(fileService.readFile(any())).thenReturn("Invalid UUID string");
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -120,7 +121,7 @@ class LocalHostServiceTest {
 
     @Test
     void testGetOrCreateHost_nonExistent() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.exists(any(Path.class))).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.empty());
         when(systemService.getOs()).thenReturn(OperatingSystem.LINUX);
@@ -151,7 +152,7 @@ class LocalHostServiceTest {
 
     @Test
     void testGetOrCreateHost() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.exists(any(Path.class))).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         final HostEntity host = mock(HostEntity.class);
         when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(host));
@@ -163,7 +164,7 @@ class LocalHostServiceTest {
 
     @Test
     void testPreDestroy() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.exists(any(Path.class))).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(systemService.getOs()).thenReturn(OperatingSystem.UNKNOWN);
         when(hostRepository.findByUuid(eq(HOST_UUID))).thenReturn(Optional.of(makeHostBuilder().alive(true)
@@ -180,7 +181,7 @@ class LocalHostServiceTest {
     }
 
     private Runnable prepareHeartbeat() throws IOException {
-        when(fileService.fileExists(any())).thenReturn(true);
+        when(fileService.exists(any(Path.class))).thenReturn(true);
         when(fileService.readFile(any())).thenReturn(UUID_FILE_CONTENTS);
         when(hostRepository.findByUuid(HOST_UUID)).thenReturn(Optional.of(makeHostBuilder().alive(false).build()));
         when(asyncService.scheduleAtFixedRate(any(), any(), any())).thenAnswer(invocation -> future);

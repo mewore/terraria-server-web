@@ -204,6 +204,16 @@ class TerrariaInstanceMonitoringServiceTest {
     }
 
     @Test
+    void testCheckInstances_recreate() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
+        final TerrariaInstanceEntity instance = preparePendingAction(TerrariaInstanceState.BROKEN,
+                TerrariaInstanceAction.RECREATE);
+        when(terrariaInstanceExecutionService.recreateInstance(instance)).thenReturn(instance);
+
+        runCheckInstances();
+        assertNull(instance.getError());
+    }
+
+    @Test
     void testCheckInstances_delete() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = preparePendingAction(TerrariaInstanceState.IDLE,
                 TerrariaInstanceAction.DELETE);

@@ -74,7 +74,7 @@ public class TerrariaInstanceMonitoringService {
             return;
         }
         instance.setError(null);
-        if (!action.isApplicableTo(originalState)) {
+        if (action.isInapplicableTo(originalState)) {
             logger.error(
                     "Cannot apply action [{}] to an instance with state [{}]! Removing the action. The only allowed " +
                             "actions for the [{}] state are: {}", action, originalState, originalState,
@@ -142,6 +142,9 @@ public class TerrariaInstanceMonitoringService {
                 }
                 case TERMINATE: {
                     return terrariaInstanceExecutionService.terminateInstance(instance);
+                }
+                case RECREATE: {
+                    return terrariaInstanceExecutionService.recreateInstance(instance);
                 }
                 case DELETE: {
                     terrariaInstanceExecutionService.deleteInstance(instance);

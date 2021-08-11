@@ -106,6 +106,7 @@
                     "SHUT_DOWN": "Shut down",
                     "SHUT_DOWN_NO_SAVE": "Shut down without saving",
                     "TERMINATE": "Terminate",
+                    "RECREATE": "Recreate",
                     "DELETE": "Delete"
                 },
                 "current": {
@@ -117,6 +118,7 @@
                     "SHUT_DOWN": "Shutting the instance down...",
                     "SHUT_DOWN_NO_SAVE": "Shutting the instance down (without saving)...",
                     "TERMINATE": "Forcibly terminating the instance...",
+                    "RECREATE": "Clearing and recreating the instance...",
                     "DELETE": "Deleting the instance completely..."
                 },
                 "pending": {
@@ -128,6 +130,7 @@
                     "SHUT_DOWN": "Will shut the instance down...",
                     "SHUT_DOWN_NO_SAVE": "Will shut the instance down (without saving)...",
                     "TERMINATE": "Will forcibly terminate the instance...",
+                    "RECREATE": "Will recreate the instance...",
                     "DELETE": "Will delete the instance completely..."
                 }
             },
