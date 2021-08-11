@@ -11,3 +11,8 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQL82Dialect
     hibernate:
       ddl-auto: validate
+server:
+  ssl:
+    key-store: ${TSW_KEYSTORE_FILENAME}
+    key-alias: ${TSW_KEYSTORE_ALIAS}
+    key-store-password: ${TSW_KEYSTORE_PASSWORD}

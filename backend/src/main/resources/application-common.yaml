@@ -21,3 +21,10 @@ spring:
 hibernate:
   id:
     new_generator_mappings: true
+server:
+  port: 8443
+  ssl:
+    key-store-type: PKCS12
+    key-store: classpath:keystore/tsw.jks
+    key-alias: tsw
+    key-store-password: VNxVE2kqrxRSODJOplbk

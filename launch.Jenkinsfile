@@ -10,22 +10,24 @@ pipeline {
     environment {
         LOG_FILE="tsw-${env.BUILD_NUMBER}.log"
         DOWNLOADED_JAR_NAME = "${TSW_BUILD_JOBNAME}-${TSW_BUILD_NUMBER}-${JAR_NAME}"
-        LAUNCH_COMMAND = 'export TSW_DB_PASSWORD="${TSW_DB_PASSWORD}"; export TSW_DB_USERNAME="${TSW_DB_USERNAME}"; ' +
+        LAUNCH_COMMAND = 'export TSW_DB_USERNAME="${TSW_DB_USERNAME}"; export TSW_DB_PASSWORD="${TSW_DB_PASSWORD}"; ' +
+            'export TSW_KEYSTORE_FILENAME="${TSW_KEYSTORE_ALIAS}.jks"; export TSW_KEYSTORE_ALIAS="${TSW_KEYSTORE_ALIAS}"; export TSW_KEYSTORE_PASSWORD="${TSW_KEYSTORE_PASSWORD}"; ' +
             "nohup bash -c \"java -jar '${DOWNLOADED_JAR_NAME}' --spring.profiles.active=common,prod\" > '${LOG_FILE}' &"
     }
 
     stages {
         stage('Prepare') {
+            when {
+                not {
+                    fileExists("${DOWNLOADED_JAR_NAME}")
+                }
+            }
             steps {
                 script {
                     sh 'pwd'
-                    if (fileExists("${DOWNLOADED_JAR_NAME}")) {
-                        echo "'${DOWNLOADED_JAR_NAME}' already exists."
-                    } else {
-                        copyArtifacts(projectName: "${TSW_BUILD_JOBNAME}", selector: specific("${TSW_BUILD_NUMBER}"), filter: "build/libs/${JAR_NAME}")
-                        sh 'cp "build/libs/${JAR_NAME}" "${DOWNLOADED_JAR_NAME}"'
-                        sh 'rm -rf "build"'
-                    }
+                    copyArtifacts(projectName: "${TSW_BUILD_JOBNAME}", selector: specific("${TSW_BUILD_NUMBER}"), filter: "build/libs/${JAR_NAME}")
+                    sh 'cp "build/libs/${JAR_NAME}" "${DOWNLOADED_JAR_NAME}"'
+                    sh 'rm -rf "build"'
                 }
             }
         }
@@ -53,7 +55,12 @@ pipeline {
         }
         stage('Launch') {
             steps {
-                withCredentials([usernamePassword(credentialsId: "${TSW_DB_CREDENTIALS}", passwordVariable: 'TSW_DB_PASSWORD', usernameVariable: 'TSW_DB_USERNAME')]) {
+                withCredentials([
+                    usernamePassword(credentialsId: "${TSW_DB_CREDENTIALS}",
+                        usernameVariable: 'TSW_DB_USERNAME', passwordVariable: 'TSW_DB_PASSWORD'),
+                    usernamePassword(credentialsId: "${TSW_KEYSTORE_CREDENTIALS}",
+                        usernameVariable: 'TSW_KEYSTORE_ALIAS', passwordVariable: 'TSW_KEYSTORE_PASSWORD')
+                ]) {
                     // https://devops.stackexchange.com/questions/1473/running-a-background-process-in-pipeline-job
                     withEnv(['JENKINS_NODE_COOKIE=dontkill']) {
                         script {
@@ -72,7 +79,7 @@ pipeline {
                     } else {
                         error "The app does not have an output file '${LOG_FILE}'!"
                     }
-                    sh "curl http://localhost:8080 | grep '<tsw-root>'"
+                    sh "curl https://localhost:443 | grep '<tsw-root>'"
                 }
             }
         }
