@@ -169,14 +169,16 @@ describe('HostInfoComponent', () => {
             });
 
             describe('when there is another valid host route', () => {
+                const newInstances = [{ id: 11 } as Readonly<TerrariaInstanceEntity>];
+
                 beforeEach(fakeAsync(() => {
+                    getInstancesSpy.and.resolveTo(newInstances);
                     routeSubject.next(new FakeParamMap({ hostId: '10' }));
-                    getInstancesSpy.and.resolveTo([{ id: 8 } as TerrariaInstanceEntity]);
                     refreshFixture(fixture);
                 }));
 
                 it('should set the instances again', () => {
-                    instanceCreationSubject.next({ id: 8 } as TerrariaInstanceEntity);
+                    expect(component.instances).toBe(newInstances);
                 });
             });
 
