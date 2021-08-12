@@ -43,12 +43,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class TerrariaInstanceMonitoringServiceTest {
+class TerrariaInstanceActionServiceTest {
 
     private static final UUID HOST_UUID = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505");
 
     @InjectMocks
-    private TerrariaInstanceMonitoringService terrariaInstanceMonitoringService;
+    private TerrariaInstanceActionService terrariaInstanceActionService;
 
     @Mock
     private LocalHostService localHostService;
@@ -108,7 +108,7 @@ class TerrariaInstanceMonitoringServiceTest {
         when(terrariaInstanceRepository.findByHostUuid(HOST_UUID)).thenReturn(
                 Arrays.asList(inactiveInstance, instanceWithoutOutputFile, instance));
 
-        terrariaInstanceMonitoringService.setUp();
+        terrariaInstanceActionService.setUp();
         verify(terrariaInstanceOutputService).trackInstance(instance);
         verify(asyncService, only()).scheduleAtFixedRate(any(), delayCaptor.capture(), periodCaptor.capture());
         assertEquals(Duration.ZERO, delayCaptor.getValue());
@@ -415,7 +415,7 @@ class TerrariaInstanceMonitoringServiceTest {
     }
 
     private void runCheckInstances() {
-        terrariaInstanceMonitoringService.setUp();
+        terrariaInstanceActionService.setUp();
         verify(asyncService, only()).scheduleAtFixedRate(checkInstancesCaptor.capture(), any(), any());
         checkInstancesCaptor.getValue().run();
     }

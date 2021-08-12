@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Service
-public class TerrariaInstanceMonitoringService {
+public class TerrariaInstanceActionService {
 
     private static final Duration POLL_RATE = Duration.ofSeconds(10);
 
