@@ -45,7 +45,7 @@ pipeline {
                         }
                     }
                     sleep 5
-                    curlStatus = sh returnStatus: true, script: "curl http://localhost:8080"
+                    curlStatus = sh returnStatus: true, script: "curl https://localhost:8443"
                     if (curlStatus == 0) {
                         error "The app is still running or something else has taken up port :8080! Kill it manually."
                     }
@@ -79,7 +79,7 @@ pipeline {
                     } else {
                         error "The app does not have an output file '${LOG_FILE}'!"
                     }
-                    sh "curl https://localhost:443 | grep '<tsw-root>'"
+                    sh "curl https://localhost:8443 | grep '<tsw-root>'"
                 }
             }
         }
