@@ -5,7 +5,12 @@ import { OperatorFunction } from 'rxjs';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as SockJS from 'sockjs-client';
-import { HostEntity, TerrariaInstanceEntity, TerrariaInstanceEventMessage, TerrariaInstanceMessage } from 'src/generated/backend';
+import {
+    HostEntity,
+    TerrariaInstanceEntity,
+    TerrariaInstanceEventMessage,
+    TerrariaInstanceMessage,
+} from 'src/generated/backend';
 import { StompService } from './stomp.service';
 
 export abstract class MessageService {
@@ -33,9 +38,6 @@ export class MessageServiceImpl implements MessageService, OnDestroy {
             heartbeatIncoming: 0,
             heartbeatOutgoing: 20000,
             reconnectDelay: 2000,
-            debug: (msg: string): void => {
-                console.log(new Date(), msg);
-            },
         });
         this.rxStomp.activate();
     }

@@ -61,27 +61,8 @@ describe('MessageService', () => {
     });
 
     describe('the debug callback in the configuration', () => {
-        let originalLog: (message?: any, ...optionalParams: any[]) => void;
-        let logSpy: jasmine.Spy<(message?: any, ...optionalParams: any[]) => void>;
-
-        beforeEach(() => {
-            originalLog = console.log;
-            logSpy = spyOn(console, 'log').and.returnValue();
-        });
-
-        afterEach(() => {
-            console.log = originalLog;
-        });
-
-        it('should be defined', () => {
-            expect(configuration.debug).toBeDefined();
-        });
-
-        it('should log the debug message', () => {
-            if (configuration.debug) {
-                configuration.debug('test');
-            }
-            expect(logSpy).toHaveBeenCalledOnceWith(jasmine.any(Date), 'test');
+        it('should be undefined', () => {
+            expect(configuration.debug).toBeUndefined();
         });
     });
 
