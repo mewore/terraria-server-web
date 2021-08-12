@@ -1,14 +1,28 @@
 <mat-list-item>
-    <mat-icon
-        [class.loading]="!instance"
-        [class.deleted]="deleted"
-        [matTooltipDisabled]="!!instance"
-        [matTooltip]="'terraria.instance.list-item.status.loading' | translate"
-        class="unclickable-icon"
+    <span
+        [matTooltip]="instance ? statusLabel : ('terraria.instance.list-item.status.loading' | translate)"
         mat-list-icon
     >
-        fit_screen
-    </mat-icon>
+        <mat-progress-spinner
+            *ngIf="hasAction && !deleted; else instanceIcon"
+            [class.tsw-loading]="!instance?.currentAction"
+            [color]="badState ? 'warn' : 'primary'"
+            [diameter]="24"
+            mode="indeterminate"
+        >
+        </mat-progress-spinner>
+
+        <ng-template #instanceIcon>
+            <mat-icon
+                [class.deleted]="deleted"
+                [class.tsw-loading]="!instance"
+                [color]="badState ? 'warn' : 'primary'"
+                class="unclickable-icon"
+            >
+                {{ icon }}
+            </mat-icon>
+        </ng-template>
+    </span>
 
     <div *ngIf="renaming" mat-line>
         <mat-form-field appearance="fill" class="full-width">

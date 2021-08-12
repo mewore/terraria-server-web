@@ -21,14 +21,28 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
     set instance(newInstance: TerrariaInstanceEntity | undefined) {
         this.privateInstance = newInstance;
         if (newInstance) {
+            this.clearInstanceSubscriptions();
             const instanceId = newInstance.id;
-            this.subscriptions.push(
+            this.instanceSubscriptions.push(
                 this.messageService.watchInstanceDeletion(newInstance).subscribe({
                     next: () => (
                         this.deletedInstanceIds.add(instanceId),
                         this.nameInput.updateValueAndValidity(),
                         this.nameInput.markAsTouched()
                     ),
+                })
+            );
+            this.instanceSubscriptions.push(
+                this.messageService.watchInstanceChanges(newInstance).subscribe({
+                    next: (change) => {
+                        const currentInstance = this.privateInstance;
+                        if (currentInstance) {
+                            this.privateInstance = {
+                                ...currentInstance,
+                                ...change,
+                            };
+                        }
+                    },
                 })
             );
         }
@@ -52,7 +66,9 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
 
     private readonly deletedInstanceIds = new Set<number>();
 
-    private readonly subscriptions: Subscription[] = [];
+    private instanceSubscriptions: Subscription[] = [];
+
+    private readonly userSubscription: Subscription;
 
     private privateInstance?: TerrariaInstanceEntity;
 
@@ -63,15 +79,42 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
         private readonly messageService: MessageService,
         private readonly terrariaInstanceService: TerrariaInstanceService
     ) {
-        this.subscriptions.push(
-            authenticationService.userObservable.subscribe({
-                next: () => this.nameInput.updateValueAndValidity(),
-            })
-        );
+        this.userSubscription = authenticationService.userObservable.subscribe({
+            next: () => this.nameInput.updateValueAndValidity(),
+        });
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach((subscription) => subscription.unsubscribe());
+        this.clearInstanceSubscriptions();
+        this.userSubscription.unsubscribe();
+    }
+
+    get statusLabel(): string {
+        return this.terrariaInstanceService.getStatusLabel(this.instance, this.deleted);
+    }
+
+    get badState(): boolean {
+        return this.terrariaInstanceService.isStateBad(this.instance, this.deleted);
+    }
+
+    get icon(): string {
+        if (this.deleted) {
+            return 'hide_source';
+        }
+        if (!this.instance) {
+            return '';
+        }
+        if (this.badState) {
+            return 'highlight_off';
+        }
+        if (this.instance.state === 'RUNNING') {
+            return 'circle';
+        }
+        return this.terrariaInstanceService.isActive(this.instance) ? 'radio_button_checked' : 'radio_button_unchecked';
+    }
+
+    get hasAction(): boolean {
+        return !!this.instance?.pendingAction || !!this.instance?.currentAction;
     }
 
     get deleted(): boolean {
@@ -169,5 +212,10 @@ export class TerrariaInstanceListItemComponent implements OnDestroy {
             this.loading = false;
             this.action = undefined;
         }
+    }
+
+    private clearInstanceSubscriptions(): void {
+        this.instanceSubscriptions.forEach((subscription) => subscription.unsubscribe());
+        this.instanceSubscriptions = [];
     }
 }

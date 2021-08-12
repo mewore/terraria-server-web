@@ -15,6 +15,14 @@ import lombok.NonNull;
 @MessageModel
 public class TerrariaInstanceMessage {
 
+    private final @Nullable String terrariaVersion;
+
+    private final @Nullable String modLoaderVersion;
+
+    private final @Nullable String modLoaderReleaseUrl;
+
+    private final @Nullable String modLoaderArchiveUrl;
+
     private final @NonNull TerrariaInstanceState state;
 
     private final @Nullable TerrariaInstanceAction pendingAction;
@@ -24,6 +32,8 @@ public class TerrariaInstanceMessage {
     private final @NonNull Map<Integer, String> options;
 
     public TerrariaInstanceMessage(final TerrariaInstanceEntity instance) {
-        this(instance.getState(), instance.getPendingAction(), instance.getCurrentAction(), instance.getOptions());
+        this(instance.getTerrariaVersion(), instance.getModLoaderVersion(), instance.getModLoaderReleaseUrl(),
+                instance.getModLoaderArchiveUrl(), instance.getState(), instance.getPendingAction(),
+                instance.getCurrentAction(), instance.getOptions());
     }
 }

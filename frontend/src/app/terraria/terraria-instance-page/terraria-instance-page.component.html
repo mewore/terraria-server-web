@@ -1,24 +1,7 @@
 <div class="log-panel solarized" id="instance-log-panel">
     <span *ngFor="let logPart of logParts" [class]="logPart?.className">{{ logPart?.text }}</span>
-    <div class="instance-info-bar blue">
-        <span *ngIf="deleted; else instanceNotDeleted" class="red">
-            {{ 'terraria.instance.states.deleted' | translate }}
-        </span>
-        <ng-template #instanceNotDeleted>
-            <ng-container *ngIf="instance">
-                <ng-container *ngIf="hasAction; else noAction">
-                    <ng-container *ngIf="instance?.currentAction; else pendingAction">
-                        {{ 'terraria.instance.actions.current.' + instance?.currentAction | translate }}
-                    </ng-container>
-                    <ng-template #pendingAction>
-                        {{ 'terraria.instance.actions.pending.' + instance?.pendingAction | translate }}
-                    </ng-template>
-                </ng-container>
-                <ng-template #noAction>
-                    {{ 'terraria.instance.states.' + instance?.state | translate }}
-                </ng-template>
-            </ng-container>
-        </ng-template>
+    <div [class]="['instance-info-bar', badState ? 'red' : 'blue']">
+        {{ statusLabel }}
         <mat-progress-bar [class.tsw-invisible]="!hasAction" color="primary" mode="indeterminate"></mat-progress-bar>
     </div>
     <div class="instance-panel">

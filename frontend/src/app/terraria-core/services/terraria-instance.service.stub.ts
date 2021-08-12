@@ -19,15 +19,23 @@ export class TerrariaInstanceServiceStub implements TerrariaInstanceService {
 
     constructor() {}
 
-    isRunning(instance: TerrariaInstanceEntity): boolean {
+    isActive(instance: TerrariaInstanceEntity): boolean {
         return this.RUNNING_STATES.has(instance.state);
     }
 
     canDelete(instance: TerrariaInstanceEntity | undefined): boolean {
-        return !!instance && !this.isRunning(instance);
+        return !!instance && !this.isActive(instance);
     }
 
     delete(_instance: TerrariaInstanceEntity | undefined): Promise<TerrariaInstanceEntity | undefined> {
+        throw new Error('Method not mocked.');
+    }
+
+    getStatusLabel(_instance: TerrariaInstanceEntity | undefined, _deleted: boolean): string {
+        throw new Error('Method not mocked.');
+    }
+
+    isStateBad(_instance: TerrariaInstanceEntity | undefined, _deleted: boolean): boolean {
         throw new Error('Method not mocked.');
     }
 }

@@ -3,6 +3,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -19,7 +20,12 @@ import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub'
 import { AuthenticatedUser } from 'src/app/core/types';
 import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria-instance.service';
 import { TerrariaInstanceServiceStub } from 'src/app/terraria-core/services/terraria-instance.service.stub';
-import { HostEntity, TerrariaInstanceEntity, TerrariaInstanceUpdateModel } from 'src/generated/backend';
+import {
+    HostEntity,
+    TerrariaInstanceEntity,
+    TerrariaInstanceMessage,
+    TerrariaInstanceUpdateModel,
+} from 'src/generated/backend';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
 import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
 import { MatFormFieldInfo } from 'src/test-util/form-field-info';
@@ -39,11 +45,16 @@ describe('TerrariaInstanceListItemComponent', () => {
 
     let restApiService: RestApiService;
     let terrariaInstanceService: TerrariaInstanceService;
+    let isStateBadSpy: jasmine.Spy<(instanceToCheck: TerrariaInstanceEntity, deleted: boolean) => boolean>;
+
     let messageService: MessageService;
     let errorService: ErrorService;
 
     let instanceDeletionSubject: Subject<void>;
     let watchInstanceDeletionSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<void>>;
+
+    let instanceChangeSubject: Subject<TerrariaInstanceMessage>;
+    let watchInstanceChangeSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<TerrariaInstanceMessage>>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -53,6 +64,7 @@ describe('TerrariaInstanceListItemComponent', () => {
                 MatListModule,
                 MatIconModule,
                 MatTooltipModule,
+                MatProgressBarModule,
                 MatProgressSpinnerModule,
                 NoopAnimationsModule,
                 RouterTestingModule,
@@ -72,7 +84,11 @@ describe('TerrariaInstanceListItemComponent', () => {
         spyOnProperty(authenticationService, 'userObservable', 'get').and.returnValue(userSubject.asObservable());
 
         restApiService = TestBed.inject(RestApiService);
+
         terrariaInstanceService = TestBed.inject(TerrariaInstanceService);
+        spyOn(terrariaInstanceService, 'getStatusLabel').and.returnValue('[Instance status]');
+        isStateBadSpy = spyOn(terrariaInstanceService, 'isStateBad').and.returnValue(false);
+
         messageService = TestBed.inject(MessageService);
         errorService = TestBed.inject(ErrorService);
 
@@ -98,12 +114,19 @@ describe('TerrariaInstanceListItemComponent', () => {
         watchInstanceDeletionSpy = spyOn(messageService, 'watchInstanceDeletion').and.returnValue(
             instanceDeletionSubject.asObservable()
         );
+        instanceChangeSubject = new Subject();
+        watchInstanceChangeSpy = spyOn(messageService, 'watchInstanceChanges').and.returnValue(
+            instanceChangeSubject.asObservable()
+        );
         component.instance = instance;
         fakeAsync(() => refreshFixture(fixture))();
     });
 
     const getInput = (): HTMLInputElement | undefined =>
         (fixture.nativeElement as HTMLElement).querySelector('input') || undefined;
+
+    const getIcon = (): string | undefined =>
+        (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.mat-list-icon .mat-icon')?.innerText;
 
     it('should have the correct lines', () => {
         expect(listItemInfo.lines).toEqual([
@@ -168,6 +191,38 @@ describe('TerrariaInstanceListItemComponent', () => {
         });
     });
 
+    describe('when the instance is in the RUNNING state', () => {
+        beforeEach(fakeAsync(() => ((instance.state = 'RUNNING'), refreshFixture(fixture))));
+
+        it('should have the full circle icon', () => {
+            expect(getIcon()).toBe('circle');
+        });
+    });
+
+    describe('when the instance is in an inactive state', () => {
+        beforeEach(fakeAsync(() => ((instance.state = 'IDLE'), refreshFixture(fixture))));
+
+        it('should have the full circle icon', () => {
+            expect(getIcon()).toBe('radio_button_unchecked');
+        });
+    });
+
+    describe('when the instance is in an inactive state', () => {
+        beforeEach(fakeAsync(() => ((instance.state = 'WORLD_MENU'), refreshFixture(fixture))));
+
+        it('should have the full circle icon', () => {
+            expect(getIcon()).toBe('radio_button_checked');
+        });
+    });
+
+    describe('when the instance is in a bad state', () => {
+        beforeEach(fakeAsync(() => (isStateBadSpy.and.returnValue(true), refreshFixture(fixture))));
+
+        it('should have the full circle icon', () => {
+            expect(getIcon()).toBe('highlight_off');
+        });
+    });
+
     describe('when there is no instance', () => {
         beforeEach(fakeAsync(() => {
             component.instance = undefined;
@@ -183,6 +238,21 @@ describe('TerrariaInstanceListItemComponent', () => {
         describe('deleted', () => {
             it('should be false', () => {
                 expect(component.deleted).toBeFalse();
+            });
+        });
+
+        it('should have an empty icon', () => {
+            expect(getIcon()).toBe('');
+        });
+
+        describe('when the instance is changed', () => {
+            beforeEach(fakeAsync(() => {
+                instanceChangeSubject.next({ state: 'INVALID', options: {} });
+                refreshFixture(fixture);
+            }));
+
+            it('should not set the instance', () => {
+                expect(component.instance).toBeUndefined();
             });
         });
 
@@ -216,7 +286,6 @@ describe('TerrariaInstanceListItemComponent', () => {
         });
 
         describe('renameInstance', () => {
-            let updateSpy: jasmine.Spy;
             let showErrorSpy: jasmine.Spy<(error: string) => void>;
 
             beforeEach(async () => {
@@ -263,6 +332,10 @@ describe('TerrariaInstanceListItemComponent', () => {
             refreshFixture(fixture);
         }));
 
+        it('should have a "deleted" icon', () => {
+            expect(getIcon()).toBe('hide_source');
+        });
+
         describe('deleted', () => {
             it('should be true', () => {
                 expect(component.deleted).toBeTrue();
@@ -299,6 +372,17 @@ describe('TerrariaInstanceListItemComponent', () => {
                     expect(component.deleted).toBeFalse();
                 });
             });
+        });
+    });
+
+    describe('when the instance is changed', () => {
+        beforeEach(fakeAsync(() => {
+            instanceChangeSubject.next({ state: 'INVALID', options: {} });
+            refreshFixture(fixture);
+        }));
+
+        it('should update the instance', () => {
+            expect(component.instance?.state).toBe('INVALID');
         });
     });
 
@@ -563,6 +647,10 @@ describe('TerrariaInstanceListItemComponent', () => {
 
             it('should not have an input anymore', () => {
                 expect(getInput()).toBeUndefined();
+            });
+
+            it('should not update the instance', () => {
+                expect(updateSpy).not.toHaveBeenCalled();
             });
         });
     });

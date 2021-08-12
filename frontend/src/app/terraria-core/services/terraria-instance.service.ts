@@ -1,20 +1,23 @@
 import { Injectable } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ErrorService } from 'src/app/core/services/error.service';
 import { RestApiService } from 'src/app/core/services/rest-api.service';
 import { SimpleDialogService } from 'src/app/core/simple-dialog/simple-dialog.service';
 import { TerrariaInstanceEntity, TerrariaInstanceState } from 'src/generated/backend';
 
 export abstract class TerrariaInstanceService {
-    abstract isRunning(instance: TerrariaInstanceEntity): boolean;
+    abstract isActive(instance: TerrariaInstanceEntity): boolean;
     abstract canDelete(instance: TerrariaInstanceEntity | undefined): boolean;
     abstract delete(instance: TerrariaInstanceEntity | undefined): Promise<TerrariaInstanceEntity | undefined>;
+    abstract getStatusLabel(instance: TerrariaInstanceEntity | undefined, deleted: boolean): string;
+    abstract isStateBad(instance: TerrariaInstanceEntity | undefined, deleted: boolean): boolean;
 }
 
 @Injectable({
     providedIn: 'root',
 })
 export class TerrariaInstanceServiceImpl implements TerrariaInstanceService {
-    private readonly RUNNING_STATES = new Set<TerrariaInstanceState>([
+    private readonly ACTIVE_STATES = new Set<TerrariaInstanceState>([
         'BOOTING_UP',
         'WORLD_MENU',
         'MOD_MENU',
@@ -27,22 +30,25 @@ export class TerrariaInstanceServiceImpl implements TerrariaInstanceService {
         'RUNNING',
     ]);
 
+    private readonly BAD_STATES = new Set<TerrariaInstanceState>(['PORT_CONFLICT', 'BROKEN', 'INVALID']);
+
     constructor(
         private readonly restApi: RestApiService,
         private readonly simpleDialogService: SimpleDialogService,
+        private readonly translateService: TranslateService,
         private readonly errorService: ErrorService
     ) {}
 
-    isRunning(instance: TerrariaInstanceEntity): boolean {
-        return this.RUNNING_STATES.has(instance.state);
+    isActive(instance: TerrariaInstanceEntity): boolean {
+        return this.ACTIVE_STATES.has(instance.state);
     }
 
     canDelete(instance: TerrariaInstanceEntity | undefined): boolean {
-        return !!instance && !this.isRunning(instance);
+        return !!instance && !this.isActive(instance);
     }
 
     async delete(instance: TerrariaInstanceEntity | undefined): Promise<TerrariaInstanceEntity | undefined> {
-        if (!instance || this.isRunning(instance)) {
+        if (!instance || this.isActive(instance)) {
             this.errorService.showError(
                 'Cannot delete the instance because it is in an invalid state: ' + instance?.state
             );
@@ -57,5 +63,25 @@ export class TerrariaInstanceServiceImpl implements TerrariaInstanceService {
             },
             warn: true,
         });
+    }
+
+    getStatusLabel(instance: TerrariaInstanceEntity | undefined, deleted: boolean): string {
+        if (deleted) {
+            return this.translateService.instant('terraria.instance.states.deleted');
+        }
+        if (!instance) {
+            return '';
+        }
+        if (instance.currentAction) {
+            return this.translateService.instant('terraria.instance.actions.current.' + instance.currentAction);
+        }
+        if (instance.pendingAction) {
+            return this.translateService.instant('terraria.instance.actions.pending.' + instance.pendingAction);
+        }
+        return this.translateService.instant('terraria.instance.states.' + instance.state);
+    }
+
+    isStateBad(instance: TerrariaInstanceEntity | undefined, deleted: boolean): boolean {
+        return deleted || !instance || this.BAD_STATES.has(instance.state);
     }
 }

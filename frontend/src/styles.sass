@@ -6,27 +6,39 @@ $link-hover: #44f
 $link-visited: #93e
 
 a
-  transition: color 200ms linear
-  color: $link
-  text-decoration: none
-  &:visited
-    color: $link-visited
-  &:hover
-    color: $link-hover
-    text-decoration: underline
+    transition: color 200ms linear
+    color: $link
+    text-decoration: none
+    &:visited
+        color: $link-visited
+    &:hover
+        color: $link-hover
+        text-decoration: underline
 
 .tsw-inactive
-  color: $inactive
+    color: $inactive
 
 .tsw-invisible
-  visibility: hidden
+    visibility: hidden
 
 .unclickable-icon
-  cursor: default
+    cursor: default
 
 a.disabled
-  color: $inactive
-  cursor: default
+    color: $inactive
+    cursor: default
+
+.tsw-loading
+    color: $inactive
+    circle
+        stroke: $inactive
+
+@media (max-width: 400px)
+    .mat-list-base.compactable-list
+        .mat-list-item, .mat-list-option
+            .mat-list-item-content
+                padding-left: 0
+                padding-right: 0 !important
 
 @media (max-height: 600px)
     .mat-dialog-container
@@ -58,47 +70,47 @@ $cyan: #2aa198
 $green: #859900
 
 @mixin rebase($rebase03, $rebase02, $rebase01, $rebase00, $rebase0, $rebase1, $rebase2, $rebase3)
-  background-color: $rebase03
-  color: $rebase0
-  h1, h2, h3, h4, h5, h6
-    color: $rebase1
-    border-color: $rebase0
-  a, a:active, a:visited
-    color: $rebase1
-  .mat-flat-button, .mat-raised-button, .mat-fab, .mat-mini-fab
-    background-color: $rebase02
-    &.mat-primary
-      color: $blue
-    &.mat-warn
-      color: $orange
-    &.mat-accent
-      color: $cyan
-    &.mat-button-disabled
-      color: $rebase00
+    background-color: $rebase03
+    color: $rebase0
+    h1, h2, h3, h4, h5, h6
+        color: $rebase1
+        border-color: $rebase0
+    a, a:active, a:visited
+        color: $rebase1
+    .mat-flat-button, .mat-raised-button, .mat-fab, .mat-mini-fab
+        background-color: $rebase02
+        &.mat-primary
+            color: $blue
+        &.mat-warn
+            color: $orange
+        &.mat-accent
+            color: $cyan
+        &.mat-button-disabled
+            color: $rebase00
 
 @mixin accentize($accent, $link-hover)
-  a, a:active, a:visited, code.url
-    color: $accent
-  a:hover
-    color: $link-hover
-  h1, h2, h3, h4, h5, h6
-    color: $accent
+    a, a:active, a:visited, code.url
+        color: $accent
+    a:hover
+        color: $link-hover
+    h1, h2, h3, h4, h5, h6
+        color: $accent
 
 .solarized
-  &, &.light
-    @include rebase($base3, $base2, $base1, $base0, $base00, $base01, $base02, $base03)
-  &.dark
-    @include rebase($base03, $base02, $base01, $base00, $base0, $base1, $base2, $base3)
-  @include accentize($blue, $violet)
-  .blue
-    color: $blue
-  .cyan
-    color: $cyan
-  .red
-    color: $red
-  .green
-    color: $green
-  .orange
-    color: $orange
-  .yellow
-    color: $yellow
+    &, &.light
+        @include rebase($base3, $base2, $base1, $base0, $base00, $base01, $base02, $base03)
+    &.dark
+        @include rebase($base03, $base02, $base01, $base00, $base0, $base1, $base2, $base3)
+    @include accentize($blue, $violet)
+    .blue
+        color: $blue
+    .cyan
+        color: $cyan
+    .red
+        color: $red
+    .green
+        color: $green
+    .orange
+        color: $orange
+    .yellow
+        color: $yellow

@@ -259,6 +259,7 @@
                 "AUTOMATICALLY_FORWARD_PORT_PROMPT": "The instance is at the automatically forward port prompt.",
                 "PASSWORD_PROMPT": "The instance is at the password prompt.",
                 "RUNNING": "The instance is running and connecting to it should be possible.",
+                "PORT_CONFLICT": "The has been started as a server but there was already another server running on the same port!",
                 "INVALID": "The instance has been marked as invalid!",
                 "BROKEN": "The instance is broken! Its actual state is unknown."
             }

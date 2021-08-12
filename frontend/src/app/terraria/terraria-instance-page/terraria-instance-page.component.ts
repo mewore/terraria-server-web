@@ -61,12 +61,12 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         },
         {
             action: 'SHUT_DOWN',
-            isDisplayed: () => !!this.instance && this.terarriaInstanceService.isRunning(this.instance),
+            isDisplayed: () => !!this.instance && this.terrariaInstanceService.isActive(this.instance),
             onClick: () => this.shutDown(),
         },
         {
             action: 'TERMINATE',
-            isDisplayed: () => !!this.instance && this.terarriaInstanceService.isRunning(this.instance),
+            isDisplayed: () => !!this.instance && this.terrariaInstanceService.isActive(this.instance),
             onClick: () => this.terminate(),
             isWarn: true,
         },
@@ -77,7 +77,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         },
         {
             action: 'DELETE',
-            isDisplayed: () => this.terarriaInstanceService.canDelete(this.instance),
+            isDisplayed: () => this.terrariaInstanceService.canDelete(this.instance),
             onClick: () => this.deleteInstance(),
             isWarn: true,
         },
@@ -125,7 +125,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         private readonly runServerDialogService: RunServerDialogService,
         private readonly setInstanceModsDialogService: SetInstanceModsDialogService,
         private readonly simpleDialogService: SimpleDialogService,
-        private readonly terarriaInstanceService: TerrariaInstanceService,
+        private readonly terrariaInstanceService: TerrariaInstanceService,
         private readonly messageService: MessageService
     ) {}
 
@@ -164,6 +164,14 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         this.instanceMessageSubscription?.unsubscribe();
         this.instanceDeletionSubscription?.unsubscribe();
         this.instanceEventMessageSubscription?.unsubscribe();
+    }
+
+    get statusLabel(): string {
+        return this.terrariaInstanceService.getStatusLabel(this.instance, this.deleted);
+    }
+
+    get badState(): boolean {
+        return this.terrariaInstanceService.isStateBad(this.instance, this.deleted);
     }
 
     get hasAction(): boolean {
@@ -253,7 +261,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     }
 
     deleteInstance(): void {
-        this.doWhileLoading(() => this.terarriaInstanceService.delete(this.instance));
+        this.doWhileLoading(() => this.terrariaInstanceService.delete(this.instance));
     }
 
     private updateInstance(instanceMessage: TerrariaInstanceMessage): void {

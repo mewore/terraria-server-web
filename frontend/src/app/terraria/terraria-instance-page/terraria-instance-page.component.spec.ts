@@ -106,7 +106,14 @@ describe('TerrariaInstancePageComponent', () => {
         runServerDialogService = TestBed.inject(RunServerDialogService);
         setInstanceModsDialogService = TestBed.inject(SetInstanceModsDialogService);
         simpleDialogService = TestBed.inject(SimpleDialogService);
+
         terrariaInstanceService = TestBed.inject(TerrariaInstanceService);
+        spyOn(terrariaInstanceService, 'getStatusLabel').and.callFake(
+            (instanceForStatus, deleted) =>
+                `[Instance status: ${instanceForStatus?.state} | ${deleted ? 'deleted' : 'not deleted'}]`
+        );
+        spyOn(terrariaInstanceService, 'isStateBad').and.returnValue(false);
+
         messageService = TestBed.inject(MessageService);
 
         instanceEvents = [];
@@ -218,6 +225,10 @@ describe('TerrariaInstancePageComponent', () => {
     describe('when there is minimal data', () => {
         beforeEach(initializeWithRoute);
 
+        it('should have the correct info text', () => {
+            expect(getInstanceInfoText()).toBe('[Instance status: DEFINED | not deleted]');
+        });
+
         describe('when there is an instance change message', () => {
             beforeEach(fakeAsync(() => {
                 instanceMessageSubject.next({
@@ -235,6 +246,10 @@ describe('TerrariaInstancePageComponent', () => {
                 expect(component.instance?.pendingAction).toBe('RUN_SERVER');
                 expect(component.instance?.options).toEqual({ 1: 'option' });
             });
+
+            it('should update the info text', () => {
+                expect(getInstanceInfoText()).toBe('[Instance status: BOOTING_UP | not deleted]');
+            });
         });
 
         describe('when there is an instance deletion message', () => {
@@ -249,7 +264,7 @@ describe('TerrariaInstancePageComponent', () => {
             });
 
             it('should update the instance info text', () => {
-                expect(getInstanceInfoText()).toBe('The instance has been deleted.');
+                expect(getInstanceInfoText()).toBe('[Instance status: undefined | deleted]');
             });
         });
 
@@ -420,7 +435,7 @@ describe('TerrariaInstancePageComponent', () => {
                 '',
                 '',
                 'Application stopped.',
-                'The instance has been defined.',
+                '[Instance status: DEFINED | not deleted]',
                 'Delete',
             ]);
         });
@@ -473,41 +488,6 @@ describe('TerrariaInstancePageComponent', () => {
         });
     });
 
-    describe('when the action of the instance changes', () => {
-        beforeEach(() => {
-            initializeWithRoute();
-        });
-
-        it('its text should change too', () => {
-            const infoTextWithoutAction = 'The instance has been defined.';
-            for (const action of [
-                'DELETE',
-                'GO_TO_MOD_MENU',
-                'RUN_SERVER',
-                'SET_LOADED_MODS',
-                'SET_UP',
-                'SHUT_DOWN',
-                'SHUT_DOWN_NO_SAVE',
-                'TERMINATE',
-            ] as TerrariaInstanceAction[]) {
-                instance.pendingAction = action;
-                fixture.detectChanges();
-                const infoTextWithPendingAction = getInstanceInfoText();
-                expect(infoTextWithPendingAction).not.toBe(infoTextWithoutAction);
-
-                instance.pendingAction = undefined;
-                instance.currentAction = action;
-                fixture.detectChanges();
-                expect(getInstanceInfoText()).not.toBe(infoTextWithoutAction);
-                expect(getInstanceInfoText()).not.toBe(infoTextWithPendingAction);
-
-                instance.currentAction = undefined;
-                fixture.detectChanges();
-                expect(getInstanceInfoText()).toBe(infoTextWithoutAction);
-            }
-        });
-    });
-
     describe('while the component is loading', () => {
         beforeEach(fakeAsync(() => {
             component.loading = true;
@@ -532,10 +512,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'DEFINED';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance has been defined.');
         });
 
         it('should have the correct buttons', () => {
@@ -584,10 +560,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance has passed validation.');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Delete']);
         });
@@ -599,10 +571,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance has been marked as invalid!');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Delete']);
         });
@@ -612,10 +580,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'BROKEN';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is broken! Its actual state is unknown.');
         });
 
         it('should have the correct buttons', () => {
@@ -648,10 +612,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is ready to be started.');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Boot up', 'Delete']);
         });
@@ -680,10 +640,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'BOOTING_UP';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is booting up.');
         });
 
         it('should have the correct buttons', () => {
@@ -751,10 +707,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'WORLD_MENU';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the World menu.');
         });
 
         it('should have the correct buttons', () => {
@@ -869,10 +821,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the Mods menu.');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Set the enabled mods', 'Shut down', 'Terminate']);
         });
@@ -932,12 +880,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe(
-                'The instance is changing the state of a mod and waiting for the Mods menu to refresh.'
-            );
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
         });
@@ -947,10 +889,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'MOD_BROWSER';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the Mod Browser menu.');
         });
 
         it('should have the correct buttons', () => {
@@ -964,10 +902,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the max players prompt.');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
         });
@@ -977,10 +911,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'PORT_PROMPT';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the port prompt.');
         });
 
         it('should have the correct buttons', () => {
@@ -994,10 +924,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the automatically forward port prompt.');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
         });
@@ -1009,10 +935,6 @@ describe('TerrariaInstancePageComponent', () => {
             initializeWithRoute();
         });
 
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is at the password prompt.');
-        });
-
         it('should have the correct buttons', () => {
             expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
         });
@@ -1022,10 +944,6 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instance.state = 'RUNNING';
             initializeWithRoute();
-        });
-
-        it('should have the correct info text', () => {
-            expect(getInstanceInfoText()).toBe('The instance is running and connecting to it should be possible.');
         });
 
         it('should have the correct buttons', () => {

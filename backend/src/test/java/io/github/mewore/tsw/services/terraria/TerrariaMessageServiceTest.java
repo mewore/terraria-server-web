@@ -68,6 +68,10 @@ class TerrariaMessageServiceTest {
         terrariaMessageService.broadcastInstanceChange(instance);
         verify(brokerMessagingTemplate).convertAndSend(eq("/topic/instances/8"), instanceMessageCaptor.capture());
         final TerrariaInstanceMessage sentMessage = instanceMessageCaptor.getValue();
+        assertSame(instance.getTerrariaVersion(), sentMessage.getTerrariaVersion());
+        assertSame(instance.getModLoaderVersion(), sentMessage.getModLoaderVersion());
+        assertSame(instance.getModLoaderReleaseUrl(), sentMessage.getModLoaderReleaseUrl());
+        assertSame(instance.getModLoaderArchiveUrl(), sentMessage.getModLoaderArchiveUrl());
         assertSame(instance.getState(), sentMessage.getState());
         assertSame(instance.getCurrentAction(), sentMessage.getCurrentAction());
         assertSame(instance.getPendingAction(), sentMessage.getPendingAction());

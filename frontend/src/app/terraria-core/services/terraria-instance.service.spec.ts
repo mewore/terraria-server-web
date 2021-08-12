@@ -7,7 +7,12 @@ import { RestApiServiceStub } from 'src/app/core/services/rest-api.service.stub'
 import { SimpleDialogInput } from 'src/app/core/simple-dialog/simple-dialog.component';
 import { SimpleDialogService } from 'src/app/core/simple-dialog/simple-dialog.service';
 import { SimpleDialogServiceStub } from 'src/app/core/simple-dialog/simple-dialog.service.stub';
-import { TerrariaInstanceEntity, TerrariaInstanceUpdateModel } from 'src/generated/backend';
+import {
+    TerrariaInstanceAction,
+    TerrariaInstanceEntity,
+    TerrariaInstanceState,
+    TerrariaInstanceUpdateModel,
+} from 'src/generated/backend';
 import { EnUsTranslateServiceStub } from 'src/stubs/translate.service.stub';
 import { TerrariaInstanceService, TerrariaInstanceServiceImpl } from './terraria-instance.service';
 
@@ -25,10 +30,11 @@ describe('TerrariaInstanceService', () => {
             providers: [
                 { provide: SimpleDialogService, useClass: SimpleDialogServiceStub },
                 { provide: RestApiService, useClass: RestApiServiceStub },
+                { provide: TranslateService, useClass: EnUsTranslateServiceStub },
                 { provide: ErrorService, useClass: ErrorServiceStub },
             ],
         });
-        translateService = new EnUsTranslateServiceStub().masked();
+        translateService = TestBed.inject(TranslateService);
 
         restApiService = TestBed.inject(RestApiService);
         simpleDialogService = TestBed.inject(SimpleDialogService);
@@ -43,11 +49,11 @@ describe('TerrariaInstanceService', () => {
 
     describe('isRunning', () => {
         it('should return true for running instances', () => {
-            expect(service.isRunning({ state: 'RUNNING' } as TerrariaInstanceEntity)).toBeTrue();
+            expect(service.isActive({ state: 'RUNNING' } as TerrariaInstanceEntity)).toBeTrue();
         });
 
         it('should return false for idle instances', () => {
-            expect(service.isRunning({ state: 'IDLE' } as TerrariaInstanceEntity)).toBeFalse();
+            expect(service.isActive({ state: 'IDLE' } as TerrariaInstanceEntity)).toBeFalse();
         });
     });
 
@@ -157,6 +163,138 @@ describe('TerrariaInstanceService', () => {
 
             it('should return undefined', () => {
                 expect(result).toBeUndefined();
+            });
+        });
+    });
+
+    describe('the instance status label', () => {
+        const ALL_ACTIONS: ReadonlyArray<TerrariaInstanceAction> = [
+            'BOOT_UP',
+            'DELETE',
+            'GO_TO_MOD_MENU',
+            'RECREATE',
+            'RUN_SERVER',
+            'SET_LOADED_MODS',
+            'SET_UP',
+            'SHUT_DOWN',
+            'SHUT_DOWN_NO_SAVE',
+            'TERMINATE',
+        ];
+
+        const ALL_STATES: ReadonlyArray<TerrariaInstanceState> = [
+            'AUTOMATICALLY_FORWARD_PORT_PROMPT',
+            'BOOTING_UP',
+            'BROKEN',
+            'CHANGING_MOD_STATE',
+            'DEFINED',
+            'IDLE',
+            'INVALID',
+            'MAX_PLAYERS_PROMPT',
+            'MOD_BROWSER',
+            'MOD_MENU',
+            'PASSWORD_PROMPT',
+            'PORT_CONFLICT',
+            'PORT_PROMPT',
+            'RUNNING',
+            'VALID',
+            'WORLD_MENU',
+        ];
+
+        describe('when the instance is deleted', () => {
+            describe('when the instance is undefined', () => {
+                it('should be correct', () => {
+                    expect(service.getStatusLabel(undefined, true)).toBe('The instance has been deleted.');
+                });
+            });
+        });
+
+        describe('when the instance is undefined but not deleted', () => {
+            it('should be an empty string', () => {
+                expect(service.getStatusLabel(undefined, false)).toBe('');
+            });
+        });
+
+        describe('when the instance has a current action', () => {
+            it('should be regarding its current action', () => {
+                expect(
+                    service.getStatusLabel(
+                        { state: 'IDLE', currentAction: 'BOOT_UP', pendingAction: 'DELETE' } as TerrariaInstanceEntity,
+                        false
+                    )
+                ).toBe('Booting the instance up...');
+            });
+        });
+
+        describe('when the instance has any current action', () => {
+            it('should have a proper translation', () => {
+                for (const currentAction of ALL_ACTIONS) {
+                    const instance = {
+                        state: 'IDLE',
+                        currentAction,
+                        pendingAction: 'DELETE',
+                    } as TerrariaInstanceEntity;
+                    expect(() => service.getStatusLabel(instance, false)).not.toThrow();
+                }
+            });
+        });
+
+        describe('when the instance has a pending action and no current action', () => {
+            it('should be regarding its pending action', () => {
+                expect(
+                    service.getStatusLabel({ state: 'IDLE', pendingAction: 'DELETE' } as TerrariaInstanceEntity, false)
+                ).toBe('Will delete the instance completely...');
+            });
+        });
+
+        describe('when the instance has any pending action and no current action', () => {
+            it('should have a proper translation', () => {
+                for (const pendingAction of ALL_ACTIONS) {
+                    const instance = { state: 'IDLE', pendingAction } as TerrariaInstanceEntity;
+                    expect(() => service.getStatusLabel(instance, false)).not.toThrow();
+                }
+            });
+        });
+
+        describe('when the instance has no action', () => {
+            it('should be regarding its state', () => {
+                expect(service.getStatusLabel({ state: 'IDLE' } as TerrariaInstanceEntity, false)).toBe(
+                    'The instance is ready to be started.'
+                );
+            });
+        });
+
+        describe('when the instance any state and no action', () => {
+            it('should have a proper translation', () => {
+                for (const state of ALL_STATES) {
+                    const instance = { state } as TerrariaInstanceEntity;
+                    expect(() => service.getStatusLabel(instance, false)).not.toThrow();
+                }
+            });
+        });
+    });
+
+    describe('isStateBad', () => {
+        describe('when the instance is deleted', () => {
+            it('should return true', () => {
+                expect(service.isStateBad({} as TerrariaInstanceEntity, true)).toBeTrue();
+            });
+        });
+
+        describe('when the instance is undefined', () => {
+            it('should return true', () => {
+                expect(service.isStateBad(undefined, false)).toBeTrue();
+            });
+        });
+
+        describe('when the instance is broken', () => {
+            it('should return true', () => {
+                expect(service.isStateBad({ state: 'BROKEN' } as TerrariaInstanceEntity, false)).toBeTrue();
+            });
+        });
+
+        describe('when the instance is idle', () => {
+            it('should return false', () => {
+                expect(service.isStateBad({ state: 'IDLE' } as TerrariaInstanceEntity, false)).toBeFalse();
             });
         });
     });

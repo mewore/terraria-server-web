@@ -1,14 +1,14 @@
-<mat-list class="tsw-host-info">
+<mat-list class="tsw-host-info compactable-list">
     <div mat-subheader>{{ 'host-info-page.host' | translate }}</div>
     <tsw-host-list-item [host]="host"></tsw-host-list-item>
 </mat-list>
 <div *ngIf="loaded; else loadingSpinner" class="tsw-sublist-container">
-    <mat-list>
+    <mat-list class="compactable-list">
         <mat-divider></mat-divider>
         <div mat-subheader>{{ 'host-info-page.worlds' | translate }}</div>
         <tsw-terraria-world-list-item *ngFor="let world of worlds" [world]="world"></tsw-terraria-world-list-item>
     </mat-list>
-    <mat-list>
+    <mat-list class="compactable-list">
         <mat-divider></mat-divider>
         <div mat-subheader>{{ 'host-info-page.instances' | translate }}</div>
         <tsw-terraria-instance-list-item
