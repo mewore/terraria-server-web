@@ -18,8 +18,8 @@ pipeline {
     stages {
         stage('Prepare') {
             when {
-                not {
-                    fileExists("${DOWNLOADED_JAR_NAME}")
+                expression {
+                    return !fileExists("${DOWNLOADED_JAR_NAME}");
                 }
             }
             steps {
