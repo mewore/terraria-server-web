@@ -25,10 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class TerrariaInstanceEventServiceTest {
+class TerrariaInstanceSubscriptionServiceTest {
 
     @InjectMocks
-    private TerrariaInstanceEventService terrariaInstanceEventService;
+    private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     @Mock
     private TerrariaInstanceRepository terrariaInstanceRepository;
@@ -120,7 +120,7 @@ class TerrariaInstanceEventServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         final FakeSubscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(instance);
 
-        terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
+        terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
                 TerrariaInstanceState.IDLE);
         assertEquals(Duration.ofMinutes(1), subscription.getLastTimeout());
     }
@@ -131,8 +131,8 @@ class TerrariaInstanceEventServiceTest {
         final FakeSubscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(instance);
 
         final Exception exception = assertThrows(IllegalStateException.class,
-                () -> terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
-                        TerrariaInstanceState.WORLD_MENU, TerrariaInstanceState.BOOTING_UP));
+                () -> terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription,
+                        Duration.ofMinutes(1), TerrariaInstanceState.WORLD_MENU, TerrariaInstanceState.BOOTING_UP));
         assertEquals("The instance " + TerrariaInstanceFactory.INSTANCE_UUID +
                 " did not reach the state(s) WORLD_MENU/BOOTING_UP " +
                 "within a timeout of PT1M; instead, its state is IDLE.", exception.getMessage());
@@ -140,10 +140,10 @@ class TerrariaInstanceEventServiceTest {
 
     @SuppressWarnings("deprecation")
     private void emitInstance(final TerrariaInstanceEntity instance) {
-        terrariaInstanceEventService.onApplicationEvent(new TerrariaInstanceUpdatedEvent(instance));
+        terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceUpdatedEvent(instance));
     }
 
     private Subscription<TerrariaInstanceEntity> subscribe(final long id) {
-        return terrariaInstanceEventService.subscribe(makeInstanceWithId(id));
+        return terrariaInstanceSubscriptionService.subscribe(makeInstanceWithId(id));
     }
 }

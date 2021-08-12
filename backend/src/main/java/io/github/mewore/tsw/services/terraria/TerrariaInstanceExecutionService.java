@@ -49,7 +49,7 @@ public class TerrariaInstanceExecutionService {
 
     private final TerrariaInstanceService terrariaInstanceService;
 
-    private final TerrariaInstanceEventService terrariaInstanceEventService;
+    private final TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     private final FileDataRepository fileDataRepository;
 
@@ -74,15 +74,15 @@ public class TerrariaInstanceExecutionService {
 
         terrariaInstanceService.ensureInstanceHasNoOutputFile(instance);
 
-        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceEventService.subscribe(
+        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceSubscriptionService.subscribe(
                 instance)) {
             instance.setNextOutputBytePosition(0L);
             instance = terrariaInstanceService.saveInstance(instance);
             terrariaInstanceOutputService.trackInstance(instance);
             tmuxService.dispatch(instance.getUuid().toString(), instance.getModLoaderServerFile(),
                     instance.getOutputFile());
-            return terrariaInstanceEventService.waitForInstanceState(instance, subscription, INSTANCE_BOOT_TIMEOUT,
-                    TerrariaInstanceState.WORLD_MENU);
+            return terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription,
+                    INSTANCE_BOOT_TIMEOUT, TerrariaInstanceState.WORLD_MENU);
         }
     }
 
@@ -246,11 +246,11 @@ public class TerrariaInstanceExecutionService {
         }
 
         terrariaInstanceOutputService.getInstanceOutputTail(instance).stopReadingFile();
-        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceEventService.subscribe(
+        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceSubscriptionService.subscribe(
                 instance)) {
             tmuxService.kill(instance.getUuid().toString());
-            instance = terrariaInstanceEventService.waitForInstanceState(instance, subscription, INSTANCE_EXIT_TIMEOUT,
-                    TerrariaInstanceState.IDLE);
+            instance = terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription,
+                    INSTANCE_EXIT_TIMEOUT, TerrariaInstanceState.IDLE);
         } finally {
             terrariaInstanceOutputService.stopTrackingInstance(instance);
         }

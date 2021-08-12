@@ -37,7 +37,7 @@ import lombok.Synchronized;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Service
-public class TerrariaInstanceEventService implements ApplicationListener<TerrariaInstanceUpdatedEvent> {
+public class TerrariaInstanceSubscriptionService implements ApplicationListener<TerrariaInstanceUpdatedEvent> {
 
     private final Map<Long, List<QueueSubscription<TerrariaInstanceEntity>>> instanceSubscriptionMap = new HashMap<>();
 

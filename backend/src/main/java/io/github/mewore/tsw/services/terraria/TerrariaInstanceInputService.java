@@ -23,7 +23,7 @@ public class TerrariaInstanceInputService {
 
     private final TerrariaInstanceService terrariaInstanceService;
 
-    private final TerrariaInstanceEventService terrariaInstanceEventService;
+    private final TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     private final TmuxService tmuxService;
 
@@ -56,14 +56,14 @@ public class TerrariaInstanceInputService {
                 .build();
 
         terrariaInstanceService.saveEvent(instanceEvent);
-        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceEventService.subscribe(
+        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceSubscriptionService.subscribe(
                 instance)) {
             if (input.equals(CTRL_C)) {
                 tmuxService.sendCtrlC(instance.getUuid().toString());
             } else {
                 tmuxService.sendInput(instance.getUuid().toString(), fullInput);
             }
-            return terrariaInstanceEventService.waitForInstanceState(instance, subscription, timeout,
+            return terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription, timeout,
                     expectedResultingStates);
         }
     }

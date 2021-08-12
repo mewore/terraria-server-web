@@ -60,7 +60,7 @@ class TerrariaInstanceExecutionServiceTest {
     private TerrariaInstanceService terrariaInstanceService;
 
     @Mock
-    private TerrariaInstanceEventService terrariaInstanceEventService;
+    private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     @Mock
     private FileDataRepository fileDataRepository;
@@ -113,9 +113,9 @@ class TerrariaInstanceExecutionServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         instance.setNextOutputBytePosition(10L);
         final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
-        when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
+        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
         when(terrariaInstanceService.saveInstance(instance)).thenAnswer(invocation -> invocation.getArgument(0));
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
+        when(terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
                 TerrariaInstanceState.WORLD_MENU)).thenReturn(instance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.bootUpInstance(instance);
@@ -470,10 +470,10 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(tail);
 
         final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
-        when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
+        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofSeconds(30),
+        when(terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription, Duration.ofSeconds(30),
                 TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.terminateInstance(instance);
@@ -494,10 +494,10 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(mock(FileTail.class));
 
         final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
-        when(terrariaInstanceEventService.subscribe(instance)).thenReturn(subscription);
+        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceEventService.waitForInstanceState(instance, subscription, Duration.ofSeconds(30),
+        when(terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription, Duration.ofSeconds(30),
                 TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
         terrariaInstanceExecutionService.terminateInstance(instance);

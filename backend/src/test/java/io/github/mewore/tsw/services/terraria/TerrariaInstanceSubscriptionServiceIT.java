@@ -15,19 +15,19 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 @SpringBootTest
-class TerrariaInstanceEventServiceIT {
+class TerrariaInstanceSubscriptionServiceIT {
 
     private static final long INSTANCE_ID = 1;
 
     @Autowired
-    private TerrariaInstanceEventService terrariaInstanceEventService;
+    private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
     @Test
     void test() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceEventService.subscribe(
+        try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceSubscriptionService.subscribe(
                 TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID))) {
             final TerrariaInstanceEntity instance = TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID);
             eventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(instance));
