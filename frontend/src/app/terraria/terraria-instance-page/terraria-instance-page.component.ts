@@ -21,6 +21,7 @@ import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.s
 import { SetInstanceModsDialogService } from '../set-instance-mods-dialog/set-instance-mods-dialog.service';
 
 interface LogPart {
+    id: number;
     className: string;
     text: string;
 }
@@ -93,9 +94,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
 
     instance?: TerrariaInstanceEntity;
 
-    instanceEvents?: TerrariaInstanceEventEntity[];
-
-    logParts: (LogPart | undefined)[] = [];
+    logParts: LogPart[] = [];
 
     instanceId = 0;
 
@@ -275,14 +274,19 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
     }
 
     private addInstanceEvent(eventMessage: TerrariaInstanceEventMessage): void {
-        const event: TerrariaInstanceEventEntity = {
+        const logPart = this.eventToLogPart({
             timestamp: '',
             ...eventMessage,
-        };
-        this.instanceEvents?.push(event);
-        const logPart = this.eventToLogPart(event);
+        });
         if (logPart) {
             this.logParts.push(logPart);
+            // Normally, event messages come in the correct order, but that's not always the case
+            let index = this.logParts.length - 1;
+            while (index > 0 && this.logParts[index - 1].id > logPart.id) {
+                this.logParts[index] = this.logParts[index - 1];
+                index--;
+            }
+            this.logParts[index] = logPart;
             this.scrollToBottom();
         }
     }
@@ -297,8 +301,9 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         this.host = host;
         this.otherInstances = instances.filter((instance) => instance.id !== instanceId);
         this.instance = instanceDetails.instance;
-        this.instanceEvents = instanceDetails.events;
-        this.logParts = instanceDetails.events.map((event) => this.eventToLogPart(event)).filter((part) => !!part);
+        this.logParts = instanceDetails.events
+            .map((event) => this.eventToLogPart(event))
+            .filter((part): part is LogPart => !!part);
         this.scrollToBottom();
         return instanceDetails.instance;
     }
@@ -312,24 +317,28 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         switch (event.type) {
             case 'APPLICATION_START': {
                 return {
+                    id: event.id,
                     className: 'application-start green',
                     text: this.translateService.instant('terraria.instance.events.' + event.type),
                 };
             }
             case 'APPLICATION_END': {
                 return {
+                    id: event.id,
                     className: 'application-end yellow',
                     text: this.translateService.instant('terraria.instance.events.' + event.type),
                 };
             }
             case 'OUTPUT': {
                 return {
+                    id: event.id,
                     className: 'preformatted',
                     text: event.text,
                 };
             }
             case 'IMPORTANT_OUTPUT': {
                 return {
+                    id: event.id,
                     className: 'important preformatted',
                     text: event.text,
                 };
@@ -338,6 +347,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
             case 'TSW_INTERRUPTED':
             case 'INVALID_INSTANCE': {
                 return {
+                    id: event.id,
                     className: 'error orange',
                     text: this.translateService.instant('terraria.instance.events.' + event.type, {
                         error: event.text,
@@ -346,6 +356,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
             }
             case 'INPUT': {
                 return {
+                    id: event.id,
                     className: 'input preformatted cyan',
                     text: event.text,
                 };

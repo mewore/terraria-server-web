@@ -32,7 +32,6 @@ import lombok.Setter;
 @Immutable
 public class TerrariaInstanceEventEntity {
 
-    @JsonIgnore
     @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue

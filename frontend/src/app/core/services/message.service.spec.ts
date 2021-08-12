@@ -182,6 +182,7 @@ describe('MessageService', () => {
         let watchSpy: jasmine.Spy<(destinationOrOptions: string | IWatchParams, headers?: any) => Subject<IMessage>>;
         let result: TerrariaInstanceEventMessage;
         const sentMessage: TerrariaInstanceEventMessage = {
+            id: 1,
             text: 'text',
             type: 'OUTPUT',
         };

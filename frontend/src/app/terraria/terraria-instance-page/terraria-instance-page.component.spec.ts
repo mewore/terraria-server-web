@@ -21,7 +21,6 @@ import { TerrariaInstanceService } from 'src/app/terraria-core/services/terraria
 import { TerrariaInstanceServiceStub } from 'src/app/terraria-core/services/terraria-instance.service.stub';
 import {
     HostEntity,
-    TerrariaInstanceAction,
     TerrariaInstanceDetailsViewModel,
     TerrariaInstanceEntity,
     TerrariaInstanceEventEntity,
@@ -293,6 +292,7 @@ describe('TerrariaInstancePageComponent', () => {
         describe('when there is an instance event message', () => {
             beforeEach(fakeAsync(() => {
                 eventMessageSubject.next({
+                    id: 8,
                     text: 'new output\n',
                     type: 'OUTPUT',
                 });
@@ -300,39 +300,34 @@ describe('TerrariaInstancePageComponent', () => {
             }));
 
             it('should update the event array', () => {
-                expect(component.instanceEvents).toEqual([
-                    {
-                        text: 'new output\n',
-                        type: 'OUTPUT',
-                        timestamp: '',
-                    },
-                ]);
                 expect(component.logParts).toEqual([
                     {
+                        id: 8,
                         text: 'new output\n',
                         className: 'preformatted',
                     },
                 ]);
             });
-        });
 
-        describe('when the instanceEvents property is not defined', () => {
-            beforeEach(() => {
-                component.instanceEvents = undefined;
-            });
-
-            describe('when there is an instance event message', () => {
+            describe('when there is another instance event message with a lower ID', () => {
                 beforeEach(fakeAsync(() => {
                     eventMessageSubject.next({
-                        text: 'new output\n',
+                        id: 1,
+                        text: 'old output\n',
                         type: 'OUTPUT',
                     });
                     tick(1000);
                 }));
 
-                it('should update only the log part array', () => {
+                it('should keep the event array sorted properly', () => {
                     expect(component.logParts).toEqual([
                         {
+                            id: 1,
+                            text: 'old output\n',
+                            className: 'preformatted',
+                        },
+                        {
+                            id: 8,
                             text: 'new output\n',
                             className: 'preformatted',
                         },
@@ -344,20 +339,14 @@ describe('TerrariaInstancePageComponent', () => {
         describe('when there is an instance event message with an unknown type', () => {
             beforeEach(fakeAsync(() => {
                 eventMessageSubject.next({
+                    id: 8,
                     text: 'new output\n',
                     type: 'INVALID_TYPE' as TerrariaInstanceEventType,
                 });
                 tick(1000);
             }));
 
-            it('should not update only the event array', () => {
-                expect(component.instanceEvents).toEqual([
-                    {
-                        text: 'new output\n',
-                        type: 'INVALID_TYPE' as TerrariaInstanceEventType,
-                        timestamp: '',
-                    },
-                ]);
+            it('should ad the event to the log parts', () => {
                 expect(component.logParts).toEqual([]);
             });
         });

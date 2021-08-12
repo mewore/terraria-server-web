@@ -11,11 +11,13 @@ import lombok.NonNull;
 @MessageModel
 public class TerrariaInstanceEventMessage {
 
+    private final long id;
+
     private final @NonNull TerrariaInstanceEventType type;
 
     private final @NonNull String text;
 
     public TerrariaInstanceEventMessage(final TerrariaInstanceEventEntity event) {
-        this(event.getType(), event.getText());
+        this(event.getId(), event.getType(), event.getText());
     }
 }
