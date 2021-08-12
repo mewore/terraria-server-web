@@ -2,7 +2,6 @@ package io.github.mewore.tsw.services.terraria;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.github.mewore.tsw.events.FakeSubscription;
 import io.github.mewore.tsw.exceptions.InvalidInstanceException;
 import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
@@ -29,6 +29,7 @@ import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
 
+import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -46,6 +47,8 @@ import static org.mockito.Mockito.when;
 class TerrariaInstanceActionServiceTest {
 
     private static final UUID HOST_UUID = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e505");
+
+    private static final UUID OTHER_HOST_UUID = UUID.fromString("e0f245dc-e6e4-4f8a-982b-004cbb04e666");
 
     @InjectMocks
     private TerrariaInstanceActionService terrariaInstanceActionService;
@@ -66,19 +69,16 @@ class TerrariaInstanceActionServiceTest {
     private TerrariaInstanceOutputService terrariaInstanceOutputService;
 
     @Mock
+    private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
+
+    @Mock
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
     @Mock
     private AsyncService asyncService;
 
     @Captor
-    private ArgumentCaptor<Duration> delayCaptor;
-
-    @Captor
-    private ArgumentCaptor<Duration> periodCaptor;
-
-    @Captor
-    private ArgumentCaptor<Runnable> checkInstancesCaptor;
+    private ArgumentCaptor<AsyncService.InterruptableRunnable> checkInstancesCaptor;
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceEntity> instanceCaptor;
@@ -88,6 +88,7 @@ class TerrariaInstanceActionServiceTest {
 
     private static TerrariaInstanceEntity.TerrariaInstanceEntityBuilder makeInstance() {
         return TerrariaInstanceFactory.makeInstanceBuilder()
+                .host(makeHostBuilder().uuid(HOST_UUID).build())
                 .state(TerrariaInstanceState.DEFINED)
                 .error("previous error");
     }
@@ -110,13 +111,67 @@ class TerrariaInstanceActionServiceTest {
 
         terrariaInstanceActionService.setUp();
         verify(terrariaInstanceOutputService).trackInstance(instance);
-        verify(asyncService, only()).scheduleAtFixedRate(any(), delayCaptor.capture(), periodCaptor.capture());
-        assertEquals(Duration.ZERO, delayCaptor.getValue());
-        assertEquals(Duration.ofSeconds(10), periodCaptor.getValue());
+        verify(asyncService, only()).runContinuously(any());
     }
 
     @Test
-    void testCheckInstances_setUpInstance() throws InvalidInstanceException, IOException {
+    void testCheckInstances_withSubscription() throws InvalidInstanceException, IOException, InterruptedException {
+        when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
+        final TerrariaInstanceEntity instance = makeInstance().state(TerrariaInstanceState.DEFINED)
+                .pendingAction(TerrariaInstanceAction.SET_UP)
+                .build();
+        when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
+                Optional.empty());
+
+        terrariaInstanceActionService.setUp();
+        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
+        when(terrariaInstancePreparationService.setUpInstance(instance)).thenReturn(instance);
+        when(terrariaInstanceSubscriptionService.subscribeToAll()).thenReturn(new FakeSubscription<>(instance));
+        checkInstancesCaptor.getValue().run();
+
+        verify(terrariaInstancePreparationService, only()).setUpInstance(instance);
+    }
+
+    @Test
+    void testCheckInstances_withSubscription_noAction()
+            throws InvalidInstanceException, IOException, InterruptedException {
+        when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
+        final TerrariaInstanceEntity instance = makeInstance().build();
+        when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
+                Optional.empty());
+
+        terrariaInstanceActionService.setUp();
+        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+
+        when(terrariaInstanceSubscriptionService.subscribeToAll()).thenReturn(new FakeSubscription<>(instance));
+        checkInstancesCaptor.getValue().run();
+
+        verify(terrariaInstancePreparationService, never()).setUpInstance(instance);
+    }
+
+    @Test
+    void testCheckInstances_withSubscription_otherHostUuid()
+            throws InvalidInstanceException, IOException, InterruptedException {
+        when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
+        final TerrariaInstanceEntity instance = makeInstance().pendingAction(TerrariaInstanceAction.SET_UP)
+                .host(makeHostBuilder().uuid(OTHER_HOST_UUID).build())
+                .build();
+        when(terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(HOST_UUID)).thenReturn(
+                Optional.empty());
+
+        terrariaInstanceActionService.setUp();
+        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+
+        when(terrariaInstanceSubscriptionService.subscribeToAll()).thenReturn(new FakeSubscription<>(instance));
+        checkInstancesCaptor.getValue().run();
+
+        verify(terrariaInstancePreparationService, never()).setUpInstance(instance);
+    }
+
+    @Test
+    void testCheckInstances_setUpInstance() throws InvalidInstanceException, IOException, InterruptedException {
         final TerrariaInstanceEntity instance = preparePendingAction(TerrariaInstanceState.DEFINED,
                 TerrariaInstanceAction.SET_UP);
         when(terrariaInstancePreparationService.setUpInstance(instance)).thenReturn(instance);
@@ -224,7 +279,7 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_inapplicableAction() {
+    void testCheckInstances_inapplicableAction() throws InterruptedException {
         final TerrariaInstanceEntity instance = preparePendingAction(TerrariaInstanceState.RUNNING,
                 TerrariaInstanceAction.DELETE);
 
@@ -245,7 +300,7 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_nullAction() {
+    void testCheckInstances_nullAction() throws InterruptedException {
         final HostEntity host = mock(HostEntity.class);
         when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
         final TerrariaInstanceEntity instance = makeInstance().host(host).build();
@@ -258,7 +313,8 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_InvalidInstanceException() throws InvalidInstanceException, IOException {
+    void testCheckInstances_InvalidInstanceException()
+            throws InvalidInstanceException, IOException, InterruptedException {
         when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
 
         final TerrariaInstanceEntity instance = makeInstance().pendingAction(TerrariaInstanceAction.SET_UP)
@@ -288,7 +344,8 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_IllegalArgumentException() throws InvalidInstanceException, IOException {
+    void testCheckInstances_IllegalArgumentException()
+            throws InvalidInstanceException, IOException, InterruptedException {
         when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
 
         final TerrariaInstanceEntity instance = makeInstance().pendingAction(TerrariaInstanceAction.SET_UP)
@@ -316,7 +373,7 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_IOException() throws InvalidInstanceException, IOException {
+    void testCheckInstances_IOException() throws InvalidInstanceException, IOException, InterruptedException {
         when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
 
         final TerrariaInstanceEntity instance = makeInstance().pendingAction(TerrariaInstanceAction.SET_UP)
@@ -341,7 +398,7 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_RuntimeException() throws InvalidInstanceException, IOException {
+    void testCheckInstances_RuntimeException() throws InvalidInstanceException, IOException, InterruptedException {
         when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
 
         final TerrariaInstanceEntity instance = makeInstance().pendingAction(TerrariaInstanceAction.SET_UP)
@@ -365,7 +422,8 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
-    void testCheckInstances_RuntimeException_noMessage() throws InvalidInstanceException, IOException {
+    void testCheckInstances_RuntimeException_noMessage()
+            throws InvalidInstanceException, IOException, InterruptedException {
         when(localHostService.getHostUuid()).thenReturn(HOST_UUID);
 
         final TerrariaInstanceEntity instance = makeInstance().pendingAction(TerrariaInstanceAction.SET_UP)
@@ -414,9 +472,9 @@ class TerrariaInstanceActionServiceTest {
         assertSame(TerrariaInstanceEventType.TSW_INTERRUPTED, instanceEventCaptor.getValue().getType());
     }
 
-    private void runCheckInstances() {
+    private void runCheckInstances() throws InterruptedException {
         terrariaInstanceActionService.setUp();
-        verify(asyncService, only()).scheduleAtFixedRate(checkInstancesCaptor.capture(), any(), any());
+        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
         checkInstancesCaptor.getValue().run();
     }
 }

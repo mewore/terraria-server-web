@@ -34,7 +34,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
     @Test
-    void test() throws InterruptedException {
+    void testSubscribe() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
             final TerrariaInstanceEntity instance = makeInstanceWithId(1);
             emitInstance(instance);
@@ -43,7 +43,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     }
 
     @Test
-    void test_fallback() throws InterruptedException {
+    void testSubscribe_fallback() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
             emitInstance(makeInstanceWithId(1));
             final TerrariaInstanceEntity fetchedInstance = makeInstanceWithId(1);
@@ -53,7 +53,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     }
 
     @Test
-    void test_overfilled() throws InterruptedException {
+    void testSubscribe_overfilled() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
             final TerrariaInstanceEntity fillerInstance = makeInstanceWithId(1);
             for (int i = 0; i < 10; i++) {
@@ -66,7 +66,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     }
 
     @Test
-    void test_openAndClosed() throws InterruptedException {
+    void testSubscribe_openAndClosed() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
             try (final Subscription<TerrariaInstanceEntity> closedSubscription = subscribe(1)) {
                 closedSubscription.close();
@@ -79,7 +79,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     }
 
     @Test
-    void test_closedSubscription() throws InterruptedException {
+    void testSubscribe_closedSubscription() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> closedSubscription = subscribe(1)) {
             closedSubscription.close();
             emitInstance(makeInstanceWithId(1));
@@ -88,7 +88,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     }
 
     @Test
-    void test_unrelatedSubscription() throws InterruptedException {
+    void testSubscribe_unrelatedSubscription() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> unrelatedSubscription = subscribe(2)) {
             emitInstance(makeInstanceWithId(1));
             assertNull(unrelatedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
@@ -96,7 +96,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     }
 
     @Test
-    void test_manySubscriptions() throws InterruptedException {
+    void testSubscribe_manySubscriptions() throws InterruptedException {
         try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
             try (final Subscription<TerrariaInstanceEntity> secondSubscription = subscribe(1)) {
                 try (final Subscription<TerrariaInstanceEntity> unrelatedSubscription = subscribe(2)) {
@@ -112,6 +112,26 @@ class TerrariaInstanceSubscriptionServiceTest {
                     assertNull(closedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
                 }
             }
+        }
+    }
+
+    @Test
+    void testSubscribeToAll() throws InterruptedException {
+        try (final Subscription<TerrariaInstanceEntity> subscription =
+                     terrariaInstanceSubscriptionService.subscribeToAll()) {
+            final TerrariaInstanceEntity instance = makeInstanceWithId(1);
+            emitInstance(instance);
+            assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
+        }
+    }
+
+    @Test
+    void testSubscribeToAll_failure() throws InterruptedException {
+        try (final Subscription<TerrariaInstanceEntity> subscription =
+                     terrariaInstanceSubscriptionService.subscribeToAll()) {
+            final TerrariaInstanceEntity instance = makeInstanceWithId(1);
+            emitInstance(instance);
+            assertNull(subscription.waitFor(unusedInstance -> false, Duration.ZERO));
         }
     }
 

@@ -34,4 +34,14 @@ class TerrariaInstanceSubscriptionServiceIT {
             assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
         }
     }
+
+    @Test
+    void test_generic() throws InterruptedException {
+        try (final Subscription<TerrariaInstanceEntity> subscription =
+                     terrariaInstanceSubscriptionService.subscribeToAll()) {
+            final TerrariaInstanceEntity instance = TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID);
+            eventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(instance));
+            assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
+        }
+    }
 }

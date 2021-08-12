@@ -5,12 +5,15 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.exceptions.InvalidInstanceException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
@@ -30,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class TerrariaInstanceActionService {
 
-    private static final Duration POLL_RATE = Duration.ofSeconds(10);
+    private static final Duration POLL_TIME = Duration.ofSeconds(60);
 
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -43,6 +46,8 @@ public class TerrariaInstanceActionService {
     private final @NonNull TerrariaInstanceExecutionService terrariaInstanceExecutionService;
 
     private final @NonNull TerrariaInstanceOutputService terrariaInstanceOutputService;
+
+    private final @NonNull TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     private final @NonNull TerrariaInstanceRepository terrariaInstanceRepository;
 
@@ -58,12 +63,28 @@ public class TerrariaInstanceActionService {
             }
         }
 
-        asyncService.scheduleAtFixedRate(this::checkInstances, Duration.ZERO, POLL_RATE);
+        asyncService.runContinuously(this::checkInstances);
     }
 
-    private void checkInstances() {
-        terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(localHostService.getHostUuid())
-                .ifPresent(this::updateInstance);
+    private void checkInstances() throws InterruptedException {
+        Optional.ofNullable(waitForUpdatableInstance()).ifPresent(this::updateInstance);
+    }
+
+    private @Nullable TerrariaInstanceEntity waitForUpdatableInstance() throws InterruptedException {
+        final UUID hostUuid = localHostService.getHostUuid();
+        final @Nullable TerrariaInstanceEntity initialInstance =
+                terrariaInstanceRepository.findTopByHostUuidAndPendingActionNotNull(
+                hostUuid).orElse(null);
+        if (initialInstance != null) {
+            return initialInstance;
+        }
+
+        try (final Subscription<TerrariaInstanceEntity> subscription =
+                     terrariaInstanceSubscriptionService.subscribeToAll()) {
+            return subscription.waitFor(
+                    instance -> instance.getHost().getUuid().equals(hostUuid) && instance.getPendingAction() != null,
+                    POLL_TIME);
+        }
     }
 
     private void updateInstance(TerrariaInstanceEntity instance) {

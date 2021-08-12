@@ -39,6 +39,8 @@ import lombok.Synchronized;
 @Service
 public class TerrariaInstanceSubscriptionService implements ApplicationListener<TerrariaInstanceUpdatedEvent> {
 
+    private static final Long ALL_INSTANCES_ID = -1L;
+
     private final Map<Long, List<QueueSubscription<TerrariaInstanceEntity>>> instanceSubscriptionMap = new HashMap<>();
 
     private final TerrariaInstanceRepository terrariaInstanceRepository;
@@ -58,8 +60,12 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
     @Override
     public void onApplicationEvent(final TerrariaInstanceUpdatedEvent event) {
         final TerrariaInstanceEntity instance = event.getChangedInstance();
-        final @Nullable List<QueueSubscription<TerrariaInstanceEntity>> subscriptionList = instanceSubscriptionMap.get(
-                instance.getId());
+        notifySubscriptions(instanceSubscriptionMap.get(instance.getId()), instance);
+        notifySubscriptions(instanceSubscriptionMap.get(ALL_INSTANCES_ID), instance);
+    }
+
+    private void notifySubscriptions(final @Nullable List<QueueSubscription<TerrariaInstanceEntity>> subscriptionList,
+            final TerrariaInstanceEntity instance) {
         if (subscriptionList != null) {
             for (final QueueSubscription<TerrariaInstanceEntity> subscription : subscriptionList) {
                 if (subscription.isOpen()) {
@@ -75,6 +81,20 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
                 LogManager.getLogger("Subscription:TerrariaInstance:" + instance.getUuid()),
                 () -> terrariaInstanceRepository.getOne(instance.getId()));
         instanceSubscriptionMap.compute(instance.getId(), (id, subscriptionList) -> {
+            final List<QueueSubscription<TerrariaInstanceEntity>> result =
+                    subscriptionList == null ? new ArrayList<>(1) : subscriptionList;
+            result.add(subscription);
+            return result;
+        });
+        allSubscriptions++;
+        return subscription;
+    }
+
+    @Synchronized
+    public Subscription<TerrariaInstanceEntity> subscribeToAll() {
+        final QueueSubscription<TerrariaInstanceEntity> subscription = new QueueSubscription<>(this::unsubscribe,
+                LogManager.getLogger("Subscription:TerrariaInstance:ALL"), null);
+        instanceSubscriptionMap.compute(ALL_INSTANCES_ID, (id, subscriptionList) -> {
             final List<QueueSubscription<TerrariaInstanceEntity>> result =
                     subscriptionList == null ? new ArrayList<>(1) : subscriptionList;
             result.add(subscription);
@@ -134,7 +154,7 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
         /**
          * Used as a last-ditch attempt if waiting for the value fails.
          */
-        private final Supplier<T> valueSupplier;
+        private final @Nullable Supplier<T> valueSupplier;
 
         @Getter
         private boolean open = true;
@@ -162,6 +182,9 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
                 if (predicate.test(result)) {
                     return result;
                 }
+            }
+            if (valueSupplier == null) {
+                return null;
             }
             final T result = valueSupplier.get();
             return predicate.test(result) ? result : null;
