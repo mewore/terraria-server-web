@@ -15,7 +15,6 @@ import {
     TerrariaInstanceEventEntity,
     TerrariaInstanceEventMessage,
     TerrariaInstanceMessage,
-    TerrariaInstanceState,
 } from 'src/generated/backend';
 import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.service';
 import { SetInstanceModsDialogService } from '../set-instance-mods-dialog/set-instance-mods-dialog.service';
@@ -90,26 +89,11 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
 
     host?: HostEntity;
 
-    otherInstances?: TerrariaInstanceEntity[];
-
     instance?: TerrariaInstanceEntity;
 
     logParts: LogPart[] = [];
 
     instanceId = 0;
-
-    private readonly RUNNING_STATES = new Set<TerrariaInstanceState>([
-        'BOOTING_UP',
-        'WORLD_MENU',
-        'MOD_MENU',
-        'MOD_BROWSER',
-        'CHANGING_MOD_STATE',
-        'MAX_PLAYERS_PROMPT',
-        'PORT_PROMPT',
-        'AUTOMATICALLY_FORWARD_PORT_PROMPT',
-        'PASSWORD_PROMPT',
-        'RUNNING',
-    ]);
 
     private instanceMessageSubscription?: Subscription;
     private instanceDeletionSubscription?: Subscription;
@@ -293,13 +277,11 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
 
     private async fetchData(hostId: number, instanceId: number): Promise<TerrariaInstanceEntity> {
         this.instanceId = instanceId;
-        const [host, instances, instanceDetails] = await Promise.all([
+        const [host, instanceDetails] = await Promise.all([
             this.restApi.getHost(hostId),
-            this.restApi.getHostInstances(hostId),
             this.restApi.getInstanceDetails(instanceId),
         ]);
         this.host = host;
-        this.otherInstances = instances.filter((instance) => instance.id !== instanceId);
         this.instance = instanceDetails.instance;
         this.logParts = instanceDetails.events
             .map((event) => this.eventToLogPart(event))

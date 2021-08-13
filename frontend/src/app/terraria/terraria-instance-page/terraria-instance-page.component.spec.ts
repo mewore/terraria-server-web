@@ -63,7 +63,6 @@ describe('TerrariaInstancePageComponent', () => {
     let hostInstances: TerrariaInstanceEntity[];
 
     let getHostSpy: jasmine.Spy<(hostId: number) => Promise<HostEntity>>;
-    let getInstancesSpy: jasmine.Spy<(hostId: number) => Promise<TerrariaInstanceEntity[]>>;
     let getInstanceDetailsSpy: jasmine.Spy<(instanceId: number) => Promise<TerrariaInstanceDetailsViewModel>>;
 
     let watchInstanceChangesSpy: jasmine.Spy<(instance: TerrariaInstanceEntity) => Observable<TerrariaInstanceMessage>>;
@@ -123,7 +122,6 @@ describe('TerrariaInstancePageComponent', () => {
         ];
 
         getHostSpy = spyOn(restApiService, 'getHost').and.resolveTo({ id: 10 } as HostEntity);
-        getInstancesSpy = spyOn(restApiService, 'getHostInstances').and.callFake(async () => hostInstances);
         getInstanceDetailsSpy = spyOn(restApiService, 'getInstanceDetails').and.callFake(() =>
             Promise.resolve({ events: instanceEvents, instance })
         );
@@ -168,7 +166,6 @@ describe('TerrariaInstancePageComponent', () => {
 
             it('should not fetch any data', () => {
                 expect(getHostSpy).not.toHaveBeenCalled();
-                expect(getInstancesSpy).not.toHaveBeenCalled();
                 expect(getInstanceDetailsSpy).not.toHaveBeenCalled();
                 expect(watchInstanceChangesSpy).not.toHaveBeenCalled();
                 expect(watchInstanceDeletionSpy).not.toHaveBeenCalled();
@@ -353,16 +350,11 @@ describe('TerrariaInstancePageComponent', () => {
 
         it('should fetch the data', () => {
             expect(getHostSpy).toHaveBeenCalledOnceWith(10);
-            expect(getInstancesSpy).toHaveBeenCalledOnceWith(10);
             expect(getInstanceDetailsSpy).toHaveBeenCalledOnceWith(20);
         });
 
         it('should set the host', () => {
             expect(component.host?.id).toBe(10);
-        });
-
-        it('should set the other instances', () => {
-            expect(component.otherInstances).toEqual([{ id: 2 } as TerrariaInstanceEntity]);
         });
 
         it('should set the instance from the host instances', () => {
