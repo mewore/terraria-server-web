@@ -33,7 +33,7 @@ public class TerrariaWorldService {
 
     private final @NonNull LocalHostService localHostService;
 
-    private final @NonNull TerrariaWorldInfoService terrariaWorldInfoService;
+    private final @NonNull TerrariaWorldFileService terrariaWorldFileService;
 
     private final @NonNull TerrariaWorldRepository terrariaWorldRepository;
 
@@ -43,7 +43,7 @@ public class TerrariaWorldService {
     @Transactional
     void setUp() throws IOException {
         final HostEntity host = localHostService.getOrCreateHost();
-        final List<TerrariaWorldInfo> newWorldInfoList = terrariaWorldInfoService.getAllWorldInfo();
+        final List<TerrariaWorldInfo> newWorldInfoList = terrariaWorldFileService.getAllWorldInfo();
 
         final Map<String, TerrariaWorldEntity> currentWorlds = terrariaWorldRepository.findByHost(host)
                 .stream()
@@ -89,7 +89,7 @@ public class TerrariaWorldService {
 
     @Transactional
     public void updateWorld(final TerrariaWorldEntity world, final Set<String> newMods) {
-        final @Nullable TerrariaWorldInfo worldInfo = terrariaWorldInfoService.getWorldInfo(world.getName());
+        final @Nullable TerrariaWorldInfo worldInfo = terrariaWorldFileService.getWorldInfo(world.getName());
         if (worldInfo == null) {
             logger.warn("Could not get the info for world " + world.getName());
             return;

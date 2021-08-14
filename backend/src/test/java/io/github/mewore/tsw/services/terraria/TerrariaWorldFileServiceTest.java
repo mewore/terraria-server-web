@@ -23,13 +23,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class TerrariaWorldInfoServiceTest {
+class TerrariaWorldFileServiceTest {
 
     private static final Path TERRARIA_WORLD_DIRECTORY = Path.of(System.getProperty("user.home"), ".local", "share",
             "Terraria", "ModLoader", "Worlds");
 
     @InjectMocks
-    private TerrariaWorldInfoService terrariaWorldInfoService;
+    private TerrariaWorldFileService terrariaWorldFileService;
 
     @Mock
     private FileService fileService;
@@ -68,7 +68,7 @@ class TerrariaWorldInfoServiceTest {
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("Partial.wld"))).thenReturn(partialWld);
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("Partial.twld"))).thenReturn(mock(File.class));
 
-        final List<TerrariaWorldInfo> result = terrariaWorldInfoService.getAllWorldInfo();
+        final List<TerrariaWorldInfo> result = terrariaWorldFileService.getAllWorldInfo();
         assertEquals(1, result.size());
 
         when(fileService.zip(presentWld, presentTwld)).thenReturn("Content".getBytes());
@@ -83,7 +83,7 @@ class TerrariaWorldInfoServiceTest {
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("World.wld"))).thenReturn(wldFile);
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("World.twld"))).thenReturn(twldFile);
 
-        final @Nullable TerrariaWorldInfo result = terrariaWorldInfoService.getWorldInfo("World");
+        final @Nullable TerrariaWorldInfo result = terrariaWorldFileService.getWorldInfo("World");
         assertNotNull(result);
         assertEquals("World", result.getName());
         assertEquals(8L, result.getLastModified().toEpochMilli());
@@ -101,7 +101,7 @@ class TerrariaWorldInfoServiceTest {
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("NoWld.wld"))).thenReturn(partialWld);
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("NoWld.twld"))).thenReturn(mock(File.class));
 
-        assertNull(terrariaWorldInfoService.getWorldInfo("NoWld"));
+        assertNull(terrariaWorldFileService.getWorldInfo("NoWld"));
     }
 
     @Test
@@ -113,6 +113,6 @@ class TerrariaWorldInfoServiceTest {
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("NoTwld.wld"))).thenReturn(partialWld);
         when(fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve("NoTwld.twld"))).thenReturn(partialTwld);
 
-        assertNull(terrariaWorldInfoService.getWorldInfo("NoTwld"));
+        assertNull(terrariaWorldFileService.getWorldInfo("NoTwld"));
     }
 }

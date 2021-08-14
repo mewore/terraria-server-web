@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Service
-public class TerrariaWorldInfoService {
+public class TerrariaWorldFileService {
 
     private static final Path TERRARIA_WORLD_DIRECTORY = Path.of(System.getProperty("user.home"), ".local", "share",
             "Terraria", "ModLoader", "Worlds");

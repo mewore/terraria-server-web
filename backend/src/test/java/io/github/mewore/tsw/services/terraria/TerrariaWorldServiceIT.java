@@ -41,7 +41,7 @@ class TerrariaWorldServiceIT {
     private LocalHostService localHostService;
 
     @MockBean
-    private TerrariaWorldInfoService terrariaWorldInfoService;
+    private TerrariaWorldFileService terrariaWorldFileService;
 
     @Autowired
     private TerrariaWorldRepository terrariaWorldRepository;
@@ -62,7 +62,7 @@ class TerrariaWorldServiceIT {
     }
 
     private TerrariaWorldService service() {
-        return new TerrariaWorldService(localHostService, terrariaWorldInfoService, terrariaWorldRepository,
+        return new TerrariaWorldService(localHostService, terrariaWorldFileService, terrariaWorldRepository,
                 terrariaWorldFileRepository);
     }
 
@@ -86,7 +86,7 @@ class TerrariaWorldServiceIT {
                 .build();
         final List<TerrariaWorldInfo> worldInfoList = List.of(makeWorldInfo("Unchanged", 1L, null),
                 makeWorldInfo("Changed", 8L, changedWorldFile), makeWorldInfo("New", 1L, newWorldFile));
-        when(terrariaWorldInfoService.getAllWorldInfo()).thenReturn(worldInfoList);
+        when(terrariaWorldFileService.getAllWorldInfo()).thenReturn(worldInfoList);
 
         service().setUp();
         final List<TerrariaWorldEntity> worlds = terrariaWorldRepository.findAll();
