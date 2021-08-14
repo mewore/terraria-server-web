@@ -4,6 +4,7 @@ import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,14 +46,14 @@ public class TerrariaWorldService {
         final HostEntity host = localHostService.getOrCreateHost();
         final List<TerrariaWorldInfo> newWorldInfoList = terrariaWorldFileService.getAllWorldInfo();
 
-        final Map<String, TerrariaWorldEntity> currentWorlds = terrariaWorldRepository.findByHost(host)
-                .stream()
+        final List<TerrariaWorldEntity> currentWorlds = terrariaWorldRepository.findByHost(host);
+        final Map<String, TerrariaWorldEntity> currentWorldsByName = currentWorlds.stream()
                 .collect(Collectors.toUnmodifiableMap(TerrariaWorldEntity::getName, Function.identity()));
 
         final List<TerrariaWorldEntity> worldsToSave = new ArrayList<>();
 
         for (final TerrariaWorldInfo worldInfo : newWorldInfoList) {
-            final @Nullable TerrariaWorldEntity currentWorld = currentWorlds.get(worldInfo.getName());
+            final @Nullable TerrariaWorldEntity currentWorld = currentWorldsByName.get(worldInfo.getName());
             if (currentWorld == null) {
                 final TerrariaWorldEntity newWorld = TerrariaWorldEntity.builder()
                         .name(worldInfo.getName())
@@ -72,17 +73,20 @@ public class TerrariaWorldService {
             worldsToSave.add(currentWorld);
         }
 
-        logger.info("New worlds: {}",
-                worldsToSave.stream().map(TerrariaWorldEntity::getName).collect(Collectors.joining(", ")));
-
         final Set<String> newWorldNames = newWorldInfoList.stream()
                 .map(TerrariaWorldInfo::getName)
                 .collect(Collectors.toUnmodifiableSet());
 
-        terrariaWorldRepository.deleteAll(currentWorlds.values()
-                .stream()
-                .filter(world -> !newWorldNames.contains(world.getName()))
-                .collect(Collectors.toList()));
+
+        for (final TerrariaWorldEntity world : currentWorlds) {
+            if (!newWorldNames.contains(world.getName())) {
+                terrariaWorldFileService.recreateWorld(world);
+            }
+        }
+
+        final Set<String> allWorldNames = new HashSet<>(newWorldNames);
+        allWorldNames.addAll(currentWorldsByName.keySet());
+        logger.info("New worlds: {}", String.join(", ", allWorldNames));
 
         terrariaWorldRepository.saveAll(worldsToSave);
     }

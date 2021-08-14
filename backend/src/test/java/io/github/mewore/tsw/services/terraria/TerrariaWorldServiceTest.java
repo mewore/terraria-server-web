@@ -75,7 +75,6 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(Collections.emptyList());
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).deleteAll(Collections.emptyList());
         verify(terrariaWorldRepository).saveAll(Collections.emptyList());
     }
 
@@ -91,7 +90,6 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(Collections.emptyList());
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).deleteAll(Collections.emptyList());
         verify(terrariaWorldRepository).saveAll(savedWorldListCaptor.capture());
         assertEquals(1, savedWorldListCaptor.getValue().size());
         final TerrariaWorldEntity savedWorld = savedWorldListCaptor.getValue().get(0);
@@ -113,7 +111,7 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(List.of(deletedWorld));
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).deleteAll(List.of(deletedWorld));
+        verify(terrariaWorldFileService).recreateWorld(deletedWorld);
     }
 
     @Test
@@ -134,7 +132,6 @@ class TerrariaWorldServiceTest {
         verify(changedWorld).setLastModified(Instant.ofEpochMilli(8L));
         verify(changedWorld).updateFile(same(worldFile));
         verify(changedWorld).setMods(null);
-        verify(terrariaWorldRepository).deleteAll(Collections.emptyList());
         verify(terrariaWorldRepository).saveAll(List.of(changedWorld));
     }
 
@@ -152,7 +149,6 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(List.of(unchangedWorld));
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).deleteAll(Collections.emptyList());
         verify(terrariaWorldRepository).saveAll(Collections.emptyList());
     }
 

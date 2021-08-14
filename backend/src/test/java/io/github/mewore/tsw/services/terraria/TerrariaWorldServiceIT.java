@@ -23,6 +23,7 @@ import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DataJpaTest
@@ -73,7 +74,7 @@ class TerrariaWorldServiceIT {
 
         final TerrariaWorldEntity unchangedWorld = terrariaWorldRepository.saveAndFlush(makeWorld(host, "Unchanged"));
         final TerrariaWorldEntity changedWorld = terrariaWorldRepository.saveAndFlush(makeWorld(host, "Changed"));
-        terrariaWorldRepository.saveAndFlush(makeWorld(host, "Deleted"));
+        final TerrariaWorldEntity deletedWorld = terrariaWorldRepository.saveAndFlush(makeWorld(host, "Deleted"));
         final TerrariaWorldEntity otherHostWorld = terrariaWorldRepository.saveAndFlush(makeWorld(saveOtherHost()));
 
         final TerrariaWorldFileEntity changedWorldFile = TerrariaWorldFileEntity.builder()
@@ -82,20 +83,22 @@ class TerrariaWorldServiceIT {
                 .build();
         final TerrariaWorldFileEntity newWorldFile = TerrariaWorldFileEntity.builder()
                 .name("New.zip")
-                .content("New content".getBytes())
-                .build();
+                .content("New content".getBytes()).build();
         final List<TerrariaWorldInfo> worldInfoList = List.of(makeWorldInfo("Unchanged", 1L, null),
                 makeWorldInfo("Changed", 8L, changedWorldFile), makeWorldInfo("New", 1L, newWorldFile));
         when(terrariaWorldFileService.getAllWorldInfo()).thenReturn(worldInfoList);
 
         service().setUp();
         final List<TerrariaWorldEntity> worlds = terrariaWorldRepository.findAll();
-        assertEquals(4, worlds.size());
+        assertEquals(5, worlds.size());
         assertSame(unchangedWorld, worlds.get(0));
         assertSame(changedWorld, worlds.get(1));
-        assertSame(otherHostWorld, worlds.get(2));
+        assertSame(deletedWorld, worlds.get(2));
+        assertSame(otherHostWorld, worlds.get(3));
 
-        final TerrariaWorldEntity newWorld = worlds.get(3);
+        verify(terrariaWorldFileService).recreateWorld(deletedWorld);
+
+        final TerrariaWorldEntity newWorld = worlds.get(4);
         assertEquals("New", newWorld.getName());
         assertEquals(1L, newWorld.getLastModified().toEpochMilli());
 

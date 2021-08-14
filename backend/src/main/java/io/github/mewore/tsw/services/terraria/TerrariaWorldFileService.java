@@ -1,6 +1,8 @@
 package io.github.mewore.tsw.services.terraria;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.services.util.FileService;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -64,5 +67,14 @@ public class TerrariaWorldFileService {
         }
         final Instant lastModified = Instant.ofEpochMilli(Math.max(wldFile.lastModified(), twldFile.lastModified()));
         return new TerrariaWorldInfo(name, lastModified, wldFile, twldFile, fileService);
+    }
+
+    void recreateWorld(final TerrariaWorldEntity world) throws IOException {
+        fileService.unzip(new ByteArrayInputStream(world.getFile().getContent()), TERRARIA_WORLD_DIRECTORY.toFile());
+
+        final String name = world.getName();
+        final Instant lastModified = world.getLastModified();
+        fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + WLD_EXTENSION), lastModified);
+        fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + TWLD_EXTENSION), lastModified);
     }
 }

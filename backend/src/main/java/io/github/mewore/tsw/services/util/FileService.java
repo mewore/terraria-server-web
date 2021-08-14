@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -180,6 +181,13 @@ public class FileService {
 
     public File pathToFile(final Path path) {
         return path.toFile();
+    }
+
+    public void setLastModified(final Path path, final Instant newLastModified) throws IOException {
+        final File file = path.toFile();
+        if (!file.setLastModified(newLastModified.toEpochMilli())) {
+            throw new IOException("Failed to set the last modified time of " + file.getAbsolutePath());
+        }
     }
 
     public byte[] zip(final File... files) throws IOException {
