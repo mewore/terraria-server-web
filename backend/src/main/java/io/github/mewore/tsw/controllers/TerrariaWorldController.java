@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.mewore.tsw.config.ConfigConstants;
 import io.github.mewore.tsw.exceptions.NotFoundException;
-import io.github.mewore.tsw.models.file.FileDataEntity;
-import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -23,13 +23,12 @@ import lombok.RequiredArgsConstructor;
 @ResponseBody
 class TerrariaWorldController {
 
-    private final TerrariaWorldRepository terrariaWorldRepository;
+    private final TerrariaWorldFileRepository terrariaWorldFileRepository;
 
     @GetMapping(path = "/{worldId}/data")
     ResponseEntity<Resource> getWorldData(@PathVariable("worldId") final long worldId) throws NotFoundException {
-        final FileDataEntity data = terrariaWorldRepository.findByIdWithData(worldId)
-                .orElseThrow(() -> new NotFoundException("There is no world with ID " + worldId))
-                .getData();
+        final TerrariaWorldFileEntity data = terrariaWorldFileRepository.findById(worldId)
+                .orElseThrow(() -> new NotFoundException("There is no world file with ID " + worldId));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + data.getName() + "\"")

@@ -1,13 +1,12 @@
 package io.github.mewore.tsw.services.terraria;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
+import javax.transaction.Transactional;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -17,12 +16,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.file.FileDataEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.repositories.file.FileDataRepository;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.LocalHostService;
-import io.github.mewore.tsw.services.util.FileService;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,70 +29,86 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class TerrariaWorldService {
 
-    private static final Path TERRARIA_WORLD_DIRECTORY = Path.of(System.getProperty("user.home"), ".local", "share",
-            "Terraria", "ModLoader", "Worlds");
-
-    private static final String WLD_EXTENSION = "wld";
-
-    private static final String TWLD_EXTENSION = "twld";
-
     private final Logger logger = LogManager.getLogger(getClass());
 
     private final @NonNull LocalHostService localHostService;
 
-    private final @NonNull FileService fileService;
+    private final @NonNull TerrariaWorldInfoService terrariaWorldInfoService;
 
     private final @NonNull TerrariaWorldRepository terrariaWorldRepository;
 
-    private final @NonNull FileDataRepository fileDataRepository;
+    private final @NonNull TerrariaWorldFileRepository terrariaWorldFileRepository;
 
     @PostConstruct
+    @Transactional
     void setUp() throws IOException {
         final HostEntity host = localHostService.getOrCreateHost();
-        final Function<File, String> fileWithoutExtension = file -> file.getName()
-                .substring(0, file.getName().lastIndexOf("."));
+        final List<TerrariaWorldInfo> newWorldInfoList = terrariaWorldInfoService.getAllWorldInfo();
 
-        logger.info("Checking for worlds in the following directory: {}", TERRARIA_WORLD_DIRECTORY);
-        final List<String> worldNames = Arrays.stream(
-                fileService.listFilesWithExtensions(TERRARIA_WORLD_DIRECTORY.toFile(), "wld"))
-                .map(fileWithoutExtension)
-                .collect(Collectors.toUnmodifiableList());
+        final Map<String, TerrariaWorldEntity> currentWorlds = terrariaWorldRepository.findByHost(host)
+                .stream()
+                .collect(Collectors.toUnmodifiableMap(TerrariaWorldEntity::getName, Function.identity()));
 
-        final List<TerrariaWorldEntity> newWorlds = new ArrayList<>();
-        for (final String name : worldNames) {
-            final @Nullable TerrariaWorldEntity world = readWorld(name, host);
-            if (world != null) {
-                newWorlds.add(world);
+        final List<TerrariaWorldEntity> worldsToSave = new ArrayList<>();
+
+        for (final TerrariaWorldInfo worldInfo : newWorldInfoList) {
+            final @Nullable TerrariaWorldEntity currentWorld = currentWorlds.get(worldInfo.getName());
+            if (currentWorld == null) {
+                final TerrariaWorldEntity newWorld = TerrariaWorldEntity.builder()
+                        .name(worldInfo.getName())
+                        .lastModified(worldInfo.getLastModified())
+                        .file(worldInfo.readFile())
+                        .host(host)
+                        .build();
+                worldsToSave.add(newWorld);
+                continue;
             }
+            if (currentWorld.getLastModified().equals(worldInfo.getLastModified())) {
+                continue;
+            }
+            currentWorld.setLastModified(worldInfo.getLastModified());
+            currentWorld.updateFile(worldInfo.readFile());
+            currentWorld.setMods(null);
+            worldsToSave.add(currentWorld);
         }
-        fileDataRepository.saveAll(
-                newWorlds.stream().map(TerrariaWorldEntity::getData).collect(Collectors.toUnmodifiableSet()));
 
-        logger.info("Found {} worlds in the following directory: {}", newWorlds.size(), TERRARIA_WORLD_DIRECTORY);
-        terrariaWorldRepository.setHostWorlds(host, newWorlds);
+        logger.info("New worlds: {}",
+                worldsToSave.stream().map(TerrariaWorldEntity::getName).collect(Collectors.joining(", ")));
+
+        final Set<String> newWorldNames = newWorldInfoList.stream()
+                .map(TerrariaWorldInfo::getName)
+                .collect(Collectors.toUnmodifiableSet());
+
+        terrariaWorldRepository.deleteAll(currentWorlds.values()
+                .stream()
+                .filter(world -> !newWorldNames.contains(world.getName()))
+                .collect(Collectors.toList()));
+
+        terrariaWorldRepository.saveAll(worldsToSave);
     }
 
-    public @Nullable TerrariaWorldEntity readWorld(final TerrariaWorldEntity world) {
+    @Transactional
+    public void updateWorld(final TerrariaWorldEntity world, final Set<String> newMods) {
+        final @Nullable TerrariaWorldInfo worldInfo = terrariaWorldInfoService.getWorldInfo(world.getName());
+        if (worldInfo == null) {
+            logger.warn("Could not get the info for world " + world.getName());
+            return;
+        }
+        final TerrariaWorldFileEntity worldFile;
         try {
-            return readWorld(world.getName(), world.getHost());
+            worldFile = worldInfo.readFile();
         } catch (final IOException e) {
-            logger.error("Failed to read world " + world.getName(), e);
-            return null;
+            logger.warn("Failed to get the data of world " + world.getName(), e);
+            return;
         }
-    }
-
-    private @Nullable TerrariaWorldEntity readWorld(final String name, final HostEntity host) throws IOException {
-        final File wldFile = fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + WLD_EXTENSION));
-        final File twldFile = fileService.pathToFile(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + TWLD_EXTENSION));
-        if (!wldFile.exists() || !twldFile.exists()) {
-            return null;
+        if (world.getLastModified().equals(worldInfo.getLastModified())) {
+            logger.info("World " + world.getName() + " is already up to date");
+            return;
         }
-        final byte[] zipData = fileService.zip(wldFile, twldFile);
-        return TerrariaWorldEntity.builder()
-                .name(name)
-                .lastModified(Instant.ofEpochMilli(Math.max(wldFile.lastModified(), twldFile.lastModified())))
-                .data(FileDataEntity.builder().name(name + ".zip").content(zipData).build())
-                .host(host)
-                .build();
+        world.setLastModified(worldInfo.getLastModified());
+        world.updateFile(worldFile);
+        world.setMods(newMods);
+        terrariaWorldFileRepository.save(world.getFile());
+        terrariaWorldRepository.save(world);
     }
 }

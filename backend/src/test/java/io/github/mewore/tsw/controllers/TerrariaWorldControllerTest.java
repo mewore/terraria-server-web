@@ -13,11 +13,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
-import io.github.mewore.tsw.models.file.FileDataEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Import(TestConfig.class)
@@ -28,13 +26,15 @@ class TerrariaWorldControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private TerrariaWorldRepository terrariaWorldRepository;
+    private TerrariaWorldFileRepository terrariaWorldFileRepository;
 
     @Test
     void testGetWorldData() throws Exception {
-        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
-        when(world.getData()).thenReturn(FileDataEntity.builder().name("world.zip").content("data".getBytes()).build());
-        when(terrariaWorldRepository.findByIdWithData(10L)).thenReturn(Optional.of(world));
+        final TerrariaWorldFileEntity worldFile = TerrariaWorldFileEntity.builder()
+                .name("world.zip")
+                .content("data".getBytes())
+                .build();
+        when(terrariaWorldFileRepository.findById(10L)).thenReturn(Optional.of(worldFile));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/terraria/worlds/10/data"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
                 .andExpect(MockMvcResultMatchers.content().bytes("data".getBytes()))
@@ -44,7 +44,7 @@ class TerrariaWorldControllerTest {
 
     @Test
     void testGetWorldData_notFound() throws Exception {
-        when(terrariaWorldRepository.findByIdWithData(10L)).thenReturn(Optional.empty());
+        when(terrariaWorldFileRepository.findById(10L)).thenReturn(Optional.empty());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/terraria/worlds/10/data"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
     }

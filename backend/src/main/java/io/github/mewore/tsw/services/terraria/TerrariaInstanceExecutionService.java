@@ -16,8 +16,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.repositories.file.FileDataRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
@@ -50,10 +48,6 @@ public class TerrariaInstanceExecutionService {
     private final TerrariaInstanceService terrariaInstanceService;
 
     private final TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
-
-    private final FileDataRepository fileDataRepository;
-
-    private final TerrariaWorldRepository terrariaWorldRepository;
 
     private final TerrariaWorldService terrariaWorldService;
 
@@ -208,15 +202,7 @@ public class TerrariaInstanceExecutionService {
                 if (world == null) {
                     logger.warn("The instance {} does not have a world despite actively running", instance.getUuid());
                 } else {
-                    final @Nullable TerrariaWorldEntity newWorld = terrariaWorldService.readWorld(world);
-                    if (newWorld == null) {
-                        logger.warn("Failed to read the new world data of {}. Skipping saving it.", instance.getUuid());
-                    } else {
-                        world.setMods(loadedMods);
-                        world.setData(fileDataRepository.save(newWorld.getData()));
-                        world.setLastModified(newWorld.getLastModified());
-                        terrariaWorldRepository.save(world);
-                    }
+                    terrariaWorldService.updateWorld(world, loadedMods);
                 }
             }
             return instance;

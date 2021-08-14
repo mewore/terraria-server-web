@@ -1,4 +1,4 @@
-package io.github.mewore.tsw.models.file;
+package io.github.mewore.tsw.models.terraria;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -7,8 +7,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.Immutable;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,10 +20,10 @@ import lombok.Setter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Getter
+@Setter
 @Entity
-@Table(name = "file_data")
-@Immutable
-public class FileDataEntity {
+@Table(name = "terraria_world_file")
+public class TerrariaWorldFileEntity {
 
     @Setter(AccessLevel.NONE)
     @Id

@@ -5,7 +5,9 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -19,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.DynamicUpdate;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.file.FileDataEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,7 +52,9 @@ public class TerrariaWorldEntity {
 
     @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
-    private @NonNull FileDataEntity data;
+    @MapsId
+    @JoinColumn(name = "id")
+    private @NonNull TerrariaWorldFileEntity file;
 
     @Column
     private @Positive @Nullable Set<String> mods;
@@ -59,4 +62,10 @@ public class TerrariaWorldEntity {
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private @NonNull HostEntity host;
+
+    public TerrariaWorldFileEntity updateFile(final TerrariaWorldFileEntity newFile) {
+        file.setContent(newFile.getContent());
+        file.setName(newFile.getName());
+        return file;
+    }
 }

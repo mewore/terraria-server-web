@@ -22,13 +22,11 @@ import org.mockito.stubbing.Answer;
 
 import io.github.mewore.tsw.events.FakeSubscription;
 import io.github.mewore.tsw.events.Subscription;
-import io.github.mewore.tsw.models.file.FileDataEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.repositories.file.FileDataRepository;
-import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.FileTail;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
@@ -46,6 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,12 +60,6 @@ class TerrariaInstanceExecutionServiceTest {
 
     @Mock
     private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
-
-    @Mock
-    private FileDataRepository fileDataRepository;
-
-    @Mock
-    private TerrariaWorldRepository terrariaWorldRepository;
 
     @Mock
     private TerrariaWorldService terrariaWorldService;
@@ -100,7 +93,7 @@ class TerrariaInstanceExecutionServiceTest {
         final TerrariaWorldEntity world = TerrariaWorldEntity.builder()
                 .name(name)
                 .lastModified(Instant.now())
-                .data(mock(FileDataEntity.class))
+                .file(mock(TerrariaWorldFileEntity.class))
                 .mods(Collections.emptySet())
                 .host(instance.getHost())
                 .build();
@@ -359,47 +352,13 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", Duration.ofSeconds(90),
                 TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
 
-        final FileDataEntity newWorldData = mock(FileDataEntity.class);
-        final Instant newLastModified = Instant.now();
-        final TerrariaWorldEntity newWorld = mock(TerrariaWorldEntity.class);
-        when(newWorld.getData()).thenReturn(newWorldData);
-        when(newWorld.getLastModified()).thenReturn(newLastModified);
-        when(terrariaWorldService.readWorld(world)).thenReturn(newWorld);
-
-        final FileDataEntity savedWorldData = mock(FileDataEntity.class);
-        when(fileDataRepository.save(newWorldData)).thenReturn(savedWorldData);
-
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.shutDownInstance(instance, true);
         assertSame(awaitedInstance, result);
 
         verify(tail).stopReadingFile();
 
-        assertSame(newLastModified, world.getLastModified());
-        assertSame(savedWorldData, world.getData());
-        assertEquals(Set.of("Mod"), world.getMods());
-        verify(terrariaWorldRepository).save(world);
-
+        verify(terrariaWorldService, only()).updateWorld(world, instance.getLoadedMods());
         verify(terrariaInstanceOutputService).stopTrackingInstance(awaitedInstance);
-    }
-
-    @Test
-    void testShutDownInstance_failureToReadWorld()
-            throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
-        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.RUNNING);
-        instance.setLoadedMods(Set.of("Mod"));
-        final TerrariaWorldEntity world = makeWorldForInstance(instance);
-
-        final FileTail tail = mock(FileTail.class);
-        when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(tail);
-
-        final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
-        when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", Duration.ofSeconds(90),
-                TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
-
-        when(terrariaWorldService.readWorld(world)).thenReturn(null);
-
-        terrariaInstanceExecutionService.shutDownInstance(instance, true);
-        verify(terrariaWorldRepository, never()).save(world);
     }
 
     @Test
@@ -411,7 +370,7 @@ class TerrariaInstanceExecutionServiceTest {
                 TerrariaInstanceState.IDLE)).thenReturn(instance);
 
         terrariaInstanceExecutionService.shutDownInstance(instance, true);
-        verify(terrariaWorldRepository, never()).save(any());
+        verify(terrariaWorldService, never()).updateWorld(any(), any());
     }
 
     @Test
@@ -428,7 +387,7 @@ class TerrariaInstanceExecutionServiceTest {
         terrariaInstanceExecutionService.shutDownInstance(instance, false);
 
         assertEquals(Collections.emptySet(), world.getMods());
-        verify(terrariaWorldRepository, never()).save(any());
+        verify(terrariaWorldService, never()).updateWorld(any(), any());
         verify(terrariaInstanceOutputService).stopTrackingInstance(instance);
     }
 
@@ -447,7 +406,7 @@ class TerrariaInstanceExecutionServiceTest {
         assertSame(awaitedInstance, result);
 
         verify(terrariaInstanceInputService, never()).sendInputToInstance(any(), any(), any(), any());
-        verify(terrariaWorldRepository, never()).save(any());
+        verify(terrariaWorldService, never()).updateWorld(any(), any());
         verify(terrariaInstanceOutputService).stopTrackingInstance(awaitedInstance);
     }
 
