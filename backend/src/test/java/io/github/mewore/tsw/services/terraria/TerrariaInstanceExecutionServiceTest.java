@@ -4,21 +4,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 
 import io.github.mewore.tsw.events.FakeSubscription;
 import io.github.mewore.tsw.events.Subscription;
@@ -26,7 +21,6 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.FileTail;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
@@ -93,7 +87,6 @@ class TerrariaInstanceExecutionServiceTest {
         final TerrariaWorldEntity world = TerrariaWorldEntity.builder()
                 .name(name)
                 .lastModified(Instant.now())
-                .file(mock(TerrariaWorldFileEntity.class))
                 .mods(Collections.emptySet())
                 .host(instance.getHost())
                 .build();
@@ -351,6 +344,7 @@ class TerrariaInstanceExecutionServiceTest {
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
         when(terrariaInstanceInputService.sendInputToInstance(instance, "exit", Duration.ofSeconds(90),
                 TerrariaInstanceState.IDLE)).thenReturn(awaitedInstance);
+        when(awaitedInstance.getWorld()).thenReturn(world);
 
         final TerrariaInstanceEntity result = terrariaInstanceExecutionService.shutDownInstance(instance, true);
         assertSame(awaitedInstance, result);
@@ -575,44 +569,5 @@ class TerrariaInstanceExecutionServiceTest {
         final Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> terrariaInstanceExecutionService.deleteInstance(instance));
         assertEquals("Cannot delete a running instance (with state RUNNING)!", exception.getMessage());
-    }
-
-    private static class FakeModMenu implements Answer<TerrariaInstanceEntity> {
-
-        final Map<Integer, String> options;
-
-        private FakeModMenu(final Map<Integer, String> initialOptions) {
-            options = new HashMap<>(initialOptions);
-        }
-
-        @Override
-        public TerrariaInstanceEntity answer(final InvocationOnMock invocation) {
-            final TerrariaInstanceEntity instance = invocation.getArgument(0);
-            final String input = invocation.getArgument(1);
-            if (instance == null || input == null) {
-                throw new NullPointerException("This should not happen");
-            }
-            if (input.equals("r")) {
-                instance.setLoadedMods(options.values()
-                        .stream()
-                        .filter(label -> label.endsWith(" (enabled)"))
-                        .map(label -> label.replaceAll(" \\(enabled\\)$", ""))
-                        .collect(Collectors.toUnmodifiableSet()));
-                return instance;
-            }
-            final int intKey = Integer.parseInt(input);
-            final @Nullable String selectedOptionLabel = options.get(intKey);
-            if (selectedOptionLabel == null) {
-                return instance;
-            }
-            options.put(intKey, selectedOptionLabel.replaceAll(" \\(enabled\\)$", " (tmp)")
-                    .replaceAll(" \\(disabled\\)$", " (enabled)")
-                    .replaceAll(" \\(tmp\\)$", " (disabled)"));
-            for (final Map.Entry<Integer, String> option : options.entrySet()) {
-                instance.acknowledgeMenuOption(option.getKey(), option.getValue());
-            }
-            instance.setState(TerrariaInstanceState.MOD_MENU);
-            return instance;
-        }
     }
 }

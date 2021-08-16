@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 
+import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.services.util.FileService;
 import lombok.Getter;
@@ -24,10 +25,11 @@ class TerrariaWorldInfo {
 
     private final FileService fileService;
 
-    public TerrariaWorldFileEntity readFile() throws IOException {
+    public TerrariaWorldFileEntity readFile(final TerrariaWorldEntity world) throws IOException {
         return TerrariaWorldFileEntity.builder()
                 .name(name + ".zip")
                 .content(fileService.zip(wldFile, twldFile))
+                .world(world)
                 .build();
     }
 }

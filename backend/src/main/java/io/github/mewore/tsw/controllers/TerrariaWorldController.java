@@ -27,8 +27,10 @@ class TerrariaWorldController {
 
     @GetMapping(path = "/{worldId}/data")
     ResponseEntity<Resource> getWorldData(@PathVariable("worldId") final long worldId) throws NotFoundException {
+        System.out.println("============ a ============");
         final TerrariaWorldFileEntity data = terrariaWorldFileRepository.findById(worldId)
                 .orElseThrow(() -> new NotFoundException("There is no world file with ID " + worldId));
+        System.out.println("============ b ============");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + data.getName() + "\"")

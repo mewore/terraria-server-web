@@ -12,7 +12,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 
 import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
@@ -87,10 +86,6 @@ class TerrariaWorldRepositoryIT {
     }
 
     private TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
-        final TerrariaWorldFileEntity data = TerrariaWorldFileEntity.builder()
-                .name(name + ".zip")
-                .content(new byte[0])
-                .build();
-        return TerrariaWorldEntity.builder().name(name).lastModified(Instant.now()).file(data).host(host).build();
+        return TerrariaWorldEntity.builder().name(name).lastModified(Instant.now()).host(host).build();
     }
 }

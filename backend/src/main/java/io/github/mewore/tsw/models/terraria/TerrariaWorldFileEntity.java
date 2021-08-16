@@ -1,12 +1,17 @@
 package io.github.mewore.tsw.models.terraria;
 
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.MapsId;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import org.checkerframework.common.returnsreceiver.qual.This;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,10 +30,12 @@ import lombok.Setter;
 @Table(name = "terraria_world_file")
 public class TerrariaWorldFileEntity {
 
-    @Setter(AccessLevel.NONE)
     @Id
-    @GeneratedValue
-    private Long id;
+    private Long worldId;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    private @NonNull TerrariaWorldEntity world;
 
     @Column(nullable = false)
     private @NonNull String name;
@@ -36,4 +43,12 @@ public class TerrariaWorldFileEntity {
     @Lob
     @Basic(optional = false)
     private byte @NonNull [] content;
+
+    public @This TerrariaWorldFileEntity update(final TerrariaWorldFileEntity newFile,
+            final TerrariaWorldEntity newWorld) {
+        content = newFile.getContent();
+        name = newFile.getName();
+        world = newWorld;
+        return this;
+    }
 }

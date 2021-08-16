@@ -5,10 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Positive;
@@ -47,14 +44,8 @@ public class TerrariaWorldEntity {
     @Column(nullable = false)
     private @NonNull String name;
 
-    @Column(nullable = false)
-    private @NonNull Instant lastModified;
-
-    @JsonIgnore
-    @OneToOne(fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
-    @MapsId
-    @JoinColumn(name = "id")
-    private @NonNull TerrariaWorldFileEntity file;
+    @Column
+    private @Nullable Instant lastModified;
 
     @Column
     private @Positive @Nullable Set<String> mods;
@@ -62,10 +53,4 @@ public class TerrariaWorldEntity {
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private @NonNull HostEntity host;
-
-    public TerrariaWorldFileEntity updateFile(final TerrariaWorldFileEntity newFile) {
-        file.setContent(newFile.getContent());
-        file.setName(newFile.getName());
-        return file;
-    }
 }

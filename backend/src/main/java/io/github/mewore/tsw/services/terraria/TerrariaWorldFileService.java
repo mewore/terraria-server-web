@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -36,6 +40,10 @@ public class TerrariaWorldFileService {
     private final Logger logger = LogManager.getLogger(getClass());
 
     private final @NonNull FileService fileService;
+
+    private final @NonNull TerrariaWorldRepository terrariaWorldRepository;
+
+    private final @NonNull TerrariaWorldFileRepository terrariaWorldFileRepository;
 
     List<TerrariaWorldInfo> getAllWorldInfo() {
         final Function<File, String> fileWithoutExtension = file -> file.getName()
@@ -70,11 +78,23 @@ public class TerrariaWorldFileService {
     }
 
     void recreateWorld(final TerrariaWorldEntity world) throws IOException {
-        fileService.unzip(new ByteArrayInputStream(world.getFile().getContent()), TERRARIA_WORLD_DIRECTORY.toFile());
+        final Optional<TerrariaWorldFileEntity> file = terrariaWorldFileRepository.findByWorld(world);
+        if (file.isEmpty()) {
+            logger.error("Cannot recreate world " + world.getName() + " because it has no file");
+            world.setLastModified(null);
+            terrariaWorldRepository.save(world);
+            return;
+        }
+        fileService.unzip(new ByteArrayInputStream(file.get().getContent()), TERRARIA_WORLD_DIRECTORY.toFile());
 
-        final String name = world.getName();
-        final Instant lastModified = world.getLastModified();
-        fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + WLD_EXTENSION), lastModified);
-        fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + TWLD_EXTENSION), lastModified);
+        final @Nullable Instant lastModified = world.getLastModified();
+        if (lastModified == null) {
+            logger.warn("World " + world.getName() +
+                    " has file data but not a lastModified timestamp. Leaving its files with the current timestamp.");
+        } else {
+            final String name = world.getName();
+            fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + WLD_EXTENSION), lastModified);
+            fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + TWLD_EXTENSION), lastModified);
+        }
     }
 }

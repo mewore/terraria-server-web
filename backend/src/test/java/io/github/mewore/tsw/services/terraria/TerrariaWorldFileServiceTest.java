@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
@@ -19,13 +20,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
+import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +47,12 @@ class TerrariaWorldFileServiceTest {
 
     @Mock
     private FileService fileService;
+
+    @Mock
+    private TerrariaWorldRepository terrariaWorldRepository;
+
+    @Mock
+    private TerrariaWorldFileRepository terrariaWorldFileRepository;
 
     @Captor
     private ArgumentCaptor<InputStream> inputStreamCaptor;
@@ -82,7 +95,8 @@ class TerrariaWorldFileServiceTest {
         assertEquals(1, result.size());
 
         when(fileService.zip(presentWld, presentTwld)).thenReturn("Content".getBytes());
-        final TerrariaWorldFileEntity file = result.get(0).readFile();
+
+        final TerrariaWorldFileEntity file = result.get(0).readFile(mock(TerrariaWorldEntity.class));
         assertEquals("Content", new String(file.getContent()));
     }
 
@@ -99,9 +113,11 @@ class TerrariaWorldFileServiceTest {
         assertEquals(8L, result.getLastModified().toEpochMilli());
 
         when(fileService.zip(wldFile, twldFile)).thenReturn("Content".getBytes());
-        final TerrariaWorldFileEntity file = result.readFile();
+        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        final TerrariaWorldFileEntity file = result.readFile(world);
         assertEquals("Content", new String(file.getContent()));
         assertEquals("World.zip", file.getName());
+        assertSame(world, file.getWorld());
     }
 
     @Test
@@ -132,7 +148,7 @@ class TerrariaWorldFileServiceTest {
         when(worldFile.getContent()).thenReturn("Content".getBytes());
 
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
-        when(world.getFile()).thenReturn(worldFile);
+        when(terrariaWorldFileRepository.findByWorld(world)).thenReturn(Optional.of(worldFile));
         when(world.getName()).thenReturn("World");
         when(world.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
 
@@ -143,5 +159,17 @@ class TerrariaWorldFileServiceTest {
 
         verify(fileService).setLastModified(TERRARIA_WORLD_DIRECTORY.resolve("World.wld"), Instant.ofEpochMilli(1L));
         verify(fileService).setLastModified(TERRARIA_WORLD_DIRECTORY.resolve("World.twld"), Instant.ofEpochMilli(1L));
+    }
+
+    @Test
+    void testRecreateWorld_noFile() throws IOException {
+        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        when(terrariaWorldFileRepository.findByWorld(world)).thenReturn(Optional.empty());
+
+        terrariaWorldFileService.recreateWorld(world);
+        verify(fileService, never()).unzip(any(), any());
+
+        assertNull(world.getLastModified());
+        verify(terrariaWorldRepository, only()).save(world);
     }
 }

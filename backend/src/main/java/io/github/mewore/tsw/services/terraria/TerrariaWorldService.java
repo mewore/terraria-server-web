@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -50,33 +51,25 @@ public class TerrariaWorldService {
         final Map<String, TerrariaWorldEntity> currentWorldsByName = currentWorlds.stream()
                 .collect(Collectors.toUnmodifiableMap(TerrariaWorldEntity::getName, Function.identity()));
 
-        final List<TerrariaWorldEntity> worldsToSave = new ArrayList<>();
+        final List<TerrariaWorldFileEntity> filesToSave = new ArrayList<>();
 
         for (final TerrariaWorldInfo worldInfo : newWorldInfoList) {
             final @Nullable TerrariaWorldEntity currentWorld = currentWorldsByName.get(worldInfo.getName());
-            if (currentWorld == null) {
-                final TerrariaWorldEntity newWorld = TerrariaWorldEntity.builder()
-                        .name(worldInfo.getName())
-                        .lastModified(worldInfo.getLastModified())
-                        .file(worldInfo.readFile())
-                        .host(host)
-                        .build();
-                worldsToSave.add(newWorld);
+            if (currentWorld != null) {
+                updateWorld(currentWorld, null, worldInfo);
                 continue;
             }
-            if (currentWorld.getLastModified().equals(worldInfo.getLastModified())) {
-                continue;
-            }
-            currentWorld.setLastModified(worldInfo.getLastModified());
-            currentWorld.updateFile(worldInfo.readFile());
-            currentWorld.setMods(null);
-            worldsToSave.add(currentWorld);
+            final TerrariaWorldEntity newWorld = TerrariaWorldEntity.builder()
+                    .name(worldInfo.getName())
+                    .lastModified(worldInfo.getLastModified())
+                    .host(host)
+                    .build();
+            filesToSave.add(worldInfo.readFile(newWorld));
         }
 
         final Set<String> newWorldNames = newWorldInfoList.stream()
                 .map(TerrariaWorldInfo::getName)
                 .collect(Collectors.toUnmodifiableSet());
-
 
         for (final TerrariaWorldEntity world : currentWorlds) {
             if (!newWorldNames.contains(world.getName())) {
@@ -88,31 +81,37 @@ public class TerrariaWorldService {
         allWorldNames.addAll(currentWorldsByName.keySet());
         logger.info("New worlds: {}", String.join(", ", allWorldNames));
 
-        terrariaWorldRepository.saveAll(worldsToSave);
+        terrariaWorldFileRepository.saveAll(filesToSave);
     }
 
     @Transactional
     public void updateWorld(final TerrariaWorldEntity world, final Set<String> newMods) {
         final @Nullable TerrariaWorldInfo worldInfo = terrariaWorldFileService.getWorldInfo(world.getName());
         if (worldInfo == null) {
-            logger.warn("Could not get the info for world " + world.getName());
+            logger.warn("Could not get the info for world \"" + world.getName() + "\"");
             return;
         }
-        final TerrariaWorldFileEntity worldFile;
         try {
-            worldFile = worldInfo.readFile();
+            updateWorld(world, newMods, worldInfo);
         } catch (final IOException e) {
-            logger.warn("Failed to get the data of world " + world.getName(), e);
-            return;
+            logger.warn("Failed to get the data of world \"" + world.getName() + "\"", e);
         }
-        if (world.getLastModified().equals(worldInfo.getLastModified())) {
-            logger.info("World " + world.getName() + " is already up to date");
+    }
+
+    @Transactional
+    private void updateWorld(TerrariaWorldEntity world,
+            final @Nullable Set<String> newMods,
+            final TerrariaWorldInfo worldInfo) throws IOException {
+        if (worldInfo.getLastModified().equals(world.getLastModified())) {
+            logger.info("World \"" + world.getName() + "\" is already up to date");
             return;
         }
         world.setLastModified(worldInfo.getLastModified());
-        world.updateFile(worldFile);
         world.setMods(newMods);
-        terrariaWorldFileRepository.save(world.getFile());
-        terrariaWorldRepository.save(world);
+        world = terrariaWorldRepository.save(world);
+
+        final TerrariaWorldFileEntity worldFile = worldInfo.readFile(world);
+        final Optional<TerrariaWorldFileEntity> file = terrariaWorldFileRepository.findByWorld(world);
+        terrariaWorldFileRepository.save(file.isPresent() ? file.get().update(worldFile, world) : worldFile);
     }
 }

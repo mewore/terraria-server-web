@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,9 +23,6 @@ import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.LocalHostService;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -62,7 +60,7 @@ class TerrariaWorldServiceTest {
         when(worldInfo.getName()).thenReturn(WORLD_NAME);
         when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(lastModified));
         if (readResult != null) {
-            when(worldInfo.readFile()).thenReturn(readResult);
+            when(worldInfo.readFile(any())).thenReturn(readResult);
         }
         return worldInfo;
     }
@@ -75,7 +73,7 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(Collections.emptyList());
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).saveAll(Collections.emptyList());
+        verify(terrariaWorldFileRepository).saveAll(Collections.emptyList());
     }
 
     @Test
@@ -90,14 +88,7 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(Collections.emptyList());
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).saveAll(savedWorldListCaptor.capture());
-        assertEquals(1, savedWorldListCaptor.getValue().size());
-        final TerrariaWorldEntity savedWorld = savedWorldListCaptor.getValue().get(0);
-        assertEquals(WORLD_NAME, savedWorld.getName());
-        assertEquals(1L, savedWorld.getLastModified().toEpochMilli());
-        assertSame(worldFile, savedWorld.getFile());
-        assertNull(savedWorld.getMods());
-        assertSame(host, savedWorld.getHost());
+        verify(terrariaWorldFileRepository).saveAll(List.of(worldFile));
     }
 
     @Test
@@ -112,6 +103,7 @@ class TerrariaWorldServiceTest {
 
         terrariaWorldService.setUp();
         verify(terrariaWorldFileService).recreateWorld(deletedWorld);
+        verify(terrariaWorldFileRepository).saveAll(Collections.emptyList());
     }
 
     @Test
@@ -119,8 +111,8 @@ class TerrariaWorldServiceTest {
         final HostEntity host = mock(HostEntity.class);
         when(localHostService.getOrCreateHost()).thenReturn(host);
 
-        final TerrariaWorldFileEntity worldFile = mock(TerrariaWorldFileEntity.class);
-        final TerrariaWorldInfo worldInfo = makeWorldInfo(8L, worldFile);
+        final TerrariaWorldFileEntity worldFileFromWorldInfo = mock(TerrariaWorldFileEntity.class);
+        final TerrariaWorldInfo worldInfo = makeWorldInfo(8L, worldFileFromWorldInfo);
         when(terrariaWorldFileService.getAllWorldInfo()).thenReturn(List.of(worldInfo));
 
         final TerrariaWorldEntity changedWorld = mock(TerrariaWorldEntity.class);
@@ -128,11 +120,21 @@ class TerrariaWorldServiceTest {
         when(changedWorld.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
         when(terrariaWorldRepository.findByHost(host)).thenReturn(List.of(changedWorld));
 
+        final TerrariaWorldEntity savedWorld = mock(TerrariaWorldEntity.class);
+        when(terrariaWorldRepository.save(changedWorld)).thenReturn(savedWorld);
+
+        final TerrariaWorldFileEntity existingWorldFile = mock(TerrariaWorldFileEntity.class);
+        when(terrariaWorldFileRepository.findByWorld(savedWorld)).thenReturn(Optional.of(existingWorldFile));
+        when(existingWorldFile.update(worldFileFromWorldInfo, savedWorld)).thenReturn(existingWorldFile);
+
         terrariaWorldService.setUp();
+
+        verify(terrariaWorldRepository).save(changedWorld);
         verify(changedWorld).setLastModified(Instant.ofEpochMilli(8L));
-        verify(changedWorld).updateFile(same(worldFile));
         verify(changedWorld).setMods(null);
-        verify(terrariaWorldRepository).saveAll(List.of(changedWorld));
+        verify(terrariaWorldFileRepository).save(existingWorldFile);
+        verify(existingWorldFile).update(worldFileFromWorldInfo, savedWorld);
+        verify(terrariaWorldFileRepository).saveAll(Collections.emptyList());
     }
 
     @Test
@@ -149,31 +151,38 @@ class TerrariaWorldServiceTest {
         when(terrariaWorldRepository.findByHost(host)).thenReturn(List.of(unchangedWorld));
 
         terrariaWorldService.setUp();
-        verify(terrariaWorldRepository).saveAll(Collections.emptyList());
+        verify(terrariaWorldFileRepository).saveAll(Collections.emptyList());
     }
 
     @Test
     void testUpdateWorld() throws IOException {
-        final TerrariaWorldFileEntity worldFile = mock(TerrariaWorldFileEntity.class);
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
         when(world.getName()).thenReturn(WORLD_NAME);
         when(world.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
-        when(world.getFile()).thenReturn(worldFile);
 
         final TerrariaWorldInfo worldInfo = mock(TerrariaWorldInfo.class);
         final TerrariaWorldFileEntity readFileResult = mock(TerrariaWorldFileEntity.class);
-        when(worldInfo.readFile()).thenReturn(readFileResult);
         when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(8L));
+
 
         when(terrariaWorldFileService.getWorldInfo(WORLD_NAME)).thenReturn(worldInfo);
 
+        final TerrariaWorldEntity savedWorld = mock(TerrariaWorldEntity.class);
+        when(terrariaWorldRepository.save(world)).thenReturn(savedWorld);
+        when(worldInfo.readFile(savedWorld)).thenReturn(readFileResult);
+
+        final TerrariaWorldFileEntity worldFile = mock(TerrariaWorldFileEntity.class);
+        when(terrariaWorldFileRepository.findByWorld(savedWorld)).thenReturn(Optional.of(worldFile));
+        when(worldFile.update(readFileResult, savedWorld)).thenReturn(worldFile);
+
         terrariaWorldService.updateWorld(world, Set.of("Mod"));
 
-        verify(world).setLastModified(Instant.ofEpochMilli(8L));
-        verify(world).updateFile(same(readFileResult));
-        verify(world).setMods(Set.of("Mod"));
-        verify(terrariaWorldFileRepository, only()).save(same(worldFile));
         verify(terrariaWorldRepository, only()).save(same(world));
+        verify(world).setLastModified(Instant.ofEpochMilli(8L));
+        verify(world).setMods(Set.of("Mod"));
+
+        verify(terrariaWorldFileRepository).save(same(worldFile));
+        verify(worldFile).update(same(readFileResult), same(savedWorld));
     }
 
     @Test
@@ -188,12 +197,13 @@ class TerrariaWorldServiceTest {
     }
 
     @Test
-    void testUpdateWorld_IOException() throws IOException {
+    void testUpdateWorld_upToDate() {
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
         when(world.getName()).thenReturn(WORLD_NAME);
+        when(world.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
 
         final TerrariaWorldInfo worldInfo = mock(TerrariaWorldInfo.class);
-        when(worldInfo.readFile()).thenThrow(new IOException());
+        when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
 
         when(terrariaWorldFileService.getWorldInfo(WORLD_NAME)).thenReturn(worldInfo);
 
@@ -202,18 +212,45 @@ class TerrariaWorldServiceTest {
     }
 
     @Test
-    void testUpdateWorld_upToDate() throws IOException {
+    void testUpdateWorld_IOException() throws IOException {
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
         when(world.getName()).thenReturn(WORLD_NAME);
         when(world.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
 
         final TerrariaWorldInfo worldInfo = mock(TerrariaWorldInfo.class);
-        when(worldInfo.readFile()).thenReturn(mock(TerrariaWorldFileEntity.class));
-        when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
+        when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(8L));
+
+        final TerrariaWorldEntity savedWorld = mock(TerrariaWorldEntity.class);
+        when(terrariaWorldRepository.save(world)).thenReturn(savedWorld);
+        when(worldInfo.readFile(savedWorld)).thenThrow(new IOException());
 
         when(terrariaWorldFileService.getWorldInfo(WORLD_NAME)).thenReturn(worldInfo);
 
         terrariaWorldService.updateWorld(world, Collections.emptySet());
-        verify(terrariaWorldRepository, never()).save(any());
+        verify(terrariaWorldRepository, only()).save(same(world));
+    }
+
+    @Test
+    void testUpdateWorld_noFile() throws IOException {
+        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        when(world.getName()).thenReturn(WORLD_NAME);
+        when(world.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
+
+        final TerrariaWorldInfo worldInfo = mock(TerrariaWorldInfo.class);
+        final TerrariaWorldFileEntity readFileResult = mock(TerrariaWorldFileEntity.class);
+        when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(8L));
+
+        final TerrariaWorldEntity savedWorld = mock(TerrariaWorldEntity.class);
+        when(terrariaWorldRepository.save(world)).thenReturn(savedWorld);
+        when(worldInfo.readFile(savedWorld)).thenReturn(readFileResult);
+
+        when(terrariaWorldFileRepository.findByWorld(savedWorld)).thenReturn(Optional.empty());
+
+        when(terrariaWorldFileService.getWorldInfo(WORLD_NAME)).thenReturn(worldInfo);
+
+        terrariaWorldService.updateWorld(world, Set.of("Mod"));
+
+        verify(terrariaWorldRepository, only()).save(same(world));
+        verify(terrariaWorldFileRepository).save(same(readFileResult));
     }
 }

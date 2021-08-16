@@ -2,10 +2,11 @@ package io.github.mewore.tsw.services.terraria;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -21,7 +22,7 @@ import io.github.mewore.tsw.services.LocalHostService;
 
 import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,14 +51,18 @@ class TerrariaWorldServiceIT {
     @Autowired
     private TerrariaWorldFileRepository terrariaWorldFileRepository;
 
-    private static TerrariaWorldInfo makeWorldInfo(final String name,
+    private static TerrariaWorldInfo makeWorldInfo(final String worldName,
             final long lastModified,
-            final @Nullable TerrariaWorldFileEntity readResult) throws IOException {
+            final boolean hasReadResult) throws IOException {
         final TerrariaWorldInfo worldInfo = mock(TerrariaWorldInfo.class);
-        when(worldInfo.getName()).thenReturn(name);
+        when(worldInfo.getName()).thenReturn(worldName);
         when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(lastModified));
-        if (readResult != null) {
-            when(worldInfo.readFile()).thenReturn(readResult);
+        if (hasReadResult) {
+            when(worldInfo.readFile(any())).thenAnswer(invocation -> TerrariaWorldFileEntity.builder()
+                    .name(worldName + ".zip")
+                    .content("Content".getBytes())
+                    .world(invocation.getArgument(0))
+                    .build());
         }
         return worldInfo;
     }
@@ -73,37 +78,55 @@ class TerrariaWorldServiceIT {
         when(localHostService.getOrCreateHost()).thenReturn(host);
 
         final TerrariaWorldEntity unchangedWorld = terrariaWorldRepository.saveAndFlush(makeWorld(host, "Unchanged"));
+        addFileToWorld(unchangedWorld);
         final TerrariaWorldEntity changedWorld = terrariaWorldRepository.saveAndFlush(makeWorld(host, "Changed"));
+        addFileToWorld(changedWorld);
+        final TerrariaWorldEntity worldWithoutFile = terrariaWorldRepository.saveAndFlush(
+                makeWorld(host, "WithoutFile"));
         final TerrariaWorldEntity deletedWorld = terrariaWorldRepository.saveAndFlush(makeWorld(host, "Deleted"));
+        addFileToWorld(deletedWorld);
         final TerrariaWorldEntity otherHostWorld = terrariaWorldRepository.saveAndFlush(makeWorld(saveOtherHost()));
 
-        final TerrariaWorldFileEntity changedWorldFile = TerrariaWorldFileEntity.builder()
-                .name("Changed.zip")
-                .content("Changed content".getBytes())
-                .build();
-        final TerrariaWorldFileEntity newWorldFile = TerrariaWorldFileEntity.builder()
-                .name("New.zip")
-                .content("New content".getBytes()).build();
-        final List<TerrariaWorldInfo> worldInfoList = List.of(makeWorldInfo("Unchanged", 1L, null),
-                makeWorldInfo("Changed", 8L, changedWorldFile), makeWorldInfo("New", 1L, newWorldFile));
+        final List<TerrariaWorldInfo> worldInfoList = List.of(makeWorldInfo("Unchanged", 1L, false),
+                makeWorldInfo("Changed", 8L, true), makeWorldInfo("WithoutFile", 8L, true),
+                makeWorldInfo("New", 1L, true));
         when(terrariaWorldFileService.getAllWorldInfo()).thenReturn(worldInfoList);
 
         service().setUp();
-        final List<TerrariaWorldEntity> worlds = terrariaWorldRepository.findAll();
-        assertEquals(5, worlds.size());
-        assertSame(unchangedWorld, worlds.get(0));
-        assertSame(changedWorld, worlds.get(1));
-        assertSame(deletedWorld, worlds.get(2));
-        assertSame(otherHostWorld, worlds.get(3));
 
         verify(terrariaWorldFileService).recreateWorld(deletedWorld);
 
-        final TerrariaWorldEntity newWorld = worlds.get(4);
+        final List<TerrariaWorldEntity> worlds = terrariaWorldRepository.findAll();
+        final TerrariaWorldEntity newWorld = worlds.get(worlds.size() - 1);
+        assertEquals(List.of(unchangedWorld, changedWorld, worldWithoutFile, deletedWorld, otherHostWorld, newWorld),
+                worlds);
         assertEquals("New", newWorld.getName());
-        assertEquals(1L, newWorld.getLastModified().toEpochMilli());
+        assertEquals(Instant.ofEpochMilli(1L), newWorld.getLastModified());
 
-        assertEquals(worlds.size(), terrariaWorldFileRepository.findAll().size(),
-                "There should be exactly as many world files as there are worlds");
+        assertEquals(Instant.ofEpochMilli(8L), changedWorld.getLastModified());
+
+        assertEquals(List.of("Unchanged", "Changed", "WithoutFile", "Deleted", "New"),
+                terrariaWorldFileRepository.findAll()
+                        .stream()
+                        .map(file -> file.getWorld().getName())
+                        .collect(Collectors.toList()));
+    }
+
+    @Test
+    void testSetUp_massInsert() throws IOException {
+        final HostEntity host = saveHost();
+        when(localHostService.getOrCreateHost()).thenReturn(host);
+
+        final List<TerrariaWorldInfo> worldInfoList = new ArrayList<>(1000);
+        for (int i = 0; i < 1000; i++) {
+            worldInfoList.add(makeWorldInfo("New" + i, 1L, true));
+        }
+        when(terrariaWorldFileService.getAllWorldInfo()).thenReturn(worldInfoList);
+
+        service().setUp();
+
+        assertEquals(1000, terrariaWorldRepository.findAll().size());
+        assertEquals(1000, terrariaWorldFileRepository.findAll().size());
     }
 
     private HostEntity saveHost() {
@@ -119,15 +142,14 @@ class TerrariaWorldServiceIT {
     }
 
     private TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
-        final TerrariaWorldFileEntity worldFile = TerrariaWorldFileEntity.builder()
-                .name(name + ".zip")
+        return TerrariaWorldEntity.builder().name(name).lastModified(Instant.ofEpochMilli(1L)).host(host).build();
+    }
+
+    private void addFileToWorld(final TerrariaWorldEntity world) {
+        terrariaWorldFileRepository.saveAndFlush(TerrariaWorldFileEntity.builder()
+                .name(world.getName() + ".zip")
                 .content(new byte[0])
-                .build();
-        return TerrariaWorldEntity.builder()
-                .name(name)
-                .lastModified(Instant.ofEpochMilli(1L))
-                .file(worldFile)
-                .host(host)
-                .build();
+                .world(world)
+                .build());
     }
 }

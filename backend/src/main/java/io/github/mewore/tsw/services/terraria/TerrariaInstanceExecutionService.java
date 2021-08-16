@@ -193,12 +193,12 @@ public class TerrariaInstanceExecutionService {
                         TerrariaInstanceState.IDLE);
                 return instance;
             }
-            final @Nullable TerrariaWorldEntity world = instance.getWorld();
             final Set<String> loadedMods = instance.getLoadedMods();
             instance = terrariaInstanceInputService.sendInputToInstance(instance, save ? "exit" : "exit-nosave",
                     save ? INSTANCE_EXIT_TIMEOUT.plus(INSTANCE_SAVE_TIMEOUT) : INSTANCE_EXIT_TIMEOUT,
                     TerrariaInstanceState.IDLE);
             if (save) {
+                final @Nullable TerrariaWorldEntity world = instance.getWorld();
                 if (world == null) {
                     logger.warn("The instance {} does not have a world despite actively running", instance.getUuid());
                 } else {
