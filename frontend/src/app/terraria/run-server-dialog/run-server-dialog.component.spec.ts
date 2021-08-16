@@ -34,6 +34,7 @@ describe('RunServerDialogComponent', () => {
     const worldWithRunningHostId = 12;
     const worldWithMatchingModsId = 13;
     const worldWithMismatchingModsId = 14;
+    const missingWorldId = 15;
 
     let getHostInstancesSpy: jasmine.Spy<(hostId: number) => Promise<TerrariaInstanceEntity[]>>;
     let hostInstances: TerrariaInstanceEntity[];
@@ -127,21 +128,31 @@ describe('RunServerDialogComponent', () => {
                 {
                     id: worldWithNoModsId,
                     name: 'World1',
+                    lastModified: '',
                     mods: undefined,
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithRunningHostId,
                     name: 'World2',
+                    lastModified: '',
                     mods: ['Mod'],
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithMatchingModsId,
                     name: 'World3',
+                    lastModified: '',
                     mods: ['Mod'],
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithMismatchingModsId,
                     name: 'World4',
+                    lastModified: '',
+                    mods: ['OtherMod'],
+                } as TerrariaWorldEntity,
+                {
+                    id: missingWorldId,
+                    name: 'World4',
+                    lastModified: undefined,
                     mods: ['OtherMod'],
                 } as TerrariaWorldEntity,
             ];
@@ -378,6 +389,16 @@ describe('RunServerDialogComponent', () => {
 
                 it('should have an error', () => {
                     expect(worldField.errors).toEqual(['* Required']);
+                });
+            });
+
+            describe('when a missing world (with no timestamp) is selected', () => {
+                beforeEach(() => {
+                    worldField.setValue(missingWorldId);
+                });
+
+                it('should have a warning', () => {
+                    expect(worldField.errors).toEqual(['The files of the world are missing']);
                 });
             });
         });

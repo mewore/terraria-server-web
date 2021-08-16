@@ -14,13 +14,15 @@ describe('TerrariaWorldListItemComponent', () => {
     let component: TerrariaWorldListItemComponent;
     let listItemInfo: ListItemInfo;
 
+    let world: TerrariaWorldEntity;
+
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [MatListModule, MatIconModule, MatTooltipModule],
             declarations: [TerrariaWorldListItemComponent, EnUsTranslatePipeStub],
         }).compileComponents();
 
-        const world = {
+        world = {
             id: 1,
             lastModified: '2021-02-13T05:51:24Z',
             name: 'Test World',
@@ -39,6 +41,12 @@ describe('TerrariaWorldListItemComponent', () => {
 
     it('should have the world name in the first line', () => {
         expect(listItemInfo.lines[0]).toBe('Test World');
+    });
+
+    describe('deleted', () => {
+        it('should be false', () => {
+            expect(component.missing).toBeFalse();
+        });
     });
 
     describe('lastModifiedString', () => {
@@ -72,6 +80,23 @@ describe('TerrariaWorldListItemComponent', () => {
         describe('lastModifiedDetailedString', () => {
             it('should return undefined', () => {
                 expect(component.lastModifiedDetailedString).toBeUndefined();
+            });
+        });
+    });
+
+    describe('when the timestamp of the world is undefined', () => {
+        beforeEach(fakeAsync(() => {
+            world.lastModified = undefined;
+            refreshFixture(fixture);
+        }));
+
+        it('should show the world as deleted with no timestamp', () => {
+            expect(listItemInfo.lines).toEqual(['Test World (MISSING)']);
+        });
+
+        describe('deleted', () => {
+            it('should be true', () => {
+                expect(component.missing).toBeTrue();
             });
         });
     });

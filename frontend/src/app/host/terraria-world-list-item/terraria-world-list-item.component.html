@@ -1,6 +1,7 @@
 <mat-list-item>
     <mat-icon
         [class.tsw-loading]="!world"
+        [class.deleted]="missing"
         [matTooltipDisabled]="!!world"
         [matTooltip]="'terraria.world.list-item.status.loading' | translate"
         class="unclickable-icon"
@@ -9,8 +10,11 @@
         public
     </mat-icon>
 
-    <div *ngIf="world" mat-line>{{ world?.name }}</div>
-    <div *ngIf="world" class="world-last-modified" mat-line>
+    <div *ngIf="world" [class.deleted]="!world || missing" mat-line>
+        {{ world?.name }}
+        <ng-container *ngIf="missing">{{ 'list-item.missing' | translate }}</ng-container>
+    </div>
+    <div *ngIf="world?.lastModified" class="world-last-modified" mat-line>
         <span
             [matTooltip]="
                 'terraria.world.list-item.last-modified-tooltip'
@@ -26,9 +30,20 @@
             <mat-icon>delete</mat-icon>
         </button>
     </span>
-    <a *ngIf="world" [href]="'/api/terraria/worlds/' + world.id + '/data'">
-        <button [matTooltip]="'terraria.world.list-item.buttons.download' | translate" mat-icon-button>
-            <mat-icon>download</mat-icon>
-        </button>
-    </a>
+    <ng-container *ngIf="world">
+        <a *ngIf="!missing; else disabledDownloadButton" [href]="'/api/terraria/worlds/' + world.id + '/data'">
+            <button
+                [disabled]="missing"
+                [matTooltip]="'terraria.world.list-item.buttons.download' | translate"
+                mat-icon-button
+            >
+                <mat-icon>download</mat-icon>
+            </button>
+        </a>
+        <ng-template #disabledDownloadButton>
+            <button [disabled]="true" mat-icon-button>
+                <mat-icon>download</mat-icon>
+            </button>
+        </ng-template>
+    </ng-container>
 </mat-list-item>

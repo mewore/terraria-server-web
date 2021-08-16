@@ -64,6 +64,7 @@
                 <mat-option *ngFor="let world of worlds || []" [value]="world.id">
                     {{ world.name }}
                     {{ worldIsUsedByServer(world) ? ('terraria.instance.dialog.run.world.used' | translate) : '' }}
+                    {{ worldIsMissing(world) ? ('terraria.instance.dialog.run.world.missing' | translate) : '' }}
                 </mat-option>
             </mat-select>
             <mat-error *ngIf="worlds.length && worldInput.hasError('required')">
@@ -71,6 +72,9 @@
             </mat-error>
             <mat-error *ngIf="!worlds.length">
                 {{ 'terraria.instance.dialog.run.world.errors.no-worlds' | translate }}
+            </mat-error>
+            <mat-error *ngIf="worldInput.hasError('missing')">
+                {{ 'terraria.instance.dialog.run.world.errors.missing' | translate }}
             </mat-error>
             <mat-hint
                 *ngIf="worldHasMismatchingMods || worldHasUnknownMods || selectedWorldIsUsedByServer"

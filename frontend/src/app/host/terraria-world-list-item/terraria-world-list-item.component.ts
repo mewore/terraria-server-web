@@ -10,11 +10,15 @@ export class TerrariaWorldListItemComponent {
     @Input()
     world?: TerrariaWorldEntity;
 
+    get missing(): boolean {
+        return !!this.world && this.world.lastModified == null;
+    }
+
     get lastModifiedString(): string | undefined {
-        return this.world ? new Date(this.world.lastModified).toLocaleString() : undefined;
+        return this.world?.lastModified ? new Date(this.world.lastModified).toLocaleString() : undefined;
     }
 
     get lastModifiedDetailedString(): string | undefined {
-        return this.world ? new Date(this.world.lastModified).toString() : undefined;
+        return this.world?.lastModified ? new Date(this.world.lastModified).toString() : undefined;
     }
 }

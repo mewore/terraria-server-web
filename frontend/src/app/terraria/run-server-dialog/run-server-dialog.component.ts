@@ -47,10 +47,19 @@ export class RunServerDialogComponent implements OnInit {
     readonly passwordInput = new FormControl('', [Validators.maxLength(this.MAX_PASSWORD_LENGTH)]);
 
     worlds: TerrariaWorldEntity[] = [];
-    worldById: { [id: number]: TerrariaWorldEntity } = {};
+    worldById = new Map<number, TerrariaWorldEntity>();
     readonly instanceModString: string;
 
-    readonly worldInput = new FormControl({ value: undefined, disabled: true }, [Validators.required]);
+    readonly worldInput = new FormControl({ value: undefined, disabled: true }, [
+        Validators.required,
+        (control) => {
+            if (!control.value) {
+                return null;
+            }
+            const selectedWorld = this.worldById.get(control.value);
+            return selectedWorld && selectedWorld.lastModified == null ? { missing: true } : null;
+        },
+    ]);
 
     readonly form = new FormGroup({
         maxPlayers: this.maxPlayersInput,
@@ -90,6 +99,10 @@ export class RunServerDialogComponent implements OnInit {
         return this.instancesByWorldId.has(world.id);
     }
 
+    worldIsMissing(world: TerrariaWorldEntity): boolean {
+        return world.lastModified == null;
+    }
+
     get selectedWorldIsUsedByServer(): boolean {
         return this.instancesByWorldId.has(this.worldInput.value);
     }
@@ -99,7 +112,7 @@ export class RunServerDialogComponent implements OnInit {
         try {
             this.loading = true;
             this.worldModStringById = {};
-            this.worldById = {};
+            this.worldById = new Map<number, TerrariaWorldEntity>();
             const [instances, worlds] = await Promise.all([
                 this.restApi.getHostInstances(this.data.hostId),
                 this.restApi.getHostWorlds(this.data.hostId),
@@ -121,7 +134,7 @@ export class RunServerDialogComponent implements OnInit {
             this.portInput.setValue(this.portInput.value);
             this.worlds = worlds;
             for (const world of this.worlds) {
-                this.worldById[world.id] = world;
+                this.worldById.set(world.id, world);
                 const mods = world.mods;
                 if (mods) {
                     this.worldModStringById[world.id] = mods.sort().join(', ');
