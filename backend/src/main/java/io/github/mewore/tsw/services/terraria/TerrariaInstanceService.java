@@ -120,14 +120,7 @@ public class TerrariaInstanceService {
 
         final @Nullable TerrariaInstanceRunConfiguration runConfiguration = model.getRunConfiguration();
         if (runConfiguration != null) {
-            final TerrariaWorldEntity world = terrariaWorldRepository.findById(runConfiguration.getWorldId())
-                    .orElseThrow(() -> new InvalidRequestException(
-                            "There is no world with ID " + runConfiguration.getWorldId()));
-            instance.setMaxPlayers(runConfiguration.getMaxPlayers());
-            instance.setPort(runConfiguration.getPort());
-            instance.setAutomaticallyForwardPort(runConfiguration.isAutomaticallyForwardPort());
-            instance.setPassword(runConfiguration.getPassword());
-            instance.setWorld(world);
+            applyUpdateConfig(instance, runConfiguration);
             actionToApply = TerrariaInstanceAction.RUN_SERVER;
         }
 
@@ -148,6 +141,22 @@ public class TerrariaInstanceService {
         }
 
         return saveInstance(instance);
+    }
+
+    private void applyUpdateConfig(final TerrariaInstanceEntity instance,
+            final TerrariaInstanceRunConfiguration runConfiguration) throws InvalidRequestException {
+        final TerrariaWorldEntity world = terrariaWorldRepository.findById(runConfiguration.getWorldId())
+                .orElseThrow(() -> new InvalidRequestException(
+                        "There is no world with ID " + runConfiguration.getWorldId()));
+        if (world.getLastModified() == null) {
+            throw new InvalidRequestException(
+                    "The world with ID " + runConfiguration.getWorldId() + " has missing files");
+        }
+        instance.setMaxPlayers(runConfiguration.getMaxPlayers());
+        instance.setPort(runConfiguration.getPort());
+        instance.setAutomaticallyForwardPort(runConfiguration.isAutomaticallyForwardPort());
+        instance.setPassword(runConfiguration.getPassword());
+        instance.setWorld(world);
     }
 
     @Transactional

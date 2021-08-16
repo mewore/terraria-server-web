@@ -1,6 +1,7 @@
 package io.github.mewore.tsw.services.terraria;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -304,6 +305,7 @@ class TerrariaInstanceServiceTest {
         when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
 
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        when(world.getLastModified()).thenReturn(Instant.EPOCH);
         when(terrariaWorldRepository.findById(11L)).thenReturn(Optional.of(world));
 
         final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
@@ -331,6 +333,22 @@ class TerrariaInstanceServiceTest {
                         .runConfiguration(new TerrariaInstanceRunConfiguration(10, 7777, false, "password", 11L))
                         .build()));
         assertEquals("There is no world with ID 11", exception.getMessage());
+    }
+
+    @Test
+    public void testUpdateInstance_runInstance_worldWithNoLastModified() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
+
+        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        when(world.getLastModified()).thenReturn(null);
+        when(terrariaWorldRepository.findById(11L)).thenReturn(Optional.of(world));
+
+        final Exception exception = assertThrows(InvalidRequestException.class,
+                () -> terrariaInstanceService.updateInstance(8L, TerrariaInstanceUpdateModel.builder()
+                        .runConfiguration(new TerrariaInstanceRunConfiguration(10, 7777, false, "password", 11L))
+                        .build()));
+        assertEquals("The world with ID 11 has missing files", exception.getMessage());
     }
 
     @Test
