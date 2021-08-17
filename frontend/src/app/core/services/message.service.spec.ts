@@ -164,7 +164,7 @@ describe('MessageService', () => {
         let result: TerrariaInstanceEventMessage;
         const sentMessage: TerrariaInstanceEventMessage = {
             id: 1,
-            text: 'text',
+            content: 'text',
             type: 'OUTPUT',
         };
 

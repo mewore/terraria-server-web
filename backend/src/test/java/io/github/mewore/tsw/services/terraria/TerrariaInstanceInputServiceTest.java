@@ -57,7 +57,7 @@ class TerrariaInstanceInputServiceTest {
 
         terrariaInstanceInputService.sendBreakToInstance(instance, Duration.ofMinutes(10), TerrariaInstanceState.IDLE);
         verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
-        assertEquals("^C\n", eventCaptor.getValue().getText());
+        assertEquals("^C\n", eventCaptor.getValue().getContent());
         verify(tmuxService, only()).sendCtrlC(INSTANCE_UUID.toString());
     }
 
@@ -76,7 +76,7 @@ class TerrariaInstanceInputServiceTest {
         assertSame(awaitedInstance, result);
 
         verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
-        assertEquals("input\n", eventCaptor.getValue().getText());
+        assertEquals("input\n", eventCaptor.getValue().getContent());
         verify(tmuxService, only()).sendInput(INSTANCE_UUID.toString(), "input\n");
     }
 
@@ -91,7 +91,7 @@ class TerrariaInstanceInputServiceTest {
         terrariaInstanceInputService.sendInputToInstance(instance, "sensitive input", Duration.ofMinutes(10), true,
                 TerrariaInstanceState.IDLE);
         verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
-        assertEquals("[REDACTED]\n", eventCaptor.getValue().getText());
+        assertEquals("[REDACTED]\n", eventCaptor.getValue().getContent());
         verify(tmuxService, only()).sendInput(INSTANCE_UUID.toString(), "sensitive input\n");
     }
 }

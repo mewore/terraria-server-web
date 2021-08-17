@@ -339,7 +339,7 @@ class TerrariaInstanceActionServiceTest {
 
         final TerrariaInstanceEventEntity event = instanceEventCaptor.getValue();
         assertSame(TerrariaInstanceEventType.INVALID_INSTANCE, event.getType());
-        assertSame(firstSavedInstance.getError(), event.getText());
+        assertSame(firstSavedInstance.getError(), event.getContent());
         assertSame(instance, event.getInstance());
     }
 
@@ -368,7 +368,7 @@ class TerrariaInstanceActionServiceTest {
 
         final TerrariaInstanceEventEntity event = instanceEventCaptor.getValue();
         assertSame(TerrariaInstanceEventType.ERROR, event.getType());
-        assertSame(finalSavedInstance.getError(), event.getText());
+        assertSame(finalSavedInstance.getError(), event.getContent());
         assertSame(instance, event.getInstance());
     }
 
@@ -444,7 +444,7 @@ class TerrariaInstanceActionServiceTest {
 
         verify(terrariaInstanceService).saveInstanceAndEvent(any(), instanceEventCaptor.capture());
         assertSame(TerrariaInstanceEventType.ERROR, instanceEventCaptor.getValue().getType());
-        assertSame(instanceCaptor.getValue().getError(), instanceEventCaptor.getValue().getText());
+        assertSame(instanceCaptor.getValue().getError(), instanceEventCaptor.getValue().getContent());
     }
 
     @Test

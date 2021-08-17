@@ -22,7 +22,7 @@ import { SetInstanceModsDialogService } from '../set-instance-mods-dialog/set-in
 interface LogPart {
     id: number;
     className: string;
-    text: string;
+    content: string;
 }
 
 interface ButtonDefinition {
@@ -301,28 +301,28 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 return {
                     id: event.id,
                     className: 'application-start green',
-                    text: this.translateService.instant('terraria.instance.events.' + event.type),
+                    content: this.translateService.instant('terraria.instance.events.' + event.type),
                 };
             }
             case 'APPLICATION_END': {
                 return {
                     id: event.id,
                     className: 'application-end yellow',
-                    text: this.translateService.instant('terraria.instance.events.' + event.type),
+                    content: this.translateService.instant('terraria.instance.events.' + event.type),
                 };
             }
             case 'OUTPUT': {
                 return {
                     id: event.id,
                     className: 'preformatted',
-                    text: event.text,
+                    content: event.content,
                 };
             }
             case 'IMPORTANT_OUTPUT': {
                 return {
                     id: event.id,
                     className: 'important preformatted',
-                    text: event.text,
+                    content: event.content,
                 };
             }
             case 'ERROR':
@@ -331,8 +331,8 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 return {
                     id: event.id,
                     className: 'error orange',
-                    text: this.translateService.instant('terraria.instance.events.' + event.type, {
-                        error: event.text,
+                    content: this.translateService.instant('terraria.instance.events.' + event.type, {
+                        error: event.content,
                     }),
                 };
             }
@@ -340,7 +340,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
                 return {
                     id: event.id,
                     className: 'input preformatted cyan',
-                    text: event.text,
+                    content: event.content,
                 };
             }
             default: {

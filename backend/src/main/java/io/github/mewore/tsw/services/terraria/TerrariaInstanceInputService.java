@@ -51,7 +51,7 @@ public class TerrariaInstanceInputService {
         final String fullInput = input + "\n";
         final TerrariaInstanceEventEntity instanceEvent = TerrariaInstanceEventEntity.builder()
                 .instance(instance)
-                .text(obfuscateInput ? "[REDACTED]\n" : fullInput)
+                .content(obfuscateInput ? "[REDACTED]\n" : fullInput)
                 .type(TerrariaInstanceEventType.INPUT)
                 .build();
 

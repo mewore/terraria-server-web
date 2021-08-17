@@ -191,13 +191,13 @@ public class TerrariaInstanceActionService {
         final @Nullable String exceptionMessage = exception.getMessage();
         final TerrariaInstanceEventEntity event = TerrariaInstanceEventEntity.builder()
                 .type(eventType)
-                .text(exceptionMessage == null ? exception.getClass().getSimpleName() : exceptionMessage)
+                .content(exceptionMessage == null ? exception.getClass().getSimpleName() : exceptionMessage)
                 .instance(instance)
                 .build();
 
         instance.completeAction();
         instance.setState(newState);
-        instance.setError(event.getText());
+        instance.setError(event.getContent());
 
         terrariaInstanceService.saveInstanceAndEvent(instance, event);
     }

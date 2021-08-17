@@ -6,7 +6,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.Instant;
@@ -46,9 +45,8 @@ public class TerrariaInstanceEventEntity {
     private @NonNull Instant timestamp = Instant.now();
 
     @Builder.Default
-    @Lob
-    @Column(nullable = false)
-    private @NonNull String text = "";
+    @Column(nullable = false, columnDefinition = "varchar")
+    private @NonNull String content = "";
 
     @JsonIgnore
     @ManyToOne(optional = false)

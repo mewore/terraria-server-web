@@ -127,7 +127,7 @@ class TerrariaInstanceOutputServiceTest {
     }
 
     private static String serializeEvent(final TerrariaInstanceEventEntity event) {
-        return event.getType() + "<" + event.getText() + ">";
+        return event.getType() + "<" + event.getContent() + ">";
     }
 
     private static <T> List<T> iterableToList(final Iterable<T> iterable) {

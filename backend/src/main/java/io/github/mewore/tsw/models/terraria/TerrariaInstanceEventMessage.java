@@ -15,9 +15,9 @@ public class TerrariaInstanceEventMessage {
 
     private final @NonNull TerrariaInstanceEventType type;
 
-    private final @NonNull String text;
+    private final @NonNull String content;
 
     public TerrariaInstanceEventMessage(final TerrariaInstanceEventEntity event) {
-        this(event.getId(), event.getType(), event.getText());
+        this(event.getId(), event.getType(), event.getContent());
     }
 }

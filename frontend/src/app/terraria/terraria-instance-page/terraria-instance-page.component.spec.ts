@@ -74,8 +74,8 @@ describe('TerrariaInstancePageComponent', () => {
     >;
     let eventMessageSubject: Subject<TerrariaInstanceEventMessage>;
 
-    const inputEvent = (text: string) => ({ text, type: 'INPUT' } as TerrariaInstanceEventEntity);
-    const outputEvent = (text: string) => ({ text, type: 'OUTPUT' } as TerrariaInstanceEventEntity);
+    const inputEvent = (text: string) => ({ content: text, type: 'INPUT' } as TerrariaInstanceEventEntity);
+    const outputEvent = (text: string) => ({ content: text, type: 'OUTPUT' } as TerrariaInstanceEventEntity);
 
     beforeEach(async () => {
         routeSubject = new Subject();
@@ -290,7 +290,7 @@ describe('TerrariaInstancePageComponent', () => {
             beforeEach(fakeAsync(() => {
                 eventMessageSubject.next({
                     id: 8,
-                    text: 'new output\n',
+                    content: 'new output\n',
                     type: 'OUTPUT',
                 });
                 tick(1000);
@@ -300,7 +300,7 @@ describe('TerrariaInstancePageComponent', () => {
                 expect(component.logParts).toEqual([
                     {
                         id: 8,
-                        text: 'new output\n',
+                        content: 'new output\n',
                         className: 'preformatted',
                     },
                 ]);
@@ -310,7 +310,7 @@ describe('TerrariaInstancePageComponent', () => {
                 beforeEach(fakeAsync(() => {
                     eventMessageSubject.next({
                         id: 1,
-                        text: 'old output\n',
+                        content: 'old output\n',
                         type: 'OUTPUT',
                     });
                     tick(1000);
@@ -320,12 +320,12 @@ describe('TerrariaInstancePageComponent', () => {
                     expect(component.logParts).toEqual([
                         {
                             id: 1,
-                            text: 'old output\n',
+                            content: 'old output\n',
                             className: 'preformatted',
                         },
                         {
                             id: 8,
-                            text: 'new output\n',
+                            content: 'new output\n',
                             className: 'preformatted',
                         },
                     ]);
@@ -337,7 +337,7 @@ describe('TerrariaInstancePageComponent', () => {
             beforeEach(fakeAsync(() => {
                 eventMessageSubject.next({
                     id: 8,
-                    text: 'new output\n',
+                    content: 'new output\n',
                     type: 'INVALID_TYPE' as TerrariaInstanceEventType,
                 });
                 tick(1000);
@@ -363,8 +363,10 @@ describe('TerrariaInstancePageComponent', () => {
     });
 
     describe('when there are all kinds of instance events', () => {
-        const importantEvent = (text: string) => ({ text, type: 'IMPORTANT_OUTPUT' } as TerrariaInstanceEventEntity);
-        const detailEvent = (text: string) => ({ text, type: 'DETAILED_OUTPUT' } as TerrariaInstanceEventEntity);
+        const importantEvent = (text: string) =>
+            ({ content: text, type: 'IMPORTANT_OUTPUT' } as TerrariaInstanceEventEntity);
+        const detailEvent = (text: string) =>
+            ({ content: text, type: 'DETAILED_OUTPUT' } as TerrariaInstanceEventEntity);
 
         const getLogLines = (): string[] => {
             const logPanel = (fixture.nativeElement as Element).querySelector<HTMLElement>('.log-panel');
@@ -377,11 +379,11 @@ describe('TerrariaInstancePageComponent', () => {
         beforeEach(() => {
             instanceEvents = [
                 {
-                    text: 'The Terraria server URL is unreachable!',
+                    content: 'The Terraria server URL is unreachable!',
                     type: 'INVALID_INSTANCE',
                 } as TerrariaInstanceEventEntity,
-                { text: 'Something Went Wrong (TM)', type: 'ERROR' } as TerrariaInstanceEventEntity,
-                { text: 'Oof.', type: 'TSW_INTERRUPTED' } as TerrariaInstanceEventEntity,
+                { content: 'Something Went Wrong (TM)', type: 'ERROR' } as TerrariaInstanceEventEntity,
+                { content: 'Oof.', type: 'TSW_INTERRUPTED' } as TerrariaInstanceEventEntity,
                 { type: 'APPLICATION_START' } as TerrariaInstanceEventEntity,
                 outputEvent('Unloading mods...\n'),
                 importantEvent('Finding Mods...'),

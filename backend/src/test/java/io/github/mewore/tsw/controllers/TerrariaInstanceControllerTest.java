@@ -52,7 +52,7 @@ class TerrariaInstanceControllerTest {
         final TerrariaInstanceEventEntity event = TerrariaInstanceEventEntity.builder()
                 .id(1L)
                 .instance(instance)
-                .text("text")
+                .content("text")
                 .type(TerrariaInstanceEventType.OUTPUT)
                 .build();
         when(terrariaInstanceEventRepository.findTop100ByInstanceOrderByIdDesc(instance)).thenReturn(

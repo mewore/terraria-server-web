@@ -51,7 +51,7 @@ class TerrariaMessageServiceIT {
         final TerrariaInstanceEventEntity event = TerrariaInstanceEventEntity.builder()
                 .id(1L)
                 .type(TerrariaInstanceEventType.INPUT)
-                .text("some text")
+                .content("some text")
                 .instance(makeInstanceBuilder().id(8L).build())
                 .build();
 

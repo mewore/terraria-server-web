@@ -161,7 +161,7 @@ public class TerrariaInstanceOutputService {
             }
 
             logger.info("Reached the end of the output file. Text:\n<{}>",
-                    events.stream().map(TerrariaInstanceEventEntity::getText).collect(Collectors.joining()) +
+                    events.stream().map(TerrariaInstanceEventEntity::getContent).collect(Collectors.joining()) +
                             remainingText);
 
             outputTextBuffer = new StringBuilder();
@@ -187,7 +187,7 @@ public class TerrariaInstanceOutputService {
                             "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,6} is connecting\\.\\.\\.",
                             "[REDACTED IP] is connecting...")
                             : text;
-            return TerrariaInstanceEventEntity.builder().type(type).text(fixedText).instance(instance).build();
+            return TerrariaInstanceEventEntity.builder().type(type).content(fixedText).instance(instance).build();
         }
 
         private List<TerrariaInstanceEventEntity> combineEvents() {
@@ -195,14 +195,14 @@ public class TerrariaInstanceOutputService {
                 return Collections.emptyList();
             }
             final List<TerrariaInstanceEventEntity> result = new ArrayList<>();
-            StringBuilder combinedText = new StringBuilder(events.get(0).getText());
+            StringBuilder combinedText = new StringBuilder(events.get(0).getContent());
             for (int i = 1; i <= events.size(); i++) {
                 if (i >= events.size() || events.get(i).getType() != events.get(i - 1).getType()) {
                     result.add(makeEvent(events.get(i - 1).getType(), combinedText.toString()));
                     combinedText = new StringBuilder();
                 }
                 if (i < events.size()) {
-                    combinedText.append(events.get(i).getText());
+                    combinedText.append(events.get(i).getContent());
                 }
             }
             return result;
@@ -321,7 +321,7 @@ public class TerrariaInstanceOutputService {
                                 : (hasSession ? "the instance is still running" : "the instance isn't running"));
                 instance.setState(TerrariaInstanceState.BROKEN);
                 instance.setError(error);
-                event = eventBuilder.type(TerrariaInstanceEventType.ERROR).text(error).build();
+                event = eventBuilder.type(TerrariaInstanceEventType.ERROR).content(error).build();
             }
             instance = terrariaInstanceService.saveInstanceAndEvent(instance, event);
         }
