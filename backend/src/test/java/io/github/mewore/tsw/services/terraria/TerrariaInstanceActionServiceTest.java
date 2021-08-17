@@ -228,6 +228,17 @@ class TerrariaInstanceActionServiceTest {
     }
 
     @Test
+    void testCheckInstances_createWorld()
+            throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
+        final TerrariaInstanceEntity instance = preparePendingAction(TerrariaInstanceState.WORLD_MENU,
+                TerrariaInstanceAction.CREATE_WORLD);
+        when(terrariaInstanceExecutionService.createWorld(instance)).thenReturn(instance);
+
+        runCheckInstances();
+        assertNull(instance.getError());
+    }
+
+    @Test
     void testCheckInstances_shutDown() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = preparePendingAction(TerrariaInstanceState.WORLD_MENU,
                 TerrariaInstanceAction.SHUT_DOWN);

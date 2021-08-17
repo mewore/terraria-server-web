@@ -1,0 +1,55 @@
+<h2 class="mat-dialog-title">{{ 'terraria.instance.dialog.create-world.title' | translate }}</h2>
+
+<mat-dialog-content>
+    <form autocomplete="off">
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.create-world.name.label' | translate }}</mat-label>
+            <input
+                [formControl]="nameInput"
+                [placeholder]="'terraria.instance.dialog.create-world.name.placeholder' | translate"
+                id="tsw-world-name-input"
+                matInput
+                required
+            />
+            <mat-error *ngIf="nameInput.hasError('blank')">
+                {{ 'input.errors.blank' | translate }}
+            </mat-error>
+            <mat-error *ngIf="nameInput.hasError('maxlength')">
+                {{ 'input.errors.too-long' | translate: { maxLength: MAX_NAME_LENGTH } }}
+            </mat-error>
+            <mat-error *ngIf="nameInput.hasError('duplicate')">
+                {{ 'terraria.instance.dialog.create-world.name.errors.duplicate' | translate: { fileName: fileName } }}
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.create-world.size.label' | translate }}</mat-label>
+            <mat-select [formControl]="sizeInput">
+                <mat-option *ngFor="let size of sizeOptions" [value]="size">
+                    {{ 'terraria.instance.dialog.create-world.size.options.' + size | translate }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="sizeInput.hasError('required')">{{ 'input.errors.required' | translate }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>{{ 'terraria.instance.dialog.create-world.difficulty.label' | translate }}</mat-label>
+            <mat-select [formControl]="difficultyInput">
+                <mat-option *ngFor="let difficulty of difficultyOptions" [value]="difficulty">
+                    {{ 'terraria.instance.dialog.create-world.difficulty.options.' + difficulty | translate }}
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="difficultyInput.hasError('required')">
+                {{ 'input.errors.required' | translate }}
+            </mat-error>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button [mat-dialog-close] mat-button>{{ 'dialog.buttons.cancel' | translate }}</button>
+    <button (click)="onCreateClicked()" [disabled]="form.invalid || loading" color="primary" mat-raised-button>
+        {{ 'terraria.instance.dialog.create-world.buttons.create' | translate }}
+    </button>
+    <mat-progress-bar [class]="loading ? '' : 'tsw-invisible'" color="primary" mode="indeterminate"></mat-progress-bar>
+</mat-dialog-actions>

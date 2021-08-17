@@ -1,5 +1,6 @@
 package io.github.mewore.tsw.services.terraria;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -51,11 +52,15 @@ class TerrariaWorldServiceIT {
     @Autowired
     private TerrariaWorldFileRepository terrariaWorldFileRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private static TerrariaWorldInfo makeWorldInfo(final String worldName,
             final long lastModified,
             final boolean hasReadResult) throws IOException {
         final TerrariaWorldInfo worldInfo = mock(TerrariaWorldInfo.class);
-        when(worldInfo.getName()).thenReturn(worldName);
+        when(worldInfo.getFileName()).thenReturn(worldName.replace(' ', '_'));
+        when(worldInfo.getDisplayName()).thenReturn(worldName);
         when(worldInfo.getLastModified()).thenReturn(Instant.ofEpochMilli(lastModified));
         if (hasReadResult) {
             when(worldInfo.readFile(any())).thenAnswer(invocation -> TerrariaWorldFileEntity.builder()
@@ -69,7 +74,7 @@ class TerrariaWorldServiceIT {
 
     private TerrariaWorldService service() {
         return new TerrariaWorldService(localHostService, terrariaWorldFileService, terrariaWorldRepository,
-                terrariaWorldFileRepository);
+                terrariaWorldFileRepository, entityManager);
     }
 
     @Test
@@ -100,15 +105,13 @@ class TerrariaWorldServiceIT {
         final TerrariaWorldEntity newWorld = worlds.get(worlds.size() - 1);
         assertEquals(List.of(unchangedWorld, changedWorld, worldWithoutFile, deletedWorld, otherHostWorld, newWorld),
                 worlds);
-        assertEquals("New", newWorld.getName());
+        assertEquals("New", newWorld.getDisplayName());
         assertEquals(Instant.ofEpochMilli(1L), newWorld.getLastModified());
 
         assertEquals(Instant.ofEpochMilli(8L), changedWorld.getLastModified());
 
         assertEquals(List.of("Unchanged", "Changed", "WithoutFile", "Deleted", "New"),
-                terrariaWorldFileRepository.findAll()
-                        .stream()
-                        .map(file -> file.getWorld().getName())
+                terrariaWorldFileRepository.findAll().stream().map(file -> file.getWorld().getDisplayName())
                         .collect(Collectors.toList()));
     }
 
@@ -142,12 +145,16 @@ class TerrariaWorldServiceIT {
     }
 
     private TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
-        return TerrariaWorldEntity.builder().name(name).lastModified(Instant.ofEpochMilli(1L)).host(host).build();
+        return TerrariaWorldEntity.builder()
+                .fileName(name.replace(' ', '_'))
+                .displayName(name)
+                .lastModified(Instant.ofEpochMilli(1L))
+                .host(host)
+                .build();
     }
 
     private void addFileToWorld(final TerrariaWorldEntity world) {
-        terrariaWorldFileRepository.saveAndFlush(TerrariaWorldFileEntity.builder()
-                .name(world.getName() + ".zip")
+        terrariaWorldFileRepository.saveAndFlush(TerrariaWorldFileEntity.builder().name(world.getDisplayName() + ".zip")
                 .content(new byte[0])
                 .world(world)
                 .build());

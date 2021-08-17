@@ -78,6 +78,10 @@ public class FileService {
         return Files.lines(filePath).collect(Collectors.joining(System.lineSeparator()));
     }
 
+    public InputStream readFileInStream(final @NonNull File file) throws IOException {
+        return new FileInputStream(file);
+    }
+
     public FileTail tail(final File file, final long startPosition, final FileTailEventConsumer eventConsumer) {
         final FileTail tail = new FileTail(file, startPosition, eventConsumer);
         asyncService.runInThread(tail);

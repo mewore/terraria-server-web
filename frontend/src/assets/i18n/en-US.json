@@ -103,6 +103,7 @@
                     "BOOT_UP": "Boot up",
                     "GO_TO_MOD_MENU": "Go to the Mods menu",
                     "SET_LOADED_MODS": "Set the enabled mods",
+                    "CREATE_WORLD": "Create world",
                     "RUN_SERVER": "Run",
                     "SHUT_DOWN": "Shut down",
                     "SHUT_DOWN_NO_SAVE": "Shut down without saving",
@@ -115,6 +116,7 @@
                     "BOOT_UP": "Booting the instance up...",
                     "GO_TO_MOD_MENU": "Going to the mod menu...",
                     "SET_LOADED_MODS": "Setting the enabled mods...",
+                    "CREATE_WORLD": "Creating a world...",
                     "RUN_SERVER": "Running the instance as a Terraria server...",
                     "SHUT_DOWN": "Shutting the instance down...",
                     "SHUT_DOWN_NO_SAVE": "Shutting the instance down (without saving)...",
@@ -127,6 +129,7 @@
                     "BOOT_UP": "Will boot the instance up...",
                     "GO_TO_MOD_MENU": "Will go to the mod menu...",
                     "SET_LOADED_MODS": "Will set the enabled mods...",
+                    "CREATE_WORLD": "Will create a world...",
                     "RUN_SERVER": "Will run the instance as a Terraria server...",
                     "SHUT_DOWN": "Will shut the instance down...",
                     "SHUT_DOWN_NO_SAVE": "Will shut the instance down (without saving)...",
@@ -153,6 +156,34 @@
                         "placeholder": "Terraria dedicated server download URL",
                         "help-text": "Pick a server download link from the terraria.gamepedia.com wiki."
                     }
+                },
+                "create-world": {
+                    "buttons": {
+                        "create": "Create"
+                    },
+                    "difficulty": {
+                        "label": "Difficulty",
+                        "options": {
+                            "NORMAL": "Normal",
+                            "EXPERT": "Expert"
+                        }
+                    },
+                    "name": {
+                        "errors": {
+                            "duplicate": "There is already a world with the same file name: {{ fileName }}"
+                        },
+                        "label": "World name",
+                        "placeholder": "World name"
+                    },
+                    "size": {
+                        "label": "Size",
+                        "options": {
+                            "SMALL": "Small",
+                            "MEDIUM": "Medium",
+                            "LARGE": "Large"
+                        }
+                    },
+                    "title": "Create a world with this Terraria instance"
                 },
                 "delete": {
                     "title": "Delete the instance?",
@@ -257,6 +288,9 @@
                 "CHANGING_MOD_STATE": "The instance is changing the state of a mod and waiting for the Mods menu to refresh.",
                 "MOD_MENU": "The instance is at the Mods menu.",
                 "MOD_BROWSER": "The instance is at the Mod Browser menu.",
+                "WORLD_SIZE_PROMPT": "The instance is at the world size prompt.",
+                "WORLD_DIFFICULTY_PROMPT": "The instance is at the world difficulty prompt.",
+                "WORLD_NAME_PROMPT": "The instance is at the world name prompt.",
                 "MAX_PLAYERS_PROMPT": "The instance is at the max players prompt.",
                 "PORT_PROMPT": "The instance is at the port prompt.",
                 "AUTOMATICALLY_FORWARD_PORT_PROMPT": "The instance is at the automatically forward port prompt.",

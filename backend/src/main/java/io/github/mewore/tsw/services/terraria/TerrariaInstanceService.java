@@ -23,6 +23,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunConfiguration;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceUpdateModel;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.WorldCreationConfiguration;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
@@ -94,7 +95,6 @@ public class TerrariaInstanceService {
         }
     }
 
-    @Transactional
     public TerrariaInstanceEntity updateInstance(final long instanceId, final TerrariaInstanceUpdateModel model)
             throws NotFoundException, InvalidRequestException {
         final TerrariaInstanceEntity instance = getInstance(instanceId);
@@ -120,30 +120,36 @@ public class TerrariaInstanceService {
 
         final @Nullable TerrariaInstanceRunConfiguration runConfiguration = model.getRunConfiguration();
         if (runConfiguration != null) {
-            applyUpdateConfig(instance, runConfiguration);
+            applyRunConfig(instance, runConfiguration);
             actionToApply = TerrariaInstanceAction.RUN_SERVER;
+        }
+
+        final @Nullable WorldCreationConfiguration worldCreationConfig = model.getWorldCreationConfiguration();
+        if (worldCreationConfig != null) {
+            final String displayName = worldCreationConfig.getWorldDisplayName().trim();
+            final TerrariaWorldEntity world = terrariaWorldRepository.save(TerrariaWorldEntity.builder()
+                    .fileName(displayName.replace(' ', '_'))
+                    .displayName(displayName)
+                    .host(instance.getHost())
+                    .size(worldCreationConfig.getWorldSize())
+                    .difficulty(worldCreationConfig.getWorldDifficulty())
+                    .build());
+            instance.setWorld(world);
+            actionToApply = TerrariaInstanceAction.CREATE_WORLD;
         }
 
         if (model.getNewAction() != null) {
             actionToApply = model.getNewAction();
         }
+
         if (actionToApply != null) {
-            if (instance.getPendingAction() != null) {
-                throw new InvalidRequestException(
-                        "Cannot apply an action to an instance that already has a pending action");
-            }
-            if (actionToApply.isInapplicableTo(instance.getState())) {
-                throw new InvalidRequestException(
-                        "Cannot apply action " + actionToApply + " to an instance with the state " +
-                                instance.getState());
-            }
-            instance.setPendingAction(actionToApply);
+            applyPendingAction(instance, actionToApply);
         }
 
         return saveInstance(instance);
     }
 
-    private void applyUpdateConfig(final TerrariaInstanceEntity instance,
+    private void applyRunConfig(final TerrariaInstanceEntity instance,
             final TerrariaInstanceRunConfiguration runConfiguration) throws InvalidRequestException {
         final TerrariaWorldEntity world = terrariaWorldRepository.findById(runConfiguration.getWorldId())
                 .orElseThrow(() -> new InvalidRequestException(
@@ -157,6 +163,19 @@ public class TerrariaInstanceService {
         instance.setAutomaticallyForwardPort(runConfiguration.isAutomaticallyForwardPort());
         instance.setPassword(runConfiguration.getPassword());
         instance.setWorld(world);
+    }
+
+    private void applyPendingAction(final TerrariaInstanceEntity instance, final TerrariaInstanceAction actionToApply)
+            throws InvalidRequestException {
+        if (instance.getPendingAction() != null) {
+            throw new InvalidRequestException(
+                    "Cannot apply an action to an instance that already has a pending action");
+        }
+        if (actionToApply.isInapplicableTo(instance.getState())) {
+            throw new InvalidRequestException(
+                    "Cannot apply action " + actionToApply + " to an instance with the state " + instance.getState());
+        }
+        instance.setPendingAction(actionToApply);
     }
 
     @Transactional

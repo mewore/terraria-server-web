@@ -39,7 +39,11 @@ class TerrariaWorldFileRepositoryIT {
 
     private TerrariaWorldEntity makeWorld() {
         final HostEntity host = hostRepository.saveAndFlush(makeHost());
-        return terrariaWorldRepository.saveAndFlush(
-                TerrariaWorldEntity.builder().name(WORLD_NAME).lastModified(Instant.now()).host(host).build());
+        return terrariaWorldRepository.saveAndFlush(TerrariaWorldEntity.builder()
+                .fileName(WORLD_NAME.replace(' ', '_'))
+                .displayName(WORLD_NAME)
+                .lastModified(Instant.now())
+                .host(host)
+                .build());
     }
 }

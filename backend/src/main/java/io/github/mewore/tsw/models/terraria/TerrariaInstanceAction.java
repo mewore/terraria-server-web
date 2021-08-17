@@ -31,6 +31,11 @@ public enum TerrariaInstanceAction {
     SET_LOADED_MODS,
 
     /**
+     * <b>{@link TerrariaInstanceState#WORLD_MENU}</b> -> <b>{@link TerrariaInstanceState#WORLD_MENU}</b>
+     */
+    CREATE_WORLD,
+
+    /**
      * <b>{@link TerrariaInstanceState#WORLD_MENU}</b> -> <b>{@link TerrariaInstanceState#RUNNING}</b>
      */
     RUN_SERVER,

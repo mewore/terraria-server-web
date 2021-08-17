@@ -1,5 +1,6 @@
 package io.github.mewore.tsw.models.terraria;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,10 +16,12 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -173,7 +176,7 @@ public class TerrariaInstanceEntity {
     private @NonNull Set<String> loadedMods = Collections.emptySet();
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     private @Nullable TerrariaWorldEntity world;
 
     @JsonIgnore
@@ -186,6 +189,21 @@ public class TerrariaInstanceEntity {
         return getLocation().resolve(getHost().getOs() == OperatingSystem.WINDOWS
                 ? T_MOD_LOADER_SERVER_NAME_WINDOWS
                 : T_MOD_LOADER_SERVER_NAME_UNIX).toFile();
+    }
+
+    public int getOptionKey(final String optionLabel) {
+        return options.entrySet()
+                .stream()
+                .filter(option -> option.getValue().equals(optionLabel))
+                .findAny()
+                .map(Map.Entry::getKey)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        String.format("There is no option \"%s\" in the known options:\n%s", optionLabel,
+                                options.entrySet()
+                                        .stream()
+                                        .sorted(Comparator.comparingInt(Map.Entry::getKey))
+                                        .map(option -> option.getKey() + "\t\t" + option.getValue())
+                                        .collect(Collectors.joining("\n")))));
     }
 
     public void setState(final TerrariaInstanceState newState) {

@@ -69,8 +69,9 @@ class TerrariaWorldRepositoryIT {
     @Test
     void testSave_sameUniqueKey() {
         final HostEntity host = saveHost();
-        worldRepository.saveAndFlush(makeWorld(host));
-        assertThrows(DataIntegrityViolationException.class, () -> worldRepository.saveAndFlush(makeWorld(host)));
+        worldRepository.saveAndFlush(makeWorld(host, "Some_World"));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> worldRepository.saveAndFlush(makeWorld(host, "Some World")));
     }
 
     private HostEntity saveHost() {
@@ -86,6 +87,11 @@ class TerrariaWorldRepositoryIT {
     }
 
     private TerrariaWorldEntity makeWorld(final HostEntity host, final String name) {
-        return TerrariaWorldEntity.builder().name(name).lastModified(Instant.now()).host(host).build();
+        return TerrariaWorldEntity.builder()
+                .fileName(name.replace(' ', '_'))
+                .displayName(name)
+                .lastModified(Instant.now())
+                .host(host)
+                .build();
     }
 }

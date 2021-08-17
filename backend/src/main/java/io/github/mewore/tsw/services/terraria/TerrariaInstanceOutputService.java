@@ -92,7 +92,7 @@ public class TerrariaInstanceOutputService {
     @Getter
     private static class WorldMenuOption {
 
-        private static final Pattern WORLD_MENU_OPTION_PATTERN = Pattern.compile("^(\\d+)\t\t(.+)$");
+        private static final Pattern WORLD_MENU_OPTION_PATTERN = Pattern.compile("^(\\d+)\t+([^\t]+)$");
 
         private final String label;
 

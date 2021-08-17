@@ -170,6 +170,7 @@ describe('TerrariaInstanceService', () => {
     describe('the instance status label', () => {
         const ALL_ACTIONS: ReadonlyArray<TerrariaInstanceAction> = [
             'BOOT_UP',
+            'CREATE_WORLD',
             'DELETE',
             'GO_TO_MOD_MENU',
             'RECREATE',
@@ -197,7 +198,10 @@ describe('TerrariaInstanceService', () => {
             'PORT_PROMPT',
             'RUNNING',
             'VALID',
+            'WORLD_DIFFICULTY_PROMPT',
             'WORLD_MENU',
+            'WORLD_NAME_PROMPT',
+            'WORLD_SIZE_PROMPT',
         ];
 
         describe('when the instance is deleted', () => {

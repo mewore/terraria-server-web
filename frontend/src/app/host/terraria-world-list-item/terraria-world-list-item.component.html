@@ -11,7 +11,7 @@
     </mat-icon>
 
     <div *ngIf="world" [class.deleted]="!world || missing" mat-line>
-        {{ world?.name }}
+        {{ world?.displayName }}
         <ng-container *ngIf="missing">{{ 'list-item.missing' | translate }}</ng-container>
     </div>
     <div *ngIf="world?.lastModified" class="world-last-modified" mat-line>

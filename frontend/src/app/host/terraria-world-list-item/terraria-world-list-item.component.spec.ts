@@ -25,7 +25,7 @@ describe('TerrariaWorldListItemComponent', () => {
         world = {
             id: 1,
             lastModified: '2021-02-13T05:51:24Z',
-            name: 'Test World',
+            displayName: 'Test World',
         } as TerrariaWorldEntity;
 
         [fixture, component] = await initComponent(

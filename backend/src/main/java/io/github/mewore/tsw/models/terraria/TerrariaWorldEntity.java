@@ -2,6 +2,8 @@ package io.github.mewore.tsw.models.terraria;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -18,6 +20,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.DynamicUpdate;
 
 import io.github.mewore.tsw.models.HostEntity;
+import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
+import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +36,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "terraria_world", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "host_id"})})
+@Table(name = "terraria_world", uniqueConstraints = {@UniqueConstraint(name = "terraria_world_file_name_host_id_ukey"
+        , columnNames = {"file_name", "host_id"})})
 @DynamicUpdate
 public class TerrariaWorldEntity {
 
@@ -41,8 +46,12 @@ public class TerrariaWorldEntity {
     @GeneratedValue
     private Long id;
 
+    @JsonIgnore
+    @Column(nullable = false, name = "file_name")
+    private @NonNull String fileName;
+
     @Column(nullable = false)
-    private @NonNull String name;
+    private @NonNull String displayName;
 
     @Column
     private @Nullable Instant lastModified;
@@ -53,4 +62,12 @@ public class TerrariaWorldEntity {
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private @NonNull HostEntity host;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private @Nullable WorldSizeOption size;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private @Nullable WorldDifficultyOption difficulty;
 }

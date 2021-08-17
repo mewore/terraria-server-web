@@ -127,31 +127,31 @@ describe('RunServerDialogComponent', () => {
             hostWorlds = [
                 {
                     id: worldWithNoModsId,
-                    name: 'World1',
+                    displayName: 'World1',
                     lastModified: '',
                     mods: undefined,
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithRunningHostId,
-                    name: 'World2',
+                    displayName: 'World2',
                     lastModified: '',
                     mods: ['Mod'],
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithMatchingModsId,
-                    name: 'World3',
+                    displayName: 'World3',
                     lastModified: '',
                     mods: ['Mod'],
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithMismatchingModsId,
-                    name: 'World4',
+                    displayName: 'World4',
                     lastModified: '',
                     mods: ['OtherMod'],
                 } as TerrariaWorldEntity,
                 {
                     id: missingWorldId,
-                    name: 'World4',
+                    displayName: 'World4',
                     lastModified: undefined,
                     mods: ['OtherMod'],
                 } as TerrariaWorldEntity,

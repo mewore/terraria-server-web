@@ -1,6 +1,7 @@
 package io.github.mewore.tsw.config;
 
 import javax.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -75,6 +76,8 @@ public class TestConfig {
         final File twldFile = makeFile("world.twld", 8);
         when(fileService.pathToFile(WORLD_DIRECTORY.resolve("world.wld"))).thenReturn(wldFile);
         when(fileService.pathToFile(WORLD_DIRECTORY.resolve("world.twld"))).thenReturn(twldFile);
+
+        when(fileService.readFileInStream(wldFile)).thenReturn(new ByteArrayInputStream(new byte[0]));
 
         when(fileService.zip(wldFile, twldFile)).thenReturn(new byte[0]);
         return fileService;

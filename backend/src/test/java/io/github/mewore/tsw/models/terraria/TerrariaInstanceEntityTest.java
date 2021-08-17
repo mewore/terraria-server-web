@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 class TerrariaInstanceEntityTest {
@@ -31,6 +32,29 @@ class TerrariaInstanceEntityTest {
         final TerrariaInstanceEntity instance = makeInstance();
         when(instance.getHost().getOs()).thenReturn(OperatingSystem.LINUX);
         assertEquals("tModLoaderServer", instance.getModLoaderServerFile().getName());
+    }
+
+    @Test
+    void testGetOptionKey() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
+        instance.acknowledgeMenuOption(1, "Option1");
+        instance.acknowledgeMenuOption(2, "Option2");
+        instance.setState(TerrariaInstanceState.WORLD_MENU);
+
+        assertEquals(2, instance.getOptionKey("Option2"));
+    }
+
+    @Test
+    void testGetOptionKey_noOption() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
+        instance.acknowledgeMenuOption(1, "Option1");
+        instance.acknowledgeMenuOption(2, "Option2");
+        instance.setState(TerrariaInstanceState.WORLD_MENU);
+
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> instance.getOptionKey("Option3"));
+        assertEquals("There is no option \"Option3\" in the known options:\n1\t\tOption1\n2\t\tOption2",
+                exception.getMessage());
     }
 
     @Test

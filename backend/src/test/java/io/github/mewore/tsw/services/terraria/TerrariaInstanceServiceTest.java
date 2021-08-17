@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,15 +27,20 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunConfiguration;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceUpdateModel;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.WorldCreationConfiguration;
+import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
+import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceEventRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -349,6 +355,28 @@ class TerrariaInstanceServiceTest {
                         .runConfiguration(new TerrariaInstanceRunConfiguration(10, 7777, false, "password", 11L))
                         .build()));
         assertEquals("The world with ID 11 has missing files", exception.getMessage());
+    }
+
+    @Test
+    public void testUpdateInstance_createWorld() throws NotFoundException, InvalidRequestException {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
+        when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
+
+        when(terrariaWorldRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        final WorldCreationConfiguration worldConfig = new WorldCreationConfiguration(WorldSizeOption.MEDIUM,
+                WorldDifficultyOption.NORMAL, "World Name");
+        final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
+                TerrariaInstanceUpdateModel.builder().worldCreationConfiguration(worldConfig).build());
+        assertSame(instance, result);
+        assertSame(TerrariaInstanceAction.CREATE_WORLD, result.getPendingAction());
+        final @Nullable TerrariaWorldEntity world = result.getWorld();
+        assertNotNull(world);
+        assertEquals("World Name", world.getDisplayName());
+        assertEquals("World_Name", world.getFileName());
+        assertEquals(WorldSizeOption.MEDIUM, world.getSize());
+        assertEquals(WorldDifficultyOption.NORMAL, world.getDifficulty());
     }
 
     @Test

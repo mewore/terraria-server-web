@@ -33,6 +33,9 @@ import { FakeParamMap } from 'src/stubs/fake-param-map';
 import { EnUsTranslatePipeStub } from 'src/stubs/translate.pipe.stub';
 import { EnUsTranslateServiceStub } from 'src/stubs/translate.service.stub';
 import { initComponent, refreshFixture } from 'src/test-util/angular-test-util';
+import { CreateWorldDialogInput } from '../create-world-dialog/create-world-dialog.component';
+import { CreateWorldDialogService } from '../create-world-dialog/create-world-dialog.service';
+import { CreateWorldDialogServiceStub } from '../create-world-dialog/create-world-dialog.service.stub';
 import { RunServerDialogInput } from '../run-server-dialog/run-server-dialog.component';
 import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.service';
 import { RunServerDialogServiceStub } from '../run-server-dialog/run-server-dialog.service.stub';
@@ -50,6 +53,7 @@ describe('TerrariaInstancePageComponent', () => {
     let errorService: ErrorService;
     let authenticationService: AuthenticationService;
     let translateService: TranslateService;
+    let createWorldDialogService: CreateWorldDialogService;
     let runServerDialogService: RunServerDialogService;
     let setInstanceModsDialogService: SetInstanceModsDialogService;
     let simpleDialogService: SimpleDialogService;
@@ -89,6 +93,7 @@ describe('TerrariaInstancePageComponent', () => {
                 { provide: ErrorService, useClass: ErrorServiceStub },
                 { provide: AuthenticationService, useClass: AuthenticationServiceStub },
                 { provide: TranslateService, useClass: EnUsTranslateServiceStub },
+                { provide: CreateWorldDialogService, useClass: CreateWorldDialogServiceStub },
                 { provide: RunServerDialogService, useClass: RunServerDialogServiceStub },
                 { provide: SetInstanceModsDialogService, useClass: SetInstanceModsDialogServiceStub },
                 { provide: SimpleDialogService, useClass: SimpleDialogServiceStub },
@@ -101,6 +106,7 @@ describe('TerrariaInstancePageComponent', () => {
         errorService = TestBed.inject(ErrorService);
         authenticationService = TestBed.inject(AuthenticationService);
         translateService = TestBed.inject(TranslateService);
+        createWorldDialogService = TestBed.inject(CreateWorldDialogService);
         runServerDialogService = TestBed.inject(RunServerDialogService);
         setInstanceModsDialogService = TestBed.inject(SetInstanceModsDialogService);
         simpleDialogService = TestBed.inject(SimpleDialogService);
@@ -693,7 +699,7 @@ describe('TerrariaInstancePageComponent', () => {
         });
 
         it('should have the correct buttons', () => {
-            expect(getButtonLabels()).toEqual(['Go to the Mods menu', 'Run', 'Shut down', 'Terminate']);
+            expect(getButtonLabels()).toEqual(['Go to the Mods menu', 'Create world', 'Run', 'Shut down', 'Terminate']);
         });
 
         describe('when the "Go to the Mods menu" button is clicked', () => {
@@ -712,6 +718,57 @@ describe('TerrariaInstancePageComponent', () => {
 
             it('should update the instance', () => {
                 expect(component.instance).toBe(newInstance);
+            });
+        });
+
+        describe('when the "Create world" button is clicked', () => {
+            describe('when the Create World dialog is confirmed', () => {
+                let createWorldSpy: jasmine.Spy<(data: CreateWorldDialogInput) => Promise<TerrariaInstanceEntity>>;
+                const newInstance = {} as TerrariaInstanceEntity;
+
+                beforeEach(fakeAsync(() => {
+                    createWorldSpy = spyOn(createWorldDialogService, 'openDialog').and.resolveTo(newInstance);
+                    getButton('Create world').click();
+                    tick();
+                }));
+
+                it('should open the Create World dialog with the correct data', () => {
+                    expect(createWorldSpy).toHaveBeenCalledWith({ hostId: 10, instance });
+                });
+
+                it('should update the instance', () => {
+                    expect(component.instance).toBe(newInstance);
+                });
+            });
+
+            describe('when the instance is undefined', () => {
+                let showErrorSpy: jasmine.Spy<(error: Error | string) => void>;
+
+                beforeEach(fakeAsync(() => {
+                    component.instance = undefined;
+                    showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                    getButton('Create world').click();
+                    tick();
+                }));
+
+                it('should show an error', () => {
+                    expect(showErrorSpy).toHaveBeenCalledOnceWith('The instance is not defined!');
+                });
+            });
+
+            describe('when the host is undefined', () => {
+                let showErrorSpy: jasmine.Spy<(error: Error | string) => void>;
+
+                beforeEach(fakeAsync(() => {
+                    component.host = undefined;
+                    showErrorSpy = spyOn(errorService, 'showError').and.returnValue();
+                    getButton('Create world').click();
+                    tick();
+                }));
+
+                it('should show an error', () => {
+                    expect(showErrorSpy).toHaveBeenCalledOnceWith('The host is not defined!');
+                });
             });
         });
 
@@ -871,6 +928,39 @@ describe('TerrariaInstancePageComponent', () => {
     describe('when the instance is in the MOD_BROWSER state', () => {
         beforeEach(() => {
             instance.state = 'MOD_BROWSER';
+            initializeWithRoute();
+        });
+
+        it('should have the correct buttons', () => {
+            expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
+        });
+    });
+
+    describe('when the instance is in the WORLD_SIZE_PROMPT state', () => {
+        beforeEach(() => {
+            instance.state = 'WORLD_SIZE_PROMPT';
+            initializeWithRoute();
+        });
+
+        it('should have the correct buttons', () => {
+            expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
+        });
+    });
+
+    describe('when the instance is in the WORLD_DIFFICULTY_PROMPT state', () => {
+        beforeEach(() => {
+            instance.state = 'WORLD_DIFFICULTY_PROMPT';
+            initializeWithRoute();
+        });
+
+        it('should have the correct buttons', () => {
+            expect(getButtonLabels()).toEqual(['Shut down', 'Terminate']);
+        });
+    });
+
+    describe('when the instance is in the WORLD_NAME_PROMP state', () => {
+        beforeEach(() => {
+            instance.state = 'WORLD_NAME_PROMPT';
             initializeWithRoute();
         });
 

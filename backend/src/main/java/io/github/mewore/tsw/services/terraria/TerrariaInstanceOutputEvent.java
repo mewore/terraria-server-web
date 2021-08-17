@@ -10,11 +10,22 @@ import lombok.RequiredArgsConstructor;
 public enum TerrariaInstanceOutputEvent {
 
     WORLD_MENU(TerrariaInstanceState.WORLD_MENU, "Choose World:", TerrariaInstanceState.BOOTING_UP,
-            TerrariaInstanceState.MOD_MENU, TerrariaInstanceState.MOD_BROWSER),
+            TerrariaInstanceState.MOD_MENU, TerrariaInstanceState.MOD_BROWSER, TerrariaInstanceState.WORLD_NAME_PROMPT),
+
+    // Mods
     MOD_MENU(TerrariaInstanceState.MOD_MENU, "Type a command:", TerrariaInstanceState.WORLD_MENU,
             TerrariaInstanceState.CHANGING_MOD_STATE),
     MOD_BROWSER(TerrariaInstanceState.MOD_BROWSER, "Type an exact ModName to download:",
             TerrariaInstanceState.WORLD_MENU),
+
+    // World creation
+    WORLD_SIZE_PROMPT(TerrariaInstanceState.WORLD_SIZE_PROMPT, "Choose size:", TerrariaInstanceState.WORLD_MENU),
+    WORLD_DIFFICULTY_PROMPT(TerrariaInstanceState.WORLD_DIFFICULTY_PROMPT, "Choose difficulty:",
+            TerrariaInstanceState.WORLD_SIZE_PROMPT),
+    WORLD_NAME_PROMPT(TerrariaInstanceState.WORLD_NAME_PROMPT, "Enter world name:",
+            TerrariaInstanceState.WORLD_DIFFICULTY_PROMPT),
+
+    // Running
     MAX_PLAYERS(TerrariaInstanceState.MAX_PLAYERS_PROMPT, "Max players (press enter for 8):",
             TerrariaInstanceState.WORLD_MENU),
     PORT(TerrariaInstanceState.PORT_PROMPT, "Server port (press enter for 7777):",

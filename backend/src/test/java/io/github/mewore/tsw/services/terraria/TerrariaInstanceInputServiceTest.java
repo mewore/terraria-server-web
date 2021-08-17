@@ -23,6 +23,7 @@ import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.INSTA
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -93,5 +94,14 @@ class TerrariaInstanceInputServiceTest {
         verify(terrariaInstanceService).saveEvent(eventCaptor.capture());
         assertEquals("[REDACTED]\n", eventCaptor.getValue().getContent());
         verify(tmuxService, only()).sendInput(INSTANCE_UUID.toString(), "sensitive input\n");
+    }
+
+    @Test
+    void testSendInputToInstance_newline() {
+        final TerrariaInstanceEntity instance = makeInstance();
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> terrariaInstanceInputService.sendInputToInstance(instance, "input\nmore input",
+                        Duration.ofMinutes(10), TerrariaInstanceState.IDLE));
+        assertEquals("Cannot enter an input of multiple lines: input\nmore input", exception.getMessage());
     }
 }

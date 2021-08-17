@@ -16,6 +16,7 @@ import {
     TerrariaInstanceEventMessage,
     TerrariaInstanceMessage,
 } from 'src/generated/backend';
+import { CreateWorldDialogService } from '../create-world-dialog/create-world-dialog.service';
 import { RunServerDialogService } from '../run-server-dialog/run-server-dialog.service';
 import { SetInstanceModsDialogService } from '../set-instance-mods-dialog/set-instance-mods-dialog.service';
 
@@ -53,6 +54,11 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
             action: 'SET_LOADED_MODS',
             isDisplayed: () => this.instance?.state === 'MOD_MENU',
             onClick: () => this.setEnabledMods(),
+        },
+        {
+            action: 'CREATE_WORLD',
+            isDisplayed: () => this.instance?.state === 'WORLD_MENU',
+            onClick: () => this.createWorld(),
         },
         {
             action: 'RUN_SERVER',
@@ -105,8 +111,9 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         private readonly errorService: ErrorService,
         private readonly authService: AuthenticationService,
         private readonly translateService: TranslateService,
-        private readonly runServerDialogService: RunServerDialogService,
         private readonly setInstanceModsDialogService: SetInstanceModsDialogService,
+        private readonly createWorldDialogService: CreateWorldDialogService,
+        private readonly runServerDialogService: RunServerDialogService,
         private readonly simpleDialogService: SimpleDialogService,
         private readonly terrariaInstanceService: TerrariaInstanceService,
         private readonly messageService: MessageService
@@ -181,6 +188,17 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         this.doWhileLoading(() => this.setInstanceModsDialogService.openDialog(instance));
     }
 
+    createWorld(): void {
+        const [instance, host] = [this.instance, this.host];
+        if (!instance) {
+            return this.errorService.showError('The instance is not defined!');
+        }
+        if (!host) {
+            return this.errorService.showError('The host is not defined!');
+        }
+        this.doWhileLoading(() => this.createWorldDialogService.openDialog({ instance, hostId: host.id }));
+    }
+
     runServer(): void {
         const [instance, host] = [this.instance, this.host];
         if (!instance) {
@@ -189,12 +207,7 @@ export class TerrariaInstancePageComponent implements AfterViewInit, OnDestroy {
         if (!host) {
             return this.errorService.showError('The host is not defined!');
         }
-        this.doWhileLoading(() =>
-            this.runServerDialogService.openDialog({
-                instance,
-                hostId: host.id,
-            })
-        );
+        this.doWhileLoading(() => this.runServerDialogService.openDialog({ instance, hostId: host.id }));
     }
 
     shutDown(): void {

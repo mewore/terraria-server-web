@@ -5,7 +5,7 @@ import { RunServerDialogService } from './run-server-dialog.service';
 
 @Injectable()
 export class RunServerDialogServiceStub implements RunServerDialogService {
-    openDialog(data: RunServerDialogInput): Promise<TerrariaInstanceEntity | undefined> {
+    openDialog(_data: RunServerDialogInput): Promise<TerrariaInstanceEntity | undefined> {
         throw new Error('Method not mocked.');
     }
 }

@@ -62,7 +62,7 @@
             <mat-label>{{ 'terraria.instance.dialog.run.world.label' | translate }}</mat-label>
             <mat-select [formControl]="worldInput">
                 <mat-option *ngFor="let world of worlds || []" [value]="world.id">
-                    {{ world.name }}
+                    {{ world.displayName }}
                     {{ worldIsUsedByServer(world) ? ('terraria.instance.dialog.run.world.used' | translate) : '' }}
                     {{ worldIsMissing(world) ? ('terraria.instance.dialog.run.world.missing' | translate) : '' }}
                 </mat-option>

@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.BOOT_UP;
+import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.CREATE_WORLD;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.DELETE;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.GO_TO_MOD_MENU;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceAction.RECREATE;
@@ -48,7 +49,7 @@ public enum TerrariaInstanceState {
     /**
      * At the main menu, where the worlds are listed (along with the ways to reach other menus).
      */
-    WORLD_MENU(true, GO_TO_MOD_MENU, RUN_SERVER, SHUT_DOWN, TERMINATE),
+    WORLD_MENU(true, GO_TO_MOD_MENU, CREATE_WORLD, RUN_SERVER, SHUT_DOWN, TERMINATE),
 
     /**
      * TSW is changing the state of a mod and waiting for the mod menu to appear again.
@@ -64,6 +65,21 @@ public enum TerrariaInstanceState {
      * At the menu with mods available for download.
      */
     MOD_BROWSER(true, SHUT_DOWN, TERMINATE),
+
+    /**
+     * At the world creation prompt for the world size (small / medium / large).
+     */
+    WORLD_SIZE_PROMPT(true, SHUT_DOWN, TERMINATE),
+
+    /**
+     * At the world creation prompt for the world difficulty (normal / expert).
+     */
+    WORLD_DIFFICULTY_PROMPT(true, SHUT_DOWN, TERMINATE),
+
+    /**
+     * At the world creation prompt for the world name.
+     */
+    WORLD_NAME_PROMPT(true, SHUT_DOWN, TERMINATE),
 
     /**
      * At the pre-start prompt for the maximum number of players.

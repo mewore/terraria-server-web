@@ -152,6 +152,9 @@ public class TerrariaInstanceActionService {
                 case SET_LOADED_MODS: {
                     return terrariaInstanceExecutionService.setInstanceLoadedMods(instance);
                 }
+                case CREATE_WORLD: {
+                    return terrariaInstanceExecutionService.createWorld(instance);
+                }
                 case RUN_SERVER: {
                     return terrariaInstanceExecutionService.runInstance(instance);
                 }

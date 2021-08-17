@@ -48,6 +48,9 @@ public class TerrariaInstanceInputService {
             final boolean obfuscateInput,
             final TerrariaInstanceState... expectedResultingStates)
             throws ProcessTimeoutException, InterruptedException, ProcessFailureException {
+        if (input.contains("\n")) {
+            throw new IllegalArgumentException("Cannot enter an input of multiple lines: " + input);
+        }
         final String fullInput = input + "\n";
         final TerrariaInstanceEventEntity instanceEvent = TerrariaInstanceEventEntity.builder()
                 .instance(instance)

@@ -7,6 +7,7 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import io.github.mewore.tsw.javax.validation.NullOrNotBlank;
+import io.github.mewore.tsw.models.terraria.world.WorldCreationConfiguration;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,4 +27,6 @@ public class TerrariaInstanceUpdateModel {
     private @Nullable Set<@NotNull String> newMods;
 
     private @Valid @Nullable TerrariaInstanceRunConfiguration runConfiguration;
+
+    private @Valid @Nullable WorldCreationConfiguration worldCreationConfiguration;
 }

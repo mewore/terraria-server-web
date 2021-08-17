@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 class TerrariaWorldInfo {
 
     @Getter
-    private final String name;
+    private final String fileName;
+
+    @Getter
+    private final String displayName;
 
     @Getter
     private final Instant lastModified;
@@ -26,8 +29,7 @@ class TerrariaWorldInfo {
     private final FileService fileService;
 
     public TerrariaWorldFileEntity readFile(final TerrariaWorldEntity world) throws IOException {
-        return TerrariaWorldFileEntity.builder()
-                .name(name + ".zip")
+        return TerrariaWorldFileEntity.builder().name(fileName + ".zip")
                 .content(fileService.zip(wldFile, twldFile))
                 .world(world)
                 .build();

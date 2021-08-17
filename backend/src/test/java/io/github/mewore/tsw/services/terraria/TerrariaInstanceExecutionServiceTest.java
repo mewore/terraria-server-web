@@ -21,6 +21,8 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
+import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.FileTail;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
@@ -85,7 +87,8 @@ class TerrariaInstanceExecutionServiceTest {
 
     private static TerrariaWorldEntity makeWorldForInstance(final TerrariaInstanceEntity instance, final String name) {
         final TerrariaWorldEntity world = TerrariaWorldEntity.builder()
-                .name(name)
+                .fileName(name.replace(' ', '_'))
+                .displayName(name)
                 .lastModified(Instant.now())
                 .mods(Collections.emptySet())
                 .host(instance.getHost())
@@ -210,6 +213,74 @@ class TerrariaInstanceExecutionServiceTest {
     }
 
     @Test
+    void testCreateWorld() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        instance.setLoadedMods(Set.of("Mod1"));
+
+        final TerrariaWorldEntity world = makeWorldForInstance(instance, "Some World");
+        world.setSize(WorldSizeOption.MEDIUM);
+        world.setDifficulty(WorldDifficultyOption.NORMAL);
+
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), eq("n"), any(),
+                same(TerrariaInstanceState.WORLD_SIZE_PROMPT))).thenAnswer(invocation -> {
+            instance.acknowledgeMenuOption(1, "Small");
+            instance.acknowledgeMenuOption(2, "Medium");
+            instance.acknowledgeMenuOption(3, "Large");
+            instance.setState(TerrariaInstanceState.WORLD_SIZE_PROMPT);
+            return instance;
+        });
+
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), eq("2"), any(),
+                same(TerrariaInstanceState.WORLD_DIFFICULTY_PROMPT))).thenAnswer(invocation -> {
+            instance.acknowledgeMenuOption(1, "Normal");
+            instance.acknowledgeMenuOption(2, "Expert");
+            instance.setState(TerrariaInstanceState.WORLD_DIFFICULTY_PROMPT);
+            return instance;
+        });
+
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), eq("1"), any(),
+                same(TerrariaInstanceState.WORLD_NAME_PROMPT))).thenAnswer(invocation -> {
+            instance.setState(TerrariaInstanceState.WORLD_NAME_PROMPT);
+            return instance;
+        });
+
+        when(terrariaInstanceInputService.sendInputToInstance(same(instance), eq("Some World"), any(),
+                same(TerrariaInstanceState.WORLD_MENU))).thenAnswer(invocation -> {
+            instance.setState(TerrariaInstanceState.WORLD_MENU);
+            return instance;
+        });
+
+        when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
+
+        final TerrariaInstanceEntity result = terrariaInstanceExecutionService.createWorld(instance);
+        assertSame(instance, result);
+
+        verify(terrariaInstanceInputService, times(4)).sendInputToInstance(same(instance), stringCaptor.capture(),
+                durationCaptor.capture(), stateCaptor.capture());
+        assertEquals(Arrays.asList(Duration.ofSeconds(10), Duration.ofSeconds(10), Duration.ofSeconds(10),
+                Duration.ofSeconds(310)), durationCaptor.getAllValues());
+
+        verify(terrariaWorldService).updateWorld(world, Set.of("Mod1"));
+    }
+
+    @Test
+    void testCreateWorld_incorrectState() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> terrariaInstanceExecutionService.createWorld(instance));
+        assertEquals("Cannot create a world with an instance with state IDLE", exception.getMessage());
+    }
+
+    @Test
+    void testCreateWorld_noWorld() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> terrariaInstanceExecutionService.createWorld(instance));
+        assertEquals("Cannot create a world with an instance that does not have an assigned world",
+                exception.getMessage());
+    }
+
+    @Test
     void testRunInstance() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.acknowledgeMenuOption(1, "World1");
@@ -315,21 +386,6 @@ class TerrariaInstanceExecutionServiceTest {
         final Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> terrariaInstanceExecutionService.runInstance(instance));
         assertEquals("Cannot run an instance that does not have any options!", exception.getMessage());
-    }
-
-    @Test
-    void testRunInstance_noWorldOption() {
-        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
-        instance.acknowledgeMenuOption(1, "World1");
-        instance.acknowledgeMenuOption(2, "World2");
-        instance.setState(TerrariaInstanceState.WORLD_MENU);
-
-        makeWorldForInstance(instance, "World3");
-
-        final Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> terrariaInstanceExecutionService.runInstance(instance));
-        assertEquals("Cannot run instance " + INSTANCE_UUID + " with world World3 " +
-                "because it isn't in the known menu world options:\n1\t\tWorld1\n2\t\tWorld2", exception.getMessage());
     }
 
     @Test

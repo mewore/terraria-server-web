@@ -23,9 +23,19 @@ import {
 } from './set-instance-mods-dialog/set-instance-mods-dialog.service';
 import { TerrariaInstancePageComponent } from './terraria-instance-page/terraria-instance-page.component';
 import { TerrariaRoutingModule } from './terraria-routing.module';
+import { CreateWorldDialogComponent } from './create-world-dialog/create-world-dialog.component';
+import {
+    CreateWorldDialogService,
+    CreateWorldDialogServiceImpl,
+} from './create-world-dialog/create-world-dialog.service';
 
 @NgModule({
-    declarations: [TerrariaInstancePageComponent, SetInstanceModsDialogComponent, RunServerDialogComponent],
+    declarations: [
+        TerrariaInstancePageComponent,
+        SetInstanceModsDialogComponent,
+        RunServerDialogComponent,
+        CreateWorldDialogComponent,
+    ],
     imports: [
         CommonModule,
         TerrariaCoreModule,
@@ -46,8 +56,9 @@ import { TerrariaRoutingModule } from './terraria-routing.module';
         TranslateModule.forChild(),
     ],
     providers: [
-        { provide: RunServerDialogService, useClass: RunServerDialogServiceImpl },
         { provide: SetInstanceModsDialogService, useClass: SetInstanceModsDialogServiceImpl },
+        { provide: CreateWorldDialogService, useClass: CreateWorldDialogServiceImpl },
+        { provide: RunServerDialogService, useClass: RunServerDialogServiceImpl },
     ],
 })
 export class TerrariaModule {}

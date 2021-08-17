@@ -1,8 +1,6 @@
 package io.github.mewore.tsw.services.terraria;
 
 import java.time.Duration;
-import java.util.Comparator;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +14,8 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
+import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
@@ -36,6 +36,8 @@ public class TerrariaInstanceExecutionService {
     private static final Duration INSTANCE_BOOT_TIMEOUT = Duration.ofMinutes(1);
 
     private static final Duration MENU_NAVIGATION_TIMEOUT = Duration.ofSeconds(10);
+
+    private static final Duration WORLD_CREATION_TIMEOUT = Duration.ofMinutes(5);
 
     private static final Duration INSTANCE_START_TIMEOUT = Duration.ofMinutes(3);
 
@@ -123,6 +125,46 @@ public class TerrariaInstanceExecutionService {
         return instance;
     }
 
+    TerrariaInstanceEntity createWorld(TerrariaInstanceEntity instance)
+            throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
+
+        if (instance.getState() != TerrariaInstanceState.WORLD_MENU) {
+            throw new IllegalArgumentException(
+                    "Cannot create a world with an instance with state " + instance.getState());
+        }
+        final @Nullable TerrariaWorldEntity world = instance.getWorld();
+        if (world == null) {
+            throw new IllegalArgumentException(
+                    "Cannot create a world with an instance that does not have an assigned world");
+        }
+        final @Nullable WorldSizeOption size = world.getSize();
+        if (size == null) {
+            throw new IllegalArgumentException("Cannot create a world with no set size");
+        }
+        final @Nullable WorldDifficultyOption difficulty = world.getDifficulty();
+        if (difficulty == null) {
+            throw new IllegalArgumentException("Cannot create a world with no set difficulty");
+        }
+
+        instance = terrariaInstanceInputService.sendInputToInstance(instance, "n", MENU_NAVIGATION_TIMEOUT,
+                TerrariaInstanceState.WORLD_SIZE_PROMPT);
+
+        final int sizeOptionKey = instance.getOptionKey(size.getOptionLabel());
+        instance = terrariaInstanceInputService.sendInputToInstance(instance, String.valueOf(sizeOptionKey),
+                MENU_NAVIGATION_TIMEOUT, TerrariaInstanceState.WORLD_DIFFICULTY_PROMPT);
+
+        final int difficultyOptionKey = instance.getOptionKey(difficulty.getOptionLabel());
+        instance = terrariaInstanceInputService.sendInputToInstance(instance, String.valueOf(difficultyOptionKey),
+                MENU_NAVIGATION_TIMEOUT, TerrariaInstanceState.WORLD_NAME_PROMPT);
+
+        instance = terrariaInstanceInputService.sendInputToInstance(instance, world.getDisplayName(),
+                MENU_NAVIGATION_TIMEOUT.plus(WORLD_CREATION_TIMEOUT), TerrariaInstanceState.WORLD_MENU);
+        instance.setWorld(null);
+
+        terrariaWorldService.updateWorld(world, instance.getLoadedMods());
+        return terrariaInstanceService.saveInstance(instance);
+    }
+
     TerrariaInstanceEntity runInstance(TerrariaInstanceEntity instance)
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
 
@@ -136,31 +178,15 @@ public class TerrariaInstanceExecutionService {
         if (instance.getOptions().isEmpty()) {
             throw new IllegalArgumentException("Cannot run an instance that does not have any options!");
         }
-        final @Nullable Integer worldMenuOption = instance.getOptions()
-                .entrySet()
-                .stream()
-                .filter(option -> option.getValue().equals(world.getName()))
-                .findAny()
-                .map(Map.Entry::getKey)
-                .orElse(null);
-        if (worldMenuOption == null) {
-            throw new IllegalArgumentException(String.format(
-                    "Cannot run instance %s with world %s because it isn't in the known menu world options:\n%s",
-                    instance.getUuid(), world.getName(), instance.getOptions()
-                            .entrySet()
-                            .stream()
-                            .sorted(Comparator.comparingInt(Map.Entry::getKey))
-                            .map(option -> option.getKey() + "\t\t" + option.getValue())
-                            .collect(Collectors.joining("\n"))));
-        }
+        final int worldMenuOptionKey = instance.getOptionKey(world.getDisplayName());
         final @Nullable Set<String> worldMods = world.getMods();
         if (!instance.getLoadedMods().equals(worldMods)) {
-            logger.warn("The mods of instance {} ({}) are different from the ones of world {} ({})", instance.getUuid(),
-                    String.join(", ", instance.getLoadedMods()), world.getName(),
+            logger.warn("The mods of instance {} ({}) are different from the ones of world \"{}\" ({})",
+                    instance.getUuid(), String.join(", ", instance.getLoadedMods()), world.getDisplayName(),
                     worldMods == null ? "UNKNOWN" : String.join(", ", worldMods));
         }
 
-        instance = terrariaInstanceInputService.sendInputToInstance(instance, worldMenuOption.toString(),
+        instance = terrariaInstanceInputService.sendInputToInstance(instance, String.valueOf(worldMenuOptionKey),
                 MENU_NAVIGATION_TIMEOUT, TerrariaInstanceState.MAX_PLAYERS_PROMPT);
         instance = terrariaInstanceInputService.sendInputToInstance(instance, instance.getMaxPlayers().toString(),
                 MENU_NAVIGATION_TIMEOUT, TerrariaInstanceState.PORT_PROMPT);
