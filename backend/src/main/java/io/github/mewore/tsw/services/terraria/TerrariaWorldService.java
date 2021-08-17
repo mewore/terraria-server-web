@@ -1,7 +1,6 @@
 package io.github.mewore.tsw.services.terraria;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,8 +40,6 @@ public class TerrariaWorldService {
     private final @NonNull TerrariaWorldRepository terrariaWorldRepository;
 
     private final @NonNull TerrariaWorldFileRepository terrariaWorldFileRepository;
-
-    private final @NonNull EntityManager entityManager;
 
     @PostConstruct
     @Transactional
@@ -117,8 +114,6 @@ public class TerrariaWorldService {
         world.setLastModified(worldInfo.getLastModified());
         world.setMods(newMods);
         world = terrariaWorldRepository.save(world);
-        // Too tired to figure out why the world is detached. Whatever.
-        entityManager.merge(world);
 
         final TerrariaWorldFileEntity worldFile = worldInfo.readFile(world);
         final Optional<TerrariaWorldFileEntity> file = terrariaWorldFileRepository.findByWorld(world);

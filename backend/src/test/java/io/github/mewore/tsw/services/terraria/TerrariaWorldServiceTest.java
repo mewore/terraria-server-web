@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.services.terraria;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
@@ -50,9 +49,6 @@ class TerrariaWorldServiceTest {
 
     @Mock
     private TerrariaWorldFileRepository terrariaWorldFileRepository;
-
-    @Mock
-    private EntityManager entityManager;
 
     private static TerrariaWorldInfo makeWorldInfo(final long lastModified, final TerrariaWorldFileEntity readResult)
             throws IOException {
@@ -182,7 +178,6 @@ class TerrariaWorldServiceTest {
         verify(terrariaWorldRepository, only()).save(same(world));
         verify(world).setLastModified(Instant.ofEpochMilli(8L));
         verify(world).setMods(Set.of("Mod"));
-        verify(entityManager).merge(savedWorld);
 
         verify(terrariaWorldFileRepository).save(same(worldFile));
         verify(worldFile).update(same(readFileResult), same(savedWorld));

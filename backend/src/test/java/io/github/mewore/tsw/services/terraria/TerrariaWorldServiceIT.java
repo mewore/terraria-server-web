@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.services.terraria;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -52,9 +51,6 @@ class TerrariaWorldServiceIT {
     @Autowired
     private TerrariaWorldFileRepository terrariaWorldFileRepository;
 
-    @Autowired
-    private EntityManager entityManager;
-
     private static TerrariaWorldInfo makeWorldInfo(final String worldName,
             final long lastModified,
             final boolean hasReadResult) throws IOException {
@@ -74,7 +70,7 @@ class TerrariaWorldServiceIT {
 
     private TerrariaWorldService service() {
         return new TerrariaWorldService(localHostService, terrariaWorldFileService, terrariaWorldRepository,
-                terrariaWorldFileRepository, entityManager);
+                terrariaWorldFileRepository);
     }
 
     @Test

@@ -2,6 +2,7 @@ package io.github.mewore.tsw.models.terraria;
 
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -33,7 +34,7 @@ public class TerrariaWorldFileEntity {
     @Id
     private Long worldId;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @MapsId
     private @NonNull TerrariaWorldEntity world;
 
