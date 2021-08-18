@@ -11,6 +11,7 @@ import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
+import io.github.mewore.tsw.services.PublisherService;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -21,6 +22,9 @@ class TerrariaInstanceSubscriptionServiceIT {
 
     @Autowired
     private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
+
+    @Autowired
+    private PublisherService publisherService;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

@@ -1,138 +1,98 @@
 package io.github.mewore.tsw.services.terraria;
 
 import java.time.Duration;
+import java.util.function.Function;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.github.mewore.tsw.events.FakeSubscription;
+import io.github.mewore.tsw.events.Publisher;
 import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
+import io.github.mewore.tsw.services.PublisherService;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithId;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TerrariaInstanceSubscriptionServiceTest {
 
-    @InjectMocks
     private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     @Mock
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
-    @Test
-    void testSubscribe() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
-            final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-            emitInstance(instance);
-            assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
-        }
+    @Mock
+    private PublisherService publisherService;
+
+    @Mock
+    private Publisher<Long, TerrariaInstanceEntity> publisher;
+
+    @Captor
+    private ArgumentCaptor<Function<Long, TerrariaInstanceEntity>> valueSupplierCaptor;
+
+    @BeforeEach
+    void setUp() {
+        when(publisherService.<Long, TerrariaInstanceEntity>makePublisher(any())).thenReturn(publisher);
+        terrariaInstanceSubscriptionService = new TerrariaInstanceSubscriptionService(terrariaInstanceRepository,
+                publisherService);
     }
 
     @Test
-    void testSubscribe_fallback() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
-            emitInstance(makeInstanceWithId(1));
-            final TerrariaInstanceEntity fetchedInstance = makeInstanceWithId(1);
-            when(terrariaInstanceRepository.getOne(1L)).thenReturn(fetchedInstance);
-            assertSame(fetchedInstance, subscription.waitFor(instance -> instance == fetchedInstance, Duration.ZERO));
-        }
+    void testFallback() {
+        verify(publisherService, only()).makePublisher(valueSupplierCaptor.capture());
+        final TerrariaInstanceEntity fetchedInstance = mock(TerrariaInstanceEntity.class);
+        when(terrariaInstanceRepository.getOne(1L)).thenReturn(fetchedInstance);
+
+        final TerrariaInstanceEntity result = valueSupplierCaptor.getValue().apply(1L);
+        assertSame(fetchedInstance, result);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testOnApplicationEvent() {
+        final TerrariaInstanceEntity instance = makeInstanceWithId(1);
+        terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceUpdatedEvent(instance));
+        verify(publisher).publish(eq(1L), same(instance));
     }
 
     @Test
-    void testSubscribe_overfilled() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
-            final TerrariaInstanceEntity fillerInstance = makeInstanceWithId(1);
-            for (int i = 0; i < 10; i++) {
-                emitInstance(fillerInstance);
-            }
-            final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-            emitInstance(instance);
-            assertNull(subscription.waitFor(instanceToCheck -> instanceToCheck == instance, Duration.ZERO));
-        }
+    void testSubscribe() {
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        when(publisher.subscribe(1L)).thenReturn(subscription);
+
+        final Subscription<TerrariaInstanceEntity> result = terrariaInstanceSubscriptionService.subscribe(
+                makeInstanceWithId(1));
+        assertSame(subscription, result);
     }
 
     @Test
-    void testSubscribe_openAndClosed() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
-            try (final Subscription<TerrariaInstanceEntity> closedSubscription = subscribe(1)) {
-                closedSubscription.close();
-                final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-                emitInstance(instance);
-                assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
-                assertNull(closedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
-            }
-        }
-    }
+    void testSubscribeToAll() {
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        when(publisher.subscribe()).thenReturn(subscription);
 
-    @Test
-    void testSubscribe_closedSubscription() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> closedSubscription = subscribe(1)) {
-            closedSubscription.close();
-            emitInstance(makeInstanceWithId(1));
-            assertNull(closedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
-        }
-    }
-
-    @Test
-    void testSubscribe_unrelatedSubscription() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> unrelatedSubscription = subscribe(2)) {
-            emitInstance(makeInstanceWithId(1));
-            assertNull(unrelatedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
-        }
-    }
-
-    @Test
-    void testSubscribe_manySubscriptions() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription = subscribe(1)) {
-            try (final Subscription<TerrariaInstanceEntity> secondSubscription = subscribe(1)) {
-                try (final Subscription<TerrariaInstanceEntity> unrelatedSubscription = subscribe(2)) {
-                    final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-                    emitInstance(instance);
-
-                    final Subscription<TerrariaInstanceEntity> closedSubscription = subscribe(1);
-                    closedSubscription.close();
-
-                    assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
-                    assertSame(instance, secondSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
-                    assertNull(unrelatedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
-                    assertNull(closedSubscription.waitFor(unusedInstance -> true, Duration.ZERO));
-                }
-            }
-        }
-    }
-
-    @Test
-    void testSubscribeToAll() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription =
-                     terrariaInstanceSubscriptionService.subscribeToAll()) {
-            final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-            emitInstance(instance);
-            assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
-        }
-    }
-
-    @Test
-    void testSubscribeToAll_failure() throws InterruptedException {
-        try (final Subscription<TerrariaInstanceEntity> subscription =
-                     terrariaInstanceSubscriptionService.subscribeToAll()) {
-            final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-            emitInstance(instance);
-            assertNull(subscription.waitFor(unusedInstance -> false, Duration.ZERO));
-        }
+        final Subscription<TerrariaInstanceEntity> result = terrariaInstanceSubscriptionService.subscribeToAll();
+        assertSame(subscription, result);
     }
 
     @Test
@@ -156,14 +116,5 @@ class TerrariaInstanceSubscriptionServiceTest {
         assertEquals("The instance " + TerrariaInstanceFactory.INSTANCE_UUID +
                 " did not reach the state(s) WORLD_MENU/BOOTING_UP " +
                 "within a timeout of PT1M; instead, its state is IDLE.", exception.getMessage());
-    }
-
-    @SuppressWarnings("deprecation")
-    private void emitInstance(final TerrariaInstanceEntity instance) {
-        terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceUpdatedEvent(instance));
-    }
-
-    private Subscription<TerrariaInstanceEntity> subscribe(final long id) {
-        return terrariaInstanceSubscriptionService.subscribe(makeInstanceWithId(id));
     }
 }
