@@ -13,8 +13,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 
 import static org.mockito.Mockito.mock;

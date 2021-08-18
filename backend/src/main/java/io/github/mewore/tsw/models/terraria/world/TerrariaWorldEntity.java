@@ -1,4 +1,4 @@
-package io.github.mewore.tsw.models.terraria;
+package io.github.mewore.tsw.models.terraria.world;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,8 +20,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.DynamicUpdate;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
-import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

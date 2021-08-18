@@ -5,8 +5,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 
 @Transactional
 public interface TerrariaWorldFileRepository extends JpaRepository<TerrariaWorldFileEntity, Long> {

@@ -18,8 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.util.FileService;

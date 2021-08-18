@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.services.util.FileService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

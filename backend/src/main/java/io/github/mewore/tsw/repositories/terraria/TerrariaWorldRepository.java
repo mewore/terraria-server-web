@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 
 @Transactional
 public interface TerrariaWorldRepository extends JpaRepository<TerrariaWorldEntity, Long> {

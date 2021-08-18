@@ -13,7 +13,7 @@ import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
 import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;
 import io.github.mewore.tsw.services.util.FileService;

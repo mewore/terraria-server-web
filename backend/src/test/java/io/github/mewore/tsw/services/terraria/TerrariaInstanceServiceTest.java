@@ -26,7 +26,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceRunConfiguration;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceUpdateModel;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.WorldCreationConfiguration;
 import io.github.mewore.tsw.models.terraria.world.WorldDifficultyOption;
 import io.github.mewore.tsw.models.terraria.world.WorldSizeOption;

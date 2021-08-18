@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.mewore.tsw.config.ConfigConstants;
 import io.github.mewore.tsw.exceptions.NotFoundException;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

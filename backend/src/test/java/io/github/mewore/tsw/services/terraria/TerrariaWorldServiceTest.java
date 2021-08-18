@@ -14,8 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.LocalHostService;

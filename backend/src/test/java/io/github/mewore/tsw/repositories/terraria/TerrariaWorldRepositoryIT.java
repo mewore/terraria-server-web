@@ -11,7 +11,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 
 import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;

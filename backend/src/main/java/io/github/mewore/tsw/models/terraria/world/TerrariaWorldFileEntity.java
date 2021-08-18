@@ -1,4 +1,4 @@
-package io.github.mewore.tsw.models.terraria;
+package io.github.mewore.tsw.models.terraria.world;
 
 
 import javax.persistence.Basic;

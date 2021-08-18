@@ -13,8 +13,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldEntity;
-import io.github.mewore.tsw.models.terraria.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
