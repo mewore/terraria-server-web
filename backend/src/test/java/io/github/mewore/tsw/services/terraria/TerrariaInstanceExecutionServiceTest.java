@@ -281,6 +281,27 @@ class TerrariaInstanceExecutionServiceTest {
     }
 
     @Test
+    void testCreateWorld_noWorldSize() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        makeWorldForInstance(instance, "Some World");
+
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> terrariaInstanceExecutionService.createWorld(instance));
+        assertEquals("Cannot create a world with no set size", exception.getMessage());
+    }
+
+    @Test
+    void testCreateWorld_noWorldDifficulty() {
+        final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
+        final TerrariaWorldEntity world = makeWorldForInstance(instance, "Some World");
+        world.setSize(WorldSizeOption.MEDIUM);
+
+        final Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> terrariaInstanceExecutionService.createWorld(instance));
+        assertEquals("Cannot create a world with no set difficulty", exception.getMessage());
+    }
+
+    @Test
     void testRunInstance() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BOOTING_UP);
         instance.acknowledgeMenuOption(1, "World1");
