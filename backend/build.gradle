@@ -114,12 +114,21 @@ jacocoTestReport {
 }
 
 generateTypeScript {
+    // The documentation for the Maven plugin (there may not be one for Gradle, but they're essentially the same):
+    // http://www.habarta.cz/typescript-generator/maven/typescript-generator-maven-plugin/generate-mojo.html
+
     classPatterns = ['io.github.mewore.tsw.controllers.**']
     classesWithAnnotations = ['io.github.mewore.tsw.models.MessageModel']
+    excludeClasses = ['org.springframework.core.io.Resource']
 
     optionalAnnotations = ['org.springframework.lang.Nullable', 'org.checkerframework.checker.nullness.qual.Nullable']
 
     customTypeMappings = ['java.nio.file.Path:string', 'java.time.Instant:string', 'java.time.Duration:undefined']
+
+    // Make sure the file remains the same if the definitions are the same
+    sortDeclarations = true
+    sortTypeDeclarations = true
+    noFileComment = true
 
     outputFileType = TypeScriptFileType.implementationFile
     jsonLibrary = JsonLibrary.jackson2

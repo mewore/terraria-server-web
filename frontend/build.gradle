@@ -14,7 +14,7 @@ node {
 
 final String GENERATED_TS_DIR = "src/generated"
 def generateTsTask = tasks.getByPath(':backend:generateTypeScript')
-task getBackendDefinitions(type: Copy, dependsOn: generateTsTask) {
+task getBackendDefinitions(type: Sync, dependsOn: generateTsTask) {
     inputs.files(generateTsTask.outputs.getFiles())
     from generateTsTask.outputs.getFiles()
 
