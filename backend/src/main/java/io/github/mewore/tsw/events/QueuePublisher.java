@@ -8,10 +8,17 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @RequiredArgsConstructor
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Component
 public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object> implements Publisher<T, V> {
 
     private final AtomicLong currentId = new AtomicLong();
@@ -21,7 +28,8 @@ public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object
 
     private final ConcurrentMap<Long, ManagedSubscription<V>> genericSubscriptions = new ConcurrentHashMap<>();
 
-    private final @Nullable Function<T, V> topicToValue;
+    @Setter
+    private volatile @Nullable Function<T, V> topicToValueMapper;
 
     @Override
     public void publish(final T topic, final V value) {
@@ -42,7 +50,7 @@ public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object
     @Override
     public Subscription<V> subscribe(final T topic) {
         final long id = currentId.incrementAndGet();
-        final var currentTopicToValue = topicToValue;
+        final var currentTopicToValue = topicToValueMapper;
         final ManagedSubscription<V> subscription = new QueueSubscription<>(() -> {
             final @Nullable ConcurrentMap<Long, ManagedSubscription<V>> map = subscriptionsByTopic.get(topic);
             if (map == null) {

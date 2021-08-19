@@ -7,14 +7,19 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Future;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.stereotype.Component;
 
+import io.github.mewore.tsw.events.Publisher;
+import io.github.mewore.tsw.events.QueuePublisher;
 import io.github.mewore.tsw.models.file.OperatingSystem;
 import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.FileService;
@@ -81,6 +86,13 @@ public class TestConfig {
 
         when(fileService.zip(wldFile, twldFile)).thenReturn(new byte[0]);
         return fileService;
+    }
+
+    @Bean
+    @Primary
+    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+    <T extends @NonNull Object, V extends @NonNull Object> Publisher<T, V> getPublisher() {
+        return new QueuePublisher<>();
     }
 
     @Bean

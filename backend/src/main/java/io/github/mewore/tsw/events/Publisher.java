@@ -1,6 +1,9 @@
 package io.github.mewore.tsw.events;
 
+import java.util.function.Function;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A publisher that sends values to subscriptions in a Publisher-Subscriber paradigm.
@@ -8,6 +11,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * @param <T> The data type.
  */
 public interface Publisher<@NonNull T, V> {
+
+    /**
+     * @param newTopicToValueMapper The function used to map a topic to a value that will be used as a fallback if no
+     *                              matching values have been encountered by a topic-specific subscription.
+     */
+    void setTopicToValueMapper(final @Nullable Function<T, V> newTopicToValueMapper);
 
     /**
      * Publish a value to a specific topic, causing all generic subscriptions and all subscriptions for the specified

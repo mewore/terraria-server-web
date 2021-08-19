@@ -3,11 +3,11 @@ package io.github.mewore.tsw.services.terraria;
 import java.time.Duration;
 import java.util.function.Function;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,14 +19,12 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
-import io.github.mewore.tsw.services.PublisherService;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithId;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithState;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -37,13 +35,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TerrariaInstanceSubscriptionServiceTest {
 
+    @InjectMocks
     private TerrariaInstanceSubscriptionService terrariaInstanceSubscriptionService;
 
     @Mock
     private TerrariaInstanceRepository terrariaInstanceRepository;
-
-    @Mock
-    private PublisherService publisherService;
 
     @Mock
     private Publisher<Long, TerrariaInstanceEntity> publisher;
@@ -51,21 +47,14 @@ class TerrariaInstanceSubscriptionServiceTest {
     @Captor
     private ArgumentCaptor<Function<Long, TerrariaInstanceEntity>> valueSupplierCaptor;
 
-    @BeforeEach
-    void setUp() {
-        when(publisherService.<Long, TerrariaInstanceEntity>makePublisher(any())).thenReturn(publisher);
-        terrariaInstanceSubscriptionService = new TerrariaInstanceSubscriptionService(terrariaInstanceRepository,
-                publisherService);
-    }
-
     @Test
-    void testFallback() {
-        verify(publisherService, only()).makePublisher(valueSupplierCaptor.capture());
+    void testSetUp() {
+        terrariaInstanceSubscriptionService.setUp();
+        verify(publisher, only()).setTopicToValueMapper(valueSupplierCaptor.capture());
+
         final TerrariaInstanceEntity fetchedInstance = mock(TerrariaInstanceEntity.class);
         when(terrariaInstanceRepository.getOne(1L)).thenReturn(fetchedInstance);
-
-        final TerrariaInstanceEntity result = valueSupplierCaptor.getValue().apply(1L);
-        assertSame(fetchedInstance, result);
+        assertSame(fetchedInstance, valueSupplierCaptor.getValue().apply(1L));
     }
 
     @SuppressWarnings("deprecation")

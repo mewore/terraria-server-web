@@ -11,7 +11,7 @@ class QueuePublisherTest {
 
     @Test
     void testSubscribe_specific() throws InterruptedException {
-        final Publisher<Integer, Integer> publisher = new QueuePublisher<>(null);
+        final Publisher<Integer, Integer> publisher = new QueuePublisher<>();
         try (final Subscription<Integer> subscription = publisher.subscribe(1)) {
             publisher.publish(1, 1);
             assertEquals(1, subscription.waitFor(value -> true, Duration.ZERO));
@@ -20,7 +20,8 @@ class QueuePublisherTest {
 
     @Test
     void testSubscribe_fallback() throws InterruptedException {
-        final Publisher<Integer, Integer> publisher = new QueuePublisher<>(topic -> topic * 5);
+        final Publisher<Integer, Integer> publisher = new QueuePublisher<>();
+        publisher.setTopicToValueMapper(topic -> topic * 5);
         try (final Subscription<Integer> subscription = publisher.subscribe(1)) {
             publisher.publish(1, 1);
             assertEquals(5, subscription.waitFor(value -> value == 5, Duration.ZERO));
@@ -29,7 +30,7 @@ class QueuePublisherTest {
 
     @Test
     void testSubscribe_unrelatedSubscription() throws InterruptedException {
-        final Publisher<Integer, Integer> publisher = new QueuePublisher<>(null);
+        final Publisher<Integer, Integer> publisher = new QueuePublisher<>();
         try (final Subscription<Integer> subscription = publisher.subscribe(2)) {
             publisher.publish(1, 1);
             assertNull(subscription.waitFor(value -> true, Duration.ZERO));
@@ -38,7 +39,7 @@ class QueuePublisherTest {
 
     @Test
     void testSubscribe_twoSubscriptions() throws InterruptedException {
-        final Publisher<Integer, Integer> publisher = new QueuePublisher<>(null);
+        final Publisher<Integer, Integer> publisher = new QueuePublisher<>();
         try (final Subscription<Integer> subscription = publisher.subscribe(1)) {
             final Subscription<Integer> otherSubscription = publisher.subscribe(1);
 
@@ -55,7 +56,7 @@ class QueuePublisherTest {
 
     @Test
     void testSubscribe_generic() throws InterruptedException {
-        final Publisher<Integer, Integer> publisher = new QueuePublisher<>(null);
+        final Publisher<Integer, Integer> publisher = new QueuePublisher<>();
         try (final Subscription<Integer> subscription = publisher.subscribe()) {
             publisher.publish(1, 1);
             assertEquals(1, subscription.waitFor(value -> true, Duration.ZERO));

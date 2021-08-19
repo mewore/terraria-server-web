@@ -1,5 +1,6 @@
 package io.github.mewore.tsw.services.terraria;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Objects;
@@ -16,16 +17,19 @@ import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
-import io.github.mewore.tsw.services.PublisherService;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class TerrariaInstanceSubscriptionService implements ApplicationListener<TerrariaInstanceUpdatedEvent> {
 
+    private final TerrariaInstanceRepository terrariaInstanceRepository;
+
     private final Publisher<Long, TerrariaInstanceEntity> instancePublisher;
 
-    TerrariaInstanceSubscriptionService(final TerrariaInstanceRepository terrariaInstanceRepository,
-            final PublisherService publisherService) {
-        instancePublisher = publisherService.makePublisher(terrariaInstanceRepository::getOne);
+    @PostConstruct
+    void setUp() {
+        instancePublisher.setTopicToValueMapper(terrariaInstanceRepository::getOne);
     }
 
     /**
@@ -54,8 +58,7 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
             final Duration timeout,
             final TerrariaInstanceState... desiredStates) throws IllegalStateException, InterruptedException {
         final Set<TerrariaInstanceState> stateSet = Set.of(desiredStates);
-        final @Nullable TerrariaInstanceEntity result = subscription.waitFor(
-                newInstance -> stateSet.contains(newInstance.getState()), timeout);
+        final @Nullable TerrariaInstanceEntity result = subscription.waitFor(newInstance -> stateSet.contains(newInstance.getState()), timeout);
         if (result == null) {
             throw new IllegalStateException(String.format(
                     "The instance %s did not reach the state(s) %s within a timeout of %s; instead, its state is %s.",
