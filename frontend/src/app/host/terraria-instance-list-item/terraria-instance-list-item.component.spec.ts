@@ -247,7 +247,16 @@ describe('TerrariaInstanceListItemComponent', () => {
 
         describe('when the instance is changed', () => {
             beforeEach(fakeAsync(() => {
-                instanceChangeSubject.next({ state: 'INVALID', options: {} });
+                instanceChangeSubject.next({
+                    state: 'INVALID',
+                    options: {},
+                    terrariaVersion: null,
+                    modLoaderVersion: null,
+                    modLoaderReleaseUrl: null,
+                    modLoaderArchiveUrl: null,
+                    currentAction: null,
+                    pendingAction: null,
+                });
                 refreshFixture(fixture);
             }));
 
@@ -377,7 +386,16 @@ describe('TerrariaInstanceListItemComponent', () => {
 
     describe('when the instance is changed', () => {
         beforeEach(fakeAsync(() => {
-            instanceChangeSubject.next({ state: 'INVALID', options: {} });
+            instanceChangeSubject.next({
+                state: 'INVALID',
+                options: {},
+                terrariaVersion: null,
+                modLoaderVersion: null,
+                modLoaderReleaseUrl: null,
+                modLoaderArchiveUrl: null,
+                currentAction: null,
+                pendingAction: null,
+            });
             refreshFixture(fixture);
         }));
 

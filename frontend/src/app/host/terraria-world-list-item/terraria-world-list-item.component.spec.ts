@@ -84,9 +84,9 @@ describe('TerrariaWorldListItemComponent', () => {
         });
     });
 
-    describe('when the timestamp of the world is undefined', () => {
+    describe('when the timestamp of the world is null', () => {
         beforeEach(fakeAsync(() => {
-            world.lastModified = undefined;
+            world.lastModified = null;
             refreshFixture(fixture);
         }));
 

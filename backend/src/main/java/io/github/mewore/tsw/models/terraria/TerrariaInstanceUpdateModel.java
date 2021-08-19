@@ -20,13 +20,18 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class TerrariaInstanceUpdateModel {
 
+    @org.springframework.lang.Nullable
     private @Nullable TerrariaInstanceAction newAction;
 
+    @org.springframework.lang.Nullable
     private @Nullable @NullOrNotBlank String newName;
 
+    @org.springframework.lang.Nullable
     private @Nullable Set<@NotNull String> newMods;
 
+    @org.springframework.lang.Nullable
     private @Valid @Nullable TerrariaInstanceRunConfiguration runConfiguration;
 
+    @org.springframework.lang.Nullable
     private @Valid @Nullable WorldCreationConfiguration worldCreationConfiguration;
 }

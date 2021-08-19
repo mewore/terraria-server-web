@@ -32,6 +32,8 @@ describe('HostListItemComponent', () => {
             os: 'LINUX',
             terrariaInstanceDirectory: 'dir',
             uuid: 'uuid',
+            name: null,
+            url: null,
         };
 
         [fixture, component] = await initComponent(

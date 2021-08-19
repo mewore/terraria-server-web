@@ -112,6 +112,10 @@ describe('MessageService', () => {
             options: { 1: 'option' },
             currentAction: 'BOOT_UP',
             pendingAction: 'RUN_SERVER',
+            terrariaVersion: null,
+            modLoaderVersion: null,
+            modLoaderReleaseUrl: null,
+            modLoaderArchiveUrl: null,
         };
 
         beforeEach(fakeAsync(() => {

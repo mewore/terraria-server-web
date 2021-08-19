@@ -41,6 +41,8 @@ describe('CreateTerrariaInstanceDialogComponent', () => {
             alive: true,
             os: 'LINUX',
             terrariaInstanceDirectory: 'instance-dir',
+            name: null,
+            url: null,
         };
         tModLoaderVersions = [
             {

@@ -60,7 +60,7 @@ describe('RunServerDialogComponent', () => {
             {
                 state: 'IDLE',
                 port: 7770,
-                worldId: undefined,
+                worldId: null,
             } as TerrariaInstanceEntity,
             {
                 state: 'IDLE',
@@ -129,7 +129,7 @@ describe('RunServerDialogComponent', () => {
                     id: worldWithNoModsId,
                     displayName: 'World1',
                     lastModified: '',
-                    mods: undefined,
+                    mods: null,
                 } as TerrariaWorldEntity,
                 {
                     id: worldWithRunningHostId,
@@ -152,7 +152,7 @@ describe('RunServerDialogComponent', () => {
                 {
                     id: missingWorldId,
                     displayName: 'World4',
-                    lastModified: undefined,
+                    lastModified: null,
                     mods: ['OtherMod'],
                 } as TerrariaWorldEntity,
             ];

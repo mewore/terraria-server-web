@@ -89,7 +89,7 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
                 authData: currentUser.authData,
                 sessionToken: currentUser.sessionToken,
                 username: currentUser.username,
-                accountType,
+                accountType: accountType || undefined,
             });
             this.authenticationStateService.sessionState = SessionState.AUTHENTICATED;
         } catch (error) {
@@ -111,7 +111,7 @@ export class AuthenticationServiceImpl implements AuthenticationService, OnDestr
             username,
             sessionToken: session.token,
             authData: this.encodeBasicAuth(username, session.token),
-            accountType: session.role,
+            accountType: session.role || undefined,
         };
         this.setCurrentUser(newUser);
         return newUser;

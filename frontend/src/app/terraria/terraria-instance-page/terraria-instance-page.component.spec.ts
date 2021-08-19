@@ -238,6 +238,10 @@ describe('TerrariaInstancePageComponent', () => {
                     currentAction: 'BOOT_UP',
                     pendingAction: 'RUN_SERVER',
                     options: { 1: 'option' },
+                    modLoaderArchiveUrl: null,
+                    modLoaderReleaseUrl: null,
+                    modLoaderVersion: null,
+                    terrariaVersion: null,
                 });
                 refreshFixture(fixture);
             }));
@@ -282,6 +286,10 @@ describe('TerrariaInstancePageComponent', () => {
                         currentAction: 'BOOT_UP',
                         pendingAction: 'RUN_SERVER',
                         options: { 1: 'option' },
+                        modLoaderArchiveUrl: null,
+                        modLoaderReleaseUrl: null,
+                        modLoaderVersion: null,
+                        terrariaVersion: null,
                     });
                     refreshFixture(fixture);
                 }));

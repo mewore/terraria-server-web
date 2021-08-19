@@ -36,6 +36,7 @@ hibernate {
     }
 }
 
+// https://checkerframework.org/manual/checker-framework-manual.pdf
 checkerFramework {
     checkers = [
             'org.checkerframework.checker.nullness.NullnessChecker',
@@ -121,7 +122,8 @@ generateTypeScript {
     classesWithAnnotations = ['io.github.mewore.tsw.models.MessageModel']
     excludeClasses = ['org.springframework.core.io.Resource']
 
-    optionalAnnotations = ['org.springframework.lang.Nullable', 'org.checkerframework.checker.nullness.qual.Nullable']
+    optionalAnnotations = ['org.springframework.lang.Nullable']
+    nullableAnnotations = ['org.checkerframework.checker.nullness.qual.Nullable']
 
     customTypeMappings = ['java.nio.file.Path:string', 'java.time.Instant:string', 'java.time.Duration:undefined']
 
