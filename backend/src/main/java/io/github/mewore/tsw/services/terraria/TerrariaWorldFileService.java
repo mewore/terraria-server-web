@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -118,7 +119,7 @@ public class TerrariaWorldFileService {
                     return nameFallback;
                 }
             }
-            return new String(nameBytes);
+            return new String(nameBytes, StandardCharsets.US_ASCII);
         } catch (final IOException e) {
             logger.error("Failed to read " + wldFile.getName(), e);
             return nameFallback;

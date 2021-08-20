@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,9 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(name = "account_type")
-public class AccountTypeEntity {
+public class AccountTypeEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Setter(AccessLevel.NONE)
     @Id

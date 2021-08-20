@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+        https://spotbugs.readthedocs.io/en/stable/filter.html
+    -->
+
+    <Match>
+        <Method name="~.*_hibernate_.*"/>
+    </Match>
+    <Match>
+        <!-- This one occurs for my try-with-resources usages of subscriptions for no apparent reason. -->
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Match>
+
+    <Match>
+        <Package name="~io\.github\.mewore\.tsw\.models(\.[^.]+)*"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Package name="~io\.github\.mewore\.tsw\.models(\.[^.]+)*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Package name="~io\.github\.mewore\.tsw\.(services|controllers)(\.[^.]+)*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- TODO: Decide if performance should be sacrificed (more round-trips to the DB) in order to avoid risking sharing
+          the same instance across different event listeners. https://github.com/mewore/terraria-server-web/issues/49 -->
+    <Match>
+        <Class name="io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+</FindBugsFilter>

@@ -18,7 +18,7 @@ pipeline {
         stage('Backend') {
             steps {
                 script {
-                    sh './gradlew backend:test --no-daemon -PuseCheckerFramework'
+                    sh './gradlew backend:spotbugsMain backend:test --no-daemon'
                 }
                 jacoco([
                     classPattern: '**/backend/build/classes',
@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     sh './gradlew frontend:frontendLint frontend:frontendBuildProd frontend:frontendTest' +
-                        ' --no-daemon -PuseCheckerFramework'
+                        ' --no-daemon'
                 }
                 cobertura([
                     coberturaReportFile: '**/frontend/coverage/terraria-server-web/cobertura-coverage.xml',
@@ -65,7 +65,7 @@ pipeline {
         stage('Jar') {
             steps {
                 script {
-                    sh './gradlew jar --no-daemon -PuseCheckerFramework'
+                    sh './gradlew jar --no-daemon'
                 }
             }
         }

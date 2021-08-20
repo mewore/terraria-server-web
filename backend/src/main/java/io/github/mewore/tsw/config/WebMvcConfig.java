@@ -19,8 +19,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
         // UI
-        final PathResourceResolver uiResourceResolver =
-                AngularUiResourceResolver.builder().nonUiPaths(new String[]{"api/", "swagger-ui/"}).build();
+        final PathResourceResolver uiResourceResolver = new AngularUiResourceResolver("api/", "swagger-ui/");
 
         registry.addResourceHandler("/**")
                 .addResourceLocations(staticLocations)

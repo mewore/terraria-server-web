@@ -4,7 +4,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Set;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.lang.Nullable;
 
 import io.github.mewore.tsw.javax.validation.NullOrNotBlank;
 import io.github.mewore.tsw.models.terraria.world.WorldCreationConfiguration;
@@ -20,18 +20,18 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class TerrariaInstanceUpdateModel {
 
-    @org.springframework.lang.Nullable
-    private @Nullable TerrariaInstanceAction newAction;
+    @Nullable
+    private TerrariaInstanceAction newAction;
 
-    @org.springframework.lang.Nullable
-    private @Nullable @NullOrNotBlank String newName;
+    @Nullable
+    private @NullOrNotBlank String newName;
 
-    @org.springframework.lang.Nullable
-    private @Nullable Set<@NotNull String> newMods;
+    @Nullable
+    private Set<@NotNull String> newMods;
 
-    @org.springframework.lang.Nullable
-    private @Valid @Nullable TerrariaInstanceRunConfiguration runConfiguration;
+    @Nullable
+    private @Valid TerrariaInstanceRunConfiguration runConfiguration;
 
-    @org.springframework.lang.Nullable
-    private @Valid @Nullable WorldCreationConfiguration worldCreationConfiguration;
+    @Nullable
+    private @Valid WorldCreationConfiguration worldCreationConfiguration;
 }

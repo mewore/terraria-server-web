@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -23,17 +24,19 @@ public class HttpService {
 
     private static final RequestSettings DEFAULT_REQUEST_SETTINGS = RequestSettings.builder().build();
 
-    private static final RequestSettings HEAD_REQUEST_SETTINGS =
-            RequestSettings.builder().method(HttpMethod.HEAD).build();
+    private static final RequestSettings HEAD_REQUEST_SETTINGS = RequestSettings.builder()
+            .method(HttpMethod.HEAD)
+            .build();
 
-    private static final ObjectReader JSON_READER =
-            new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).reader();
+    private static final ObjectReader JSON_READER = new ObjectMapper().configure(
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).reader();
 
     private final Logger logger = LogManager.getLogger(getClass());
 
     public void checkUrl(final URL url) throws IOException, HttpClientErrorException {
         try (final InputStream stream = requestAsStream(url, HEAD_REQUEST_SETTINGS)) {
-            logger.info("The response header for URL {} is:\n{}", url, new String(stream.readAllBytes()));
+            logger.info("The response header for URL {} is:\n{}", url,
+                    new String(stream.readAllBytes(), StandardCharsets.US_ASCII));
         }
     }
 

@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.io.Serializable;
 import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,7 +30,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "terraria_instance_event")
 @Immutable
-public class TerrariaInstanceEventEntity {
+public class TerrariaInstanceEventEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Setter(AccessLevel.NONE)
     @Id

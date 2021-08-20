@@ -117,11 +117,11 @@ public class TerrariaInstanceOutputService {
 
         private final Logger logger = LogManager.getLogger(getClass());
 
+        List<TerrariaInstanceEventEntity> events = new ArrayList<>();
+
         private StringBuilder outputTextBuffer = new StringBuilder();
 
         private @NonNull TerrariaInstanceEntity instance;
-
-        List<TerrariaInstanceEventEntity> events = new ArrayList<>();
 
         @Override
         public void onFileCreated() {
@@ -180,6 +180,11 @@ public class TerrariaInstanceOutputService {
             events = new ArrayList<>();
         }
 
+        @Override
+        public void onFileDeleted() {
+            onFileExistenceChanged(false);
+        }
+
         private TerrariaInstanceEventEntity makeEvent(final TerrariaInstanceEventType type, final String text) {
             final String fixedText =
                     instance.getState() == TerrariaInstanceState.RUNNING && type == TerrariaInstanceEventType.OUTPUT
@@ -206,11 +211,6 @@ public class TerrariaInstanceOutputService {
                 }
             }
             return result;
-        }
-
-        @Override
-        public void onFileDeleted() {
-            onFileExistenceChanged(false);
         }
 
         /**

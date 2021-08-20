@@ -11,6 +11,7 @@ import javax.persistence.Lob;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 import org.checkerframework.common.returnsreceiver.qual.This;
 
@@ -29,7 +30,9 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "terraria_world_file")
-public class TerrariaWorldFileEntity {
+public class TerrariaWorldFileEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     private Long worldId;

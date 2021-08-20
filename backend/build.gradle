@@ -18,12 +18,11 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'java'
     id 'jacoco'
-    id 'org.checkerframework' version '0.5.22'
+    id 'com.github.spotbugs' version '4.7.3'
 }
 
 apply plugin: 'cz.habarta.typescript-generator'
 apply plugin: 'org.hibernate.orm'
-apply plugin: 'org.checkerframework'
 
 targetCompatibility = JavaVersion.VERSION_11
 sourceCompatibility = JavaVersion.VERSION_11
@@ -34,18 +33,6 @@ hibernate {
         enableDirtyTracking = true
         enableAssociationManagement = true
     }
-}
-
-// https://checkerframework.org/manual/checker-framework-manual.pdf
-checkerFramework {
-    checkers = [
-            'org.checkerframework.checker.nullness.NullnessChecker',
-    ]
-    extraJavacArgs = [
-            '-AsuppressWarnings=uninitialized,type.anno.before.modifier',
-            '-AskipUses=^(org\\.mockito\\.|org\\.junit\\.jupiter\\.api\\.Assertions)',
-    ]
-    skipCheckerFramework = !project.hasProperty("useCheckerFramework")
 }
 
 group = 'io.github.mewore.terraria'
@@ -62,6 +49,7 @@ repositories {
 }
 
 dependencies {
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
     compileOnly 'org.hibernate:hibernate-core:5.5.5.Final'
     compileOnly 'org.projectlombok:lombok:1.18.20'
     compileOnly 'org.checkerframework:checker-qual:3.16.0'
@@ -77,13 +65,21 @@ dependencies {
     runtimeOnly 'com.h2database:h2:1.4.200'
     //noinspection GradlePackageUpdate
     runtimeOnly 'org.postgresql:postgresql:42.2.23'
-    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
     testCompileOnly 'org.projectlombok:lombok:1.18.20'
     testCompileOnly 'org.checkerframework:checker-qual:3.16.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.3'
     testImplementation 'org.springframework.security:spring-security-test:5.5.1'
     testImplementation 'org.mockito:mockito-core:3.11.2'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+}
+
+spotbugsMain {
+    reports.configure {
+        xml.enabled = false
+        html.enabled = true
+    }
+    excludeFilter.fileValue(projectDir.toPath().resolve('spotbugs-exclude.xml').toFile())
 }
 
 test {
@@ -136,8 +132,8 @@ generateTypeScript {
     jsonLibrary = JsonLibrary.jackson2
     outputKind = 'module'
     generateSpringApplicationClient = true
-    def fileExtension = outputFileType == TypeScriptFileType.implementationFile ? ".ts" : ".d.ts"
-    outputs.file(project.buildDir.toPath().resolve("typescript-generator").resolve(project.name + fileExtension))
+    def fileExtension = outputFileType == TypeScriptFileType.implementationFile ? '.ts' : '.d.ts'
+    outputs.file(project.buildDir.toPath().resolve('typescript-generator').resolve(project.name + fileExtension))
 }
 
-bootJar.dependsOn test, generateTypeScript
+bootJar.dependsOn spotbugsMain, test, generateTypeScript

@@ -7,6 +7,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,10 +36,12 @@ import lombok.Setter;
 @Entity
 @Table(name = "host")
 @DynamicUpdate
-public class HostEntity {
+public class HostEntity implements Serializable {
 
-    private static final Path DEFAULT_TERRARIA_PATH =
-            Path.of(System.getProperty("user.home"), ".local", "share", "Terraria", "Instances");
+    private static final long serialVersionUID = 1L;
+
+    private static final String DEFAULT_TERRARIA_PATH = Path.of(System.getProperty("user.home"), ".local", "share",
+            "Terraria", "Instances").toString();
 
     private static final int DEFAULT_PORT = 8080;
 
@@ -79,9 +82,14 @@ public class HostEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private @NonNull Path terrariaInstanceDirectory = DEFAULT_TERRARIA_PATH;
+    @Setter(AccessLevel.NONE)
+    private @NonNull String terrariaInstanceDirectory = DEFAULT_TERRARIA_PATH;
 
     public boolean isAlive() {
         return alive && lastHeartbeat.plus(heartbeatDuration.multipliedBy(2)).isAfter(Instant.now());
+    }
+
+    public Path getTerrariaInstanceDirectory() {
+        return Path.of(terrariaInstanceDirectory);
     }
 }

@@ -13,6 +13,7 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Positive;
 import java.io.File;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
@@ -48,7 +49,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "terraria_instance", uniqueConstraints = {@UniqueConstraint(columnNames = {"host_id", "uuid"})})
 @DynamicUpdate
-public class TerrariaInstanceEntity {
+public class TerrariaInstanceEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final String OUTPUT_FILE_NAME = "output.log";
 
@@ -89,7 +92,7 @@ public class TerrariaInstanceEntity {
     private @Nullable Instant actionExecutionStartTime;
 
     @Column(nullable = false, length = 1023)
-    private @NonNull Path location;
+    private @NonNull String location;
 
     @Column(nullable = false)
     private @NonNull String name;
@@ -180,6 +183,14 @@ public class TerrariaInstanceEntity {
     @ManyToOne(cascade = CascadeType.PERSIST)
     private @Nullable TerrariaWorldEntity world;
 
+    public Path getLocation() {
+        return Path.of(location);
+    }
+
+    public void setLocation(final Path newLocation) {
+        location = newLocation.toAbsolutePath().toString();
+    }
+
     @JsonIgnore
     public File getOutputFile() {
         return getLocation().resolve(OUTPUT_FILE_NAME).toFile();
@@ -199,7 +210,7 @@ public class TerrariaInstanceEntity {
                 .findAny()
                 .map(Map.Entry::getKey)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        String.format("There is no option \"%s\" in the known options:\n%s", optionLabel,
+                        String.format("There is no option \"%s\" in the known options:%n%s", optionLabel,
                                 options.entrySet()
                                         .stream()
                                         .sorted(Comparator.comparingInt(Map.Entry::getKey))

@@ -7,6 +7,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -30,7 +31,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "account")
 @DynamicUpdate
-public class AccountEntity {
+public class AccountEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Setter(AccessLevel.NONE)
     @Id

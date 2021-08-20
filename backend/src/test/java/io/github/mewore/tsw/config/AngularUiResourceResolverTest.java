@@ -23,9 +23,7 @@ class AngularUiResourceResolverTest {
 
     private static final String RESOURCE_PATH = "path/to/resource";
 
-    private static final ResourceResolver RESOURCE_RESOLVER = AngularUiResourceResolver.builder()
-            .nonUiPaths(new String[]{NON_UI_PATH})
-            .build();
+    private static final ResourceResolver RESOURCE_RESOLVER = new AngularUiResourceResolver(NON_UI_PATH);
 
     @Mock
     private Resource location;

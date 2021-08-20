@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.models.terraria;
 
-import java.nio.file.Path;
 import java.util.UUID;
 
 import io.github.mewore.tsw.models.HostEntity;
@@ -29,7 +28,7 @@ public class TerrariaInstanceFactory {
         return TerrariaInstanceEntity.builder()
                 .id(INSTANCE_ID)
                 .uuid(INSTANCE_UUID)
-                .location(Path.of("instance-dir"))
+                .location("instance-dir")
                 .name("Instance Name")
                 .terrariaServerUrl("server-url")
                 .modLoaderReleaseId(1L)

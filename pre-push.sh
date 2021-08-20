@@ -28,7 +28,7 @@ else
 fi
 
 # See if the full build with test+lint and packaging into a jar works
-./gradlew jar -PuseCheckerFramework
+./gradlew jar
 result=$?
 
 compareNumbers() {

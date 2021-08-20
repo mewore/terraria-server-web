@@ -590,17 +590,17 @@ class TerrariaInstanceExecutionServiceTest {
     void testRecreateInstance_existingDirectory()
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.BROKEN);
-        when(fileService.exists(same(instance.getLocation()))).thenReturn(true);
+        when(fileService.exists(instance.getLocation())).thenReturn(true);
 
         terrariaInstanceExecutionService.recreateInstance(instance);
-        verify(fileService).deleteRecursively(same(instance.getLocation()));
+        verify(fileService).deleteRecursively(instance.getLocation());
     }
 
     @Test
     void testDeleteInstance() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(false);
-        when(fileService.exists(same(instance.getLocation()))).thenReturn(true);
+        when(fileService.exists(instance.getLocation())).thenReturn(true);
         when(fileService.deleteRecursively(instance.getLocation())).thenReturn(true);
 
         terrariaInstanceExecutionService.deleteInstance(instance);
@@ -623,7 +623,7 @@ class TerrariaInstanceExecutionServiceTest {
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(false);
-        when(fileService.exists(same(instance.getLocation()))).thenReturn(false);
+        when(fileService.exists(instance.getLocation())).thenReturn(false);
 
         terrariaInstanceExecutionService.deleteInstance(instance);
         verify(fileService, never()).deleteRecursively(any());
@@ -634,7 +634,7 @@ class TerrariaInstanceExecutionServiceTest {
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         when(tmuxService.hasSession(INSTANCE_UUID.toString())).thenReturn(false);
-        when(fileService.exists(same(instance.getLocation()))).thenReturn(true);
+        when(fileService.exists(instance.getLocation())).thenReturn(true);
         when(fileService.deleteRecursively(instance.getLocation())).thenReturn(false);
 
         terrariaInstanceExecutionService.deleteInstance(instance);

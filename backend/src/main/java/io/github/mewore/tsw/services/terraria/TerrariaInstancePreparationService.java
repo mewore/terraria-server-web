@@ -114,7 +114,7 @@ public class TerrariaInstancePreparationService {
 
         final TerrariaInstanceEntity newTerrariaInstance = TerrariaInstanceEntity.builder()
                 .uuid(instanceUuid)
-                .location(instanceDirectory)
+                .location(instanceDirectory.toAbsolutePath().toString())
                 .name(creationModel.getInstanceName())
                 .terrariaServerUrl(creationModel.getTerrariaServerArchiveUrl())
                 .modLoaderReleaseId(creationModel.getModLoaderReleaseId())

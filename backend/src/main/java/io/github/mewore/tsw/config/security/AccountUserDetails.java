@@ -24,7 +24,8 @@ public class AccountUserDetails implements UserDetails {
 
     private final String password;
 
-    private final Collection<GrantedAuthority> authorities;
+    @Getter(AccessLevel.NONE)
+    private final Set<GrantedAuthority> authorities;
 
     @Getter(AccessLevel.NONE)
     private final Instant expiration;
@@ -33,7 +34,7 @@ public class AccountUserDetails implements UserDetails {
         this(account.getUsername(), password, extractAuthorities(account), account.getSessionExpiration());
     }
 
-    private static Collection<GrantedAuthority> extractAuthorities(final AccountEntity account) {
+    private static Set<GrantedAuthority> extractAuthorities(final AccountEntity account) {
         final AccountTypeEntity role = account.getType();
         if (role == null) {
             return Collections.emptySet();
@@ -50,6 +51,11 @@ public class AccountUserDetails implements UserDetails {
             result.add(new SimpleGrantedAuthority(AuthorityRoles.MANAGE_TERRARIA));
         }
         return result;
+    }
+
+    @Override
+    public Collection<GrantedAuthority> getAuthorities() {
+        return Collections.unmodifiableSet(authorities);
     }
 
     @Override

@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Positive;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Set;
 
@@ -37,7 +38,9 @@ import lombok.Setter;
 @Table(name = "terraria_world", uniqueConstraints = {@UniqueConstraint(name = "terraria_world_file_name_host_id_ukey"
         , columnNames = {"file_name", "host_id"})})
 @DynamicUpdate
-public class TerrariaWorldEntity {
+public class TerrariaWorldEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Setter(AccessLevel.NONE)
     @Id
