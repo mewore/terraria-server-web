@@ -25,7 +25,8 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.LocalHostService;
-import io.github.mewore.tsw.services.util.AsyncService;
+import io.github.mewore.tsw.services.util.async.InterruptableRunnable;
+import io.github.mewore.tsw.services.util.async.LifecycleThreadPool;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
 
@@ -75,10 +76,10 @@ class TerrariaInstanceActionServiceTest {
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
     @Mock
-    private AsyncService asyncService;
+    private LifecycleThreadPool lifecycleThreadPool;
 
     @Captor
-    private ArgumentCaptor<AsyncService.InterruptableRunnable> checkInstancesCaptor;
+    private ArgumentCaptor<InterruptableRunnable> checkInstancesCaptor;
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceEntity> instanceCaptor;
@@ -111,7 +112,7 @@ class TerrariaInstanceActionServiceTest {
 
         terrariaInstanceActionService.setUp();
         verify(terrariaInstanceOutputService).trackInstance(instance);
-        verify(asyncService, only()).runContinuously(any());
+        verify(lifecycleThreadPool, only()).run(any(InterruptableRunnable.class));
     }
 
     @Test
@@ -124,7 +125,7 @@ class TerrariaInstanceActionServiceTest {
                 Optional.empty());
 
         terrariaInstanceActionService.setUp();
-        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+        verify(lifecycleThreadPool, only()).run(checkInstancesCaptor.capture());
 
         when(terrariaInstanceService.saveInstance(instance)).thenReturn(instance);
         when(terrariaInstancePreparationService.setUpInstance(instance)).thenReturn(instance);
@@ -143,7 +144,7 @@ class TerrariaInstanceActionServiceTest {
                 Optional.empty());
 
         terrariaInstanceActionService.setUp();
-        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+        verify(lifecycleThreadPool, only()).run(checkInstancesCaptor.capture());
 
         when(terrariaInstanceSubscriptionService.subscribeToAll()).thenReturn(new FakeSubscription<>(instance));
         checkInstancesCaptor.getValue().run();
@@ -162,7 +163,7 @@ class TerrariaInstanceActionServiceTest {
                 Optional.empty());
 
         terrariaInstanceActionService.setUp();
-        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+        verify(lifecycleThreadPool, only()).run(checkInstancesCaptor.capture());
 
         when(terrariaInstanceSubscriptionService.subscribeToAll()).thenReturn(new FakeSubscription<>(instance));
         checkInstancesCaptor.getValue().run();
@@ -485,7 +486,7 @@ class TerrariaInstanceActionServiceTest {
 
     private void runCheckInstances() throws InterruptedException {
         terrariaInstanceActionService.setUp();
-        verify(asyncService, only()).runContinuously(checkInstancesCaptor.capture());
+        verify(lifecycleThreadPool, only()).run(checkInstancesCaptor.capture());
         checkInstancesCaptor.getValue().run();
     }
 }

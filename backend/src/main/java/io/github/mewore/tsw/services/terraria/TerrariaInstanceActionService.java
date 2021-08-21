@@ -22,7 +22,7 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEventType;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.services.LocalHostService;
-import io.github.mewore.tsw.services.util.AsyncService;
+import io.github.mewore.tsw.services.util.async.LifecycleThreadPool;
 import io.github.mewore.tsw.services.util.process.ProcessFailureException;
 import io.github.mewore.tsw.services.util.process.ProcessTimeoutException;
 import lombok.AccessLevel;
@@ -51,7 +51,7 @@ public class TerrariaInstanceActionService {
 
     private final @NonNull TerrariaInstanceRepository terrariaInstanceRepository;
 
-    private final @NonNull AsyncService asyncService;
+    private final @NonNull LifecycleThreadPool lifecycleThreadPool;
 
     @PostConstruct
     void setUp() {
@@ -63,7 +63,7 @@ public class TerrariaInstanceActionService {
             }
         }
 
-        asyncService.runContinuously(this::checkInstances);
+        lifecycleThreadPool.run(this::checkInstances);
     }
 
     private void checkInstances() throws InterruptedException {

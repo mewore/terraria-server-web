@@ -17,6 +17,14 @@ public class FakeSubscription<T> implements Subscription<T> {
     private Duration lastTimeout;
 
     @Override
+    public T take() {
+        if (answer == null) {
+            throw new IllegalArgumentException("Cannot take a null answer");
+        }
+        return answer;
+    }
+
+    @Override
     public @Nullable T waitFor(final Predicate<T> predicate, final Duration timeout) {
         lastTimeout = timeout;
         return answer != null && predicate.test(answer) ? answer : null;
@@ -24,5 +32,10 @@ public class FakeSubscription<T> implements Subscription<T> {
 
     @Override
     public void close() {
+    }
+
+    @Override
+    public boolean isOpen() {
+        return true;
     }
 }

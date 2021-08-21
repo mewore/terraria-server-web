@@ -18,11 +18,10 @@
 
     <Match>
         <Package name="~io\.github\.mewore\.tsw\.models(\.[^.]+)*"/>
-        <Bug pattern="EI_EXPOSE_REP"/>
-    </Match>
-    <Match>
-        <Package name="~io\.github\.mewore\.tsw\.models(\.[^.]+)*"/>
-        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
     </Match>
 
     <Match>
@@ -30,14 +29,21 @@
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
+    <Match>
+        <Class name="io.github.mewore.tsw.services.database.ConsistentPostgresConnection"/>
+        <Or>
+            <Bug pattern="ODR_OPEN_DATABASE_RESOURCE"/>
+            <Bug pattern="EI_EXPOSE_REP"/>
+        </Or>
+    </Match>
+
     <!-- TODO: Decide if performance should be sacrificed (more round-trips to the DB) in order to avoid risking sharing
           the same instance across different event listeners. https://github.com/mewore/terraria-server-web/issues/49 -->
     <Match>
         <Class name="io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent"/>
-        <Bug pattern="EI_EXPOSE_REP"/>
-    </Match>
-    <Match>
-        <Class name="io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent"/>
-        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
     </Match>
 </FindBugsFilter>

@@ -25,6 +25,7 @@ import io.github.mewore.tsw.services.util.AsyncService;
 import io.github.mewore.tsw.services.util.FileService;
 import io.github.mewore.tsw.services.util.HttpService;
 import io.github.mewore.tsw.services.util.SystemService;
+import io.github.mewore.tsw.services.util.async.LifecycleThreadPool;
 import io.github.mewore.tsw.services.util.process.TmuxService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -113,5 +114,11 @@ public class TestConfig {
         final SystemService systemService = mock(SystemService.class);
         when(systemService.getOs()).thenReturn(OperatingSystem.LINUX);
         return systemService;
+    }
+
+    @Bean
+    @Primary
+    public LifecycleThreadPool mockLifecycleThreadPool() {
+        return mock(LifecycleThreadPool.class);
     }
 }

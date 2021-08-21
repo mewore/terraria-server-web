@@ -47,6 +47,8 @@ public class TerrariaInstanceService {
 
     private final TerrariaMessageService terrariaMessageService;
 
+    private final TerrariaInstanceDbNotificationService terrariaInstanceDbNotificationService;
+
     public TerrariaInstanceEntity getInstance(final long instanceId) throws NotFoundException {
         return terrariaInstanceRepository.findById(instanceId)
                 .orElseThrow(() -> new NotFoundException("Could not find a Terraria instance with ID " + instanceId));
@@ -56,6 +58,7 @@ public class TerrariaInstanceService {
         final boolean isNew = instance.getId() == null;
         final TerrariaInstanceEntity result = terrariaInstanceRepository.save(instance);
         applicationEventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(result));
+        terrariaInstanceDbNotificationService.sendNotification(result);
 
         if (isNew) {
             terrariaMessageService.broadcastInstanceCreation(result);

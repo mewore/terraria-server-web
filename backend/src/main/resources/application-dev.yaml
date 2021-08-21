@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/terraria_server_web_dev
-    driverClassName: org.postgresql.Driver
+    driverClassName: com.impossibl.postgres.jdbc.PGDriver
+    url: jdbc:pgsql://localhost:5432/terraria_server_web_dev
     username: ${TSW_DB_USERNAME:tswdev}
     password: ${TSW_DB_PASSWORD}
   flyway:

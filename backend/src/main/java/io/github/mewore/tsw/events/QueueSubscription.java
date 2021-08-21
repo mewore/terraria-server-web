@@ -34,13 +34,18 @@ class QueueSubscription<T extends @NonNull Object> implements ManagedSubscriptio
      */
     private final @Nullable Supplier<T> valueSupplier;
 
-    private final AtomicBoolean open = new AtomicBoolean(true);
+    private final AtomicBoolean opened = new AtomicBoolean(true);
 
     @Override
     public void accept(final T value) {
-        if (open.get() && !queue.offer(value)) {
+        if (opened.get() && !queue.offer(value)) {
             logger.warn("The subscription blocking queue for has been overfilled! Skipping the next value.");
         }
+    }
+
+    @Override
+    public T take() throws InterruptedException {
+        return queue.take();
     }
 
     @Override
@@ -65,8 +70,14 @@ class QueueSubscription<T extends @NonNull Object> implements ManagedSubscriptio
 
     @Override
     public void close() {
-        if (open.compareAndSet(true, false)) {
+        if (opened.compareAndSet(true, false)) {
+            logger.debug("[Closing]");
             onClosed.run();
         }
+    }
+
+    @Override
+    public boolean isOpen() {
+        return opened.get();
     }
 }

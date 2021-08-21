@@ -5,7 +5,9 @@ import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class QueuePublisherTest {
 
@@ -51,6 +53,26 @@ class QueuePublisherTest {
             publisher.publish(1, 2);
             assertNull(otherSubscription.waitFor(value -> true, Duration.ZERO));
             assertEquals(2, subscription.waitFor(value -> true, Duration.ZERO));
+        }
+    }
+
+    @Test
+    void testSubscribeToTopicEvents() throws InterruptedException {
+        final Publisher<Integer, Integer> publisher = new QueuePublisher<>();
+        try (final Subscription<PublisherTopicEvent<Integer>> topicSubscription = publisher.subscribeToTopicEvents()) {
+            assertNull(topicSubscription.waitFor(unused -> true, Duration.ZERO));
+            try (final Subscription<Integer> ignored = publisher.subscribe(1)) {
+                final PublisherTopicEvent<Integer> event = topicSubscription.waitFor(unused -> true, Duration.ZERO);
+                assertNotNull(event);
+                assertSame(PublisherTopicEvent.Type.TOPIC_CREATED, event.getType());
+                assertEquals(1, event.getTopic());
+                assertNull(topicSubscription.waitFor(unused -> true, Duration.ZERO));
+            }
+            final PublisherTopicEvent<Integer> event = topicSubscription.waitFor(unused -> true, Duration.ZERO);
+            assertNotNull(event);
+            assertSame(PublisherTopicEvent.Type.TOPIC_DELETED, event.getType());
+            assertEquals(1, event.getTopic());
+            assertNull(topicSubscription.waitFor(unused -> true, Duration.ZERO));
         }
     }
 

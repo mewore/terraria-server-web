@@ -1,12 +1,13 @@
 package io.github.mewore.tsw.services.util;
 
+import javax.annotation.PreDestroy;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AsyncService {
 
-    private final Logger logger = LogManager.getLogger(getClass());
+    public final ExecutorService commonExecutor = Executors.newCachedThreadPool();
 
     public Future<?> scheduleAtFixedRate(final Runnable command, final Duration initialDelay, final Duration period) {
 
@@ -24,28 +25,11 @@ public class AsyncService {
     }
 
     public void runInThread(final Runnable target) {
-        final Thread thread = new Thread(target);
-        thread.start();
+        commonExecutor.submit(target);
     }
 
-    public void runContinuously(final InterruptableRunnable target) {
-        final Thread thread = new Thread(() -> {
-            while (true) {
-                try {
-                    target.run();
-                } catch (final InterruptedException e) {
-                    logger.warn("Continuous thread interrupted", e);
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-        });
-        thread.start();
-    }
-
-    @FunctionalInterface
-    public interface InterruptableRunnable {
-
-        void run() throws InterruptedException;
+    @PreDestroy
+    void preDestroy() {
+        commonExecutor.shutdownNow();
     }
 }

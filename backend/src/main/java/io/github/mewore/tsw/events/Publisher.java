@@ -2,7 +2,6 @@ package io.github.mewore.tsw.events;
 
 import java.util.function.Function;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -10,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @param <T> The data type.
  */
-public interface Publisher<@NonNull T, V> {
+public interface Publisher<T, V> {
 
     /**
      * @param newTopicToValueMapper The function used to map a topic to a value that will be used as a fallback if no
@@ -25,7 +24,7 @@ public interface Publisher<@NonNull T, V> {
      * @param topic The topic to publish the value to.
      * @param value The value to publish.
      */
-    void publish(final @NonNull T topic, final V value);
+    void publish(final T topic, final V value);
 
     /**
      * Subscribe to all topics.
@@ -40,5 +39,13 @@ public interface Publisher<@NonNull T, V> {
      * @param topic The topic to subscribe to.
      * @return The resulting subscription.
      */
-    Subscription<V> subscribe(final @NonNull T topic);
+    Subscription<V> subscribe(final T topic);
+
+    /**
+     * Subscribe to all topic events that occur from now on. A topic is considered created when a subscription is
+     * created for it while no other subscriptions exist.
+     *
+     * @return The subscription for all created topics.
+     */
+    Subscription<PublisherTopicEvent<T>> subscribeToTopicEvents();
 }

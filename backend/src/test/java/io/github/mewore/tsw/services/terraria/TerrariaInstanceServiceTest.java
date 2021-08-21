@@ -70,6 +70,9 @@ class TerrariaInstanceServiceTest {
     @Mock
     private TerrariaMessageService terrariaMessageService;
 
+    @Mock
+    private TerrariaInstanceDbNotificationService terrariaInstanceDbNotificationService;
+
     @Captor
     private ArgumentCaptor<ApplicationEvent> applicationEventCaptor;
 
@@ -108,6 +111,7 @@ class TerrariaInstanceServiceTest {
 
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstance(instance);
         assertSame(savedInstance, result);
+        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
         verify(terrariaMessageService).broadcastInstanceChange(savedInstance);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
@@ -122,6 +126,7 @@ class TerrariaInstanceServiceTest {
         when(terrariaInstanceRepository.save(instance)).thenReturn(savedInstance);
 
         terrariaInstanceService.saveInstance(instance);
+        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
         verify(terrariaMessageService).broadcastInstanceCreation(savedInstance);
     }
 
@@ -139,6 +144,7 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstanceAndEvents(instance, events);
         assertSame(savedInstance, result);
         verify(terrariaInstanceEventRepository).saveAll(events);
+        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
         verify(terrariaMessageService).broadcastInstanceChange(savedInstance);
         verify(terrariaMessageService).broadcastInstanceEvent(event);
         verify(terrariaMessageService).broadcastInstanceEvent(secondEvent);
@@ -158,6 +164,7 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstanceAndEvent(instance, event);
         assertSame(savedInstance, result);
         verify(terrariaInstanceEventRepository).save(event);
+        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
         verify(terrariaMessageService).broadcastInstanceChange(savedInstance);
         verify(terrariaMessageService).broadcastInstanceEvent(event);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());

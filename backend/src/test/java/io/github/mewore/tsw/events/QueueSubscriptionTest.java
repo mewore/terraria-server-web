@@ -1,13 +1,17 @@
 package io.github.mewore.tsw.events;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -19,6 +23,48 @@ class QueueSubscriptionTest {
     };
 
     private final Logger logger = LogManager.getLogger(getClass());
+
+    @Test
+    void testTake() throws InterruptedException {
+        try (final ManagedSubscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null)) {
+            subscription.accept(1);
+            final AtomicInteger result = new AtomicInteger(0);
+            final Thread thread = new Thread(() -> {
+                try {
+                    result.set(subscription.take());
+                } catch (final InterruptedException e) {
+                    fail("Interrupted while taking element", e);
+                }
+            });
+            thread.start();
+            thread.join(10000L);
+            if (thread.isAlive()) {
+                fail("Still taking a value");
+                thread.interrupt();
+            }
+            assertEquals(1, result.get());
+        }
+    }
+
+    @Test
+    void testTake_noValue() throws InterruptedException {
+        try (final ManagedSubscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null)) {
+            final Thread thread = new Thread(() -> {
+                try {
+                    subscription.take();
+                } catch (final InterruptedException e) {
+                    // This is what is expected
+                }
+            });
+            thread.start();
+            thread.join(100L);
+            if (thread.isAlive()) {
+                thread.interrupt();
+            } else {
+                fail("Not taking the value anymore");
+            }
+        }
+    }
 
     @Test
     void testWaitFor() throws InterruptedException {
@@ -91,11 +137,20 @@ class QueueSubscriptionTest {
     }
 
     @Test
-    void testClose_closed() {
+    void testClose_alreadyClosed() {
         final Runnable onClose = mock(Runnable.class);
         final ManagedSubscription<Integer> subscription = new QueueSubscription<>(onClose, logger, null);
         subscription.close();
         subscription.close();
         verify(onClose, atMostOnce()).run();
+    }
+
+    @Test
+    void testIsOpen() {
+        final Subscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null);
+        assertTrue(subscription.isOpen());
+
+        subscription.close();
+        assertFalse(subscription.isOpen());
     }
 }

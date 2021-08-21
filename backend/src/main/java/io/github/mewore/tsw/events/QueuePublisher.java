@@ -10,14 +10,20 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+/**
+ * A fragile implementation of {@link Publisher}, which hopes that its {@code currentId} atomic ID and usage of maps
+ * saves it from any nasty race conditions.
+ *
+ * @param <T> The topic type.
+ * @param <V> The notification value type.
+ */
 @RequiredArgsConstructor
-@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Component
 public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object> implements Publisher<T, V> {
 
@@ -27,6 +33,9 @@ public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object
             new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Long, ManagedSubscription<V>> genericSubscriptions = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<Long, ManagedSubscription<PublisherTopicEvent<T>>> topicEventSubscriptions =
+            new ConcurrentHashMap<>();
 
     @Setter
     private volatile @Nullable Function<T, V> topicToValueMapper;
@@ -41,7 +50,7 @@ public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object
     public Subscription<V> subscribe() {
         final long id = currentId.incrementAndGet();
         final ManagedSubscription<V> subscription = new QueueSubscription<>(() -> genericSubscriptions.remove(id),
-                LogManager.getLogger("GenericSubscription"), null);
+                LogManager.getLogger("Subscription(GENERIC)"), null);
 
         genericSubscriptions.put(id, subscription);
         return subscription;
@@ -60,10 +69,16 @@ public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object
             if (map.isEmpty()) {
                 subscriptionsByTopic.remove(topic, new ConcurrentHashMap<Long, ManagedSubscription<V>>());
             }
+            notifySubscriptions(topicEventSubscriptions,
+                    new PublisherTopicEvent<>(PublisherTopicEvent.Type.TOPIC_DELETED, topic));
         }, LogManager.getLogger("Subscription(" + topic + ")"),
                 currentTopicToValue == null ? null : () -> currentTopicToValue.apply(topic));
 
         subscriptionsByTopic.compute(topic, (key, subscriptionMap) -> {
+            if (subscriptionMap == null || subscriptionMap.isEmpty()) {
+                notifySubscriptions(topicEventSubscriptions,
+                        new PublisherTopicEvent<>(PublisherTopicEvent.Type.TOPIC_CREATED, topic));
+            }
             final ConcurrentMap<Long, ManagedSubscription<V>> result =
                     subscriptionMap == null ? new ConcurrentHashMap<>(1) : subscriptionMap;
             result.put(id, subscription);
@@ -73,10 +88,19 @@ public class QueuePublisher<T extends @NonNull Object, V extends @NonNull Object
         return subscription;
     }
 
-    private void notifySubscriptions(final @Nullable ConcurrentMap<Long, ManagedSubscription<V>> subscriptionMap,
-            final V value) {
+    @Override
+    public Subscription<PublisherTopicEvent<T>> subscribeToTopicEvents() {
+        final long id = currentId.incrementAndGet();
+        final ManagedSubscription<PublisherTopicEvent<T>> subscription = new QueueSubscription<>(
+                () -> topicEventSubscriptions.remove(id), LogManager.getLogger("Subscription(TOPIC_EVENTS)"), null);
+        topicEventSubscriptions.put(id, subscription);
+        return subscription;
+    }
+
+    private <U> void notifySubscriptions(final @Nullable ConcurrentMap<Long, ManagedSubscription<U>> subscriptionMap,
+            final U value) {
         if (subscriptionMap != null) {
-            for (final ManagedSubscription<V> subscription : subscriptionMap.values()) {
+            for (final ManagedSubscription<U> subscription : subscriptionMap.values()) {
                 subscription.accept(value);
             }
         }

@@ -13,6 +13,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface Subscription<T> extends AutoCloseable {
 
     /**
+     * Take the first received value for this subscription that hasn't been acknowledged yet.
+     *
+     * @return The first value that is received.
+     * @throws InterruptedException If interrupted while waiting.
+     */
+    T take() throws InterruptedException;
+
+    /**
      * Wait until a value matching a predicate is received.
      *
      * @param predicate The predicate to filter the values by.
@@ -29,4 +37,9 @@ public interface Subscription<T> extends AutoCloseable {
      */
     @Override
     void close();
+
+    /**
+     * @return @Whether the subscription is still open.
+     */
+    boolean isOpen();
 }
