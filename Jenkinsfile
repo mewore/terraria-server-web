@@ -74,7 +74,7 @@ pipeline {
     post {
         always {
             archiveArtifacts([
-                artifacts: 'build/libs/**/*.jar',
+                artifacts: 'build/libs/**/*.jar,backend/build/reports/spotbugs/main.html',
                 fingerprint: true,
             ])
         }
