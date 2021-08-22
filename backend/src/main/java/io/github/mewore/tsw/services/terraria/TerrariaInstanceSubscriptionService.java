@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class TerrariaInstanceSubscriptionService implements ApplicationListener<TerrariaInstanceApplicationEvent> {
+
+    private final Logger logger = LogManager.getLogger(getClass());
 
     private final TerrariaInstanceRepository terrariaInstanceRepository;
 
@@ -44,6 +48,8 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
     @Override
     public void onApplicationEvent(final TerrariaInstanceApplicationEvent event) {
         final TerrariaInstanceEntity instance = event.getChangedInstance();
+        logger.debug("Application event for the {} of instance {}", event.isNew() ? "creation" : "deletion",
+                instance.getId());
         instancePublisher.publish(instance.getId(), instance);
 
         if (event.isNew()) {
@@ -65,14 +71,18 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
             final Subscription<TerrariaInstanceEntity> subscription,
             final Duration timeout,
             final TerrariaInstanceState... desiredStates) throws IllegalStateException, InterruptedException {
+        final String desiredStateString = Arrays.stream(desiredStates)
+                .map(Objects::toString)
+                .collect(Collectors.joining("/"));
+        logger.debug("Waiting for instance {} to transition from {} to {}...", instance.getId(), instance.getState(),
+                desiredStateString);
         final Set<TerrariaInstanceState> stateSet = Set.of(desiredStates);
-        final @Nullable TerrariaInstanceEntity result = subscription.waitFor(newInstance -> stateSet.contains(newInstance.getState()), timeout);
+        final @Nullable TerrariaInstanceEntity result = subscription.waitFor(
+                newInstance -> stateSet.contains(newInstance.getState()), timeout);
         if (result == null) {
             throw new IllegalStateException(String.format(
                     "The instance %s did not reach the state(s) %s within a timeout of %s; instead, its state is %s.",
-                    instance.getUuid(),
-                    Arrays.stream(desiredStates).map(Objects::toString).collect(Collectors.joining("/")), timeout,
-                    instance.getState()));
+                    instance.getUuid(), desiredStateString, timeout, instance.getState()));
         }
         return result;
     }

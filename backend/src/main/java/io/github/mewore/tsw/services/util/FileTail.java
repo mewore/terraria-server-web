@@ -45,6 +45,7 @@ public class FileTail implements Runnable {
             logger.error("File {} does not have a parent! Cannot tail it.", file.getAbsolutePath());
             return;
         }
+        logger.info("Tailing file: {}", file.getAbsolutePath());
         try (final WatchService watchService = FileSystems.getDefault().newWatchService()) {
             if (file.exists()) {
                 readFile();
@@ -72,6 +73,7 @@ public class FileTail implements Runnable {
      */
     @Synchronized
     public void stopReadingFile() {
+        logger.info("Will not process the contents of file {} anymore", file.getAbsolutePath());
         shouldReadFile = false;
     }
 
@@ -102,11 +104,13 @@ public class FileTail implements Runnable {
 
             try {
                 if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+                    logger.info("File '{}' has been CREATED.", file.getAbsolutePath());
                     eventConsumer.onFileCreated();
                     readFile();
                 } else if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
                     readFile();
                 } else if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                    logger.info("File '{}' has been DELETED.", file.getAbsolutePath());
                     eventConsumer.onFileDeleted();
                 } else {
                     logger.warn("Unexpected event kind encountered for file {}: {}", file.getAbsolutePath(),

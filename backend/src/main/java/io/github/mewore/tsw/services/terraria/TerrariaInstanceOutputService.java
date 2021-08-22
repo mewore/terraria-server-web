@@ -278,7 +278,7 @@ public class TerrariaInstanceOutputService {
                         existingOptionLabel, newOption.getId(), newOption.getLabel());
             }
             instance.acknowledgeMenuOption(newOption.getId(), newOption.getLabel());
-            logger.info("The numerical options of instance {} are now:\n{}", instance.getUuid(),
+            logger.debug("The numerical options of instance {} are now:\n{}", instance.getUuid(),
                     instance.getPendingOptions()
                             .entrySet()
                             .stream()
