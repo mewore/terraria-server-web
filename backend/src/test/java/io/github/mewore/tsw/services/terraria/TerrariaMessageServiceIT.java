@@ -55,6 +55,6 @@ class TerrariaMessageServiceIT {
                 .instance(makeInstanceBuilder().id(8L).build())
                 .build();
 
-        terrariaMessageService.broadcastInstanceEvent(event);
+        terrariaMessageService.broadcastInstanceEventCreation(event);
     }
 }

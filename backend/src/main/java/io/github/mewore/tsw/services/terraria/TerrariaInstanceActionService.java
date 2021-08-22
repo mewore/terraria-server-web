@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class TerrariaInstanceActionService {
 
-    private static final Duration POLL_TIME = Duration.ofSeconds(60);
+    private static final Duration POLL_TIME = Duration.ofMinutes(5);
 
     private final Logger logger = LogManager.getLogger(getClass());
 

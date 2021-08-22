@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import io.github.mewore.tsw.events.Publisher;
 import io.github.mewore.tsw.events.Subscription;
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
+import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
@@ -21,11 +21,13 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
-public class TerrariaInstanceSubscriptionService implements ApplicationListener<TerrariaInstanceUpdatedEvent> {
+public class TerrariaInstanceSubscriptionService implements ApplicationListener<TerrariaInstanceApplicationEvent> {
 
     private final TerrariaInstanceRepository terrariaInstanceRepository;
 
     private final Publisher<Long, TerrariaInstanceEntity> instancePublisher;
+
+    private final TerrariaMessageService terrariaMessageService;
 
     @PostConstruct
     void setUp() {
@@ -33,16 +35,22 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
     }
 
     /**
-     * Acknowledge an event that represents an updated Terraria instance entity.
+     * Acknowledge an event that represents an updated or created Terraria instance entity.
      *
      * @param event The changed instance.
      * @deprecated This method is meant to be used only by Spring itself.
      */
     @Deprecated
     @Override
-    public void onApplicationEvent(final TerrariaInstanceUpdatedEvent event) {
+    public void onApplicationEvent(final TerrariaInstanceApplicationEvent event) {
         final TerrariaInstanceEntity instance = event.getChangedInstance();
         instancePublisher.publish(instance.getId(), instance);
+
+        if (event.isNew()) {
+            terrariaMessageService.broadcastInstanceCreation(instance);
+        } else {
+            terrariaMessageService.broadcastInstanceChange(instance);
+        }
     }
 
     public Subscription<TerrariaInstanceEntity> subscribe(final TerrariaInstanceEntity instance) {

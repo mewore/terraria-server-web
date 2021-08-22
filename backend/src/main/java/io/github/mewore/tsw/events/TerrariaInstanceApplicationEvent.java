@@ -6,12 +6,15 @@ import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import lombok.Getter;
 
 @Getter
-public class TerrariaInstanceUpdatedEvent extends ApplicationEvent {
+public class TerrariaInstanceApplicationEvent extends ApplicationEvent {
 
     private final TerrariaInstanceEntity changedInstance;
 
-    public TerrariaInstanceUpdatedEvent(final TerrariaInstanceEntity changedInstance) {
+    private final boolean isNew;
+
+    public TerrariaInstanceApplicationEvent(final TerrariaInstanceEntity changedInstance, final boolean isNew) {
         super(changedInstance);
         this.changedInstance = changedInstance;
+        this.isNew = isNew;
     }
 }

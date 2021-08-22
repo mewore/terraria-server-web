@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
+import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.exceptions.InvalidRequestException;
 import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
@@ -57,13 +57,11 @@ public class TerrariaInstanceService {
     public TerrariaInstanceEntity saveInstance(final TerrariaInstanceEntity instance) {
         final boolean isNew = instance.getId() == null;
         final TerrariaInstanceEntity result = terrariaInstanceRepository.save(instance);
-        applicationEventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(result));
-        terrariaInstanceDbNotificationService.sendNotification(result);
-
+        applicationEventPublisher.publishEvent(new TerrariaInstanceApplicationEvent(result, isNew));
         if (isNew) {
-            terrariaMessageService.broadcastInstanceCreation(result);
+            terrariaInstanceDbNotificationService.onInstanceCreated(result);
         } else {
-            terrariaMessageService.broadcastInstanceChange(result);
+            terrariaInstanceDbNotificationService.onInstanceUpdated(result);
         }
         return result;
     }
@@ -73,7 +71,7 @@ public class TerrariaInstanceService {
             final List<TerrariaInstanceEventEntity> events) {
         final List<TerrariaInstanceEventEntity> savedEvents = terrariaInstanceEventRepository.saveAll(events);
         for (final TerrariaInstanceEventEntity event : savedEvents) {
-            terrariaMessageService.broadcastInstanceEvent(event);
+            terrariaMessageService.broadcastInstanceEventCreation(event);
         }
         return saveInstance(instance);
     }
@@ -82,14 +80,14 @@ public class TerrariaInstanceService {
     public TerrariaInstanceEntity saveInstanceAndEvent(final TerrariaInstanceEntity instance,
             final TerrariaInstanceEventEntity event) {
         final TerrariaInstanceEventEntity savedEvent = terrariaInstanceEventRepository.save(event);
-        terrariaMessageService.broadcastInstanceEvent(savedEvent);
+        terrariaMessageService.broadcastInstanceEventCreation(savedEvent);
         return saveInstance(instance);
     }
 
     @Transactional
     public void saveEvent(final TerrariaInstanceEventEntity event) {
         final TerrariaInstanceEventEntity savedEvent = terrariaInstanceEventRepository.save(event);
-        terrariaMessageService.broadcastInstanceEvent(savedEvent);
+        terrariaMessageService.broadcastInstanceEventCreation(savedEvent);
     }
 
     public void ensureInstanceHasNoOutputFile(final TerrariaInstanceEntity instance) {

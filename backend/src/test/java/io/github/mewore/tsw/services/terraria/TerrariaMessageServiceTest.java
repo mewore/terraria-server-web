@@ -93,7 +93,7 @@ class TerrariaMessageServiceTest {
                 .instance(makeInstanceBuilder().id(8L).build())
                 .build();
 
-        terrariaMessageService.broadcastInstanceEvent(event);
+        terrariaMessageService.broadcastInstanceEventCreation(event);
         verify(brokerMessagingTemplate).convertAndSend(eq("/topic/instances/8/events"), eventMessageCaptor.capture());
         final TerrariaInstanceEventMessage sentMessage = eventMessageCaptor.getValue();
         assertSame(sentMessage.getType(), sentMessage.getType());

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Import;
 
 import io.github.mewore.tsw.config.TestConfig;
 import io.github.mewore.tsw.events.Subscription;
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
+import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
@@ -42,7 +42,7 @@ class TerrariaInstanceSubscriptionServiceIT {
         try (final Subscription<TerrariaInstanceEntity> subscription = terrariaInstanceSubscriptionService.subscribe(
                 TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID))) {
             final TerrariaInstanceEntity instance = TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID);
-            eventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(instance));
+            eventPublisher.publishEvent(new TerrariaInstanceApplicationEvent(instance, true));
             assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
             verify(terrariaInstanceRepository, never()).getOne(anyLong());
         }
@@ -63,7 +63,7 @@ class TerrariaInstanceSubscriptionServiceIT {
         try (final Subscription<TerrariaInstanceEntity> subscription =
                      terrariaInstanceSubscriptionService.subscribeToAll()) {
             final TerrariaInstanceEntity instance = TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID);
-            eventPublisher.publishEvent(new TerrariaInstanceUpdatedEvent(instance));
+            eventPublisher.publishEvent(new TerrariaInstanceApplicationEvent(instance, true));
             assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
             verify(terrariaInstanceRepository, never()).getOne(anyLong());
         }

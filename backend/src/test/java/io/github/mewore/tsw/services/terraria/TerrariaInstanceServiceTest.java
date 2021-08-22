@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
+import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.exceptions.InvalidRequestException;
 import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
@@ -111,11 +111,10 @@ class TerrariaInstanceServiceTest {
 
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstance(instance);
         assertSame(savedInstance, result);
-        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceChange(savedInstance);
+        verify(terrariaInstanceDbNotificationService, only()).onInstanceUpdated(savedInstance);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
-                ((TerrariaInstanceUpdatedEvent) applicationEventCaptor.getValue()).getChangedInstance());
+                ((TerrariaInstanceApplicationEvent) applicationEventCaptor.getValue()).getChangedInstance());
     }
 
     @Test
@@ -126,13 +125,13 @@ class TerrariaInstanceServiceTest {
         when(terrariaInstanceRepository.save(instance)).thenReturn(savedInstance);
 
         terrariaInstanceService.saveInstance(instance);
-        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceCreation(savedInstance);
+        verify(terrariaInstanceDbNotificationService, only()).onInstanceCreated(savedInstance);
     }
 
     @Test
     void testSaveInstanceAndEvents() {
         final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
+        when(instance.getId()).thenReturn(null);
         final TerrariaInstanceEventEntity event = mock(TerrariaInstanceEventEntity.class);
         final TerrariaInstanceEventEntity secondEvent = mock(TerrariaInstanceEventEntity.class);
         final List<TerrariaInstanceEventEntity> events = List.of(event, secondEvent);
@@ -144,18 +143,18 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstanceAndEvents(instance, events);
         assertSame(savedInstance, result);
         verify(terrariaInstanceEventRepository).saveAll(events);
-        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceChange(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceEvent(event);
-        verify(terrariaMessageService).broadcastInstanceEvent(secondEvent);
+        verify(terrariaInstanceDbNotificationService, only()).onInstanceCreated(savedInstance);
+        verify(terrariaMessageService).broadcastInstanceEventCreation(event);
+        verify(terrariaMessageService).broadcastInstanceEventCreation(secondEvent);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
-                ((TerrariaInstanceUpdatedEvent) applicationEventCaptor.getValue()).getChangedInstance());
+                ((TerrariaInstanceApplicationEvent) applicationEventCaptor.getValue()).getChangedInstance());
     }
 
     @Test
     void testSaveInstanceAndEvent() {
         final TerrariaInstanceEntity instance = mock(TerrariaInstanceEntity.class);
+        when(instance.getId()).thenReturn(null);
         final TerrariaInstanceEventEntity event = mock(TerrariaInstanceEventEntity.class);
         final TerrariaInstanceEntity savedInstance = mock(TerrariaInstanceEntity.class);
         when(terrariaInstanceRepository.save(instance)).thenReturn(savedInstance);
@@ -164,12 +163,11 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstanceAndEvent(instance, event);
         assertSame(savedInstance, result);
         verify(terrariaInstanceEventRepository).save(event);
-        verify(terrariaInstanceDbNotificationService, only()).sendNotification(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceChange(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceEvent(event);
+        verify(terrariaInstanceDbNotificationService, only()).onInstanceCreated(savedInstance);
+        verify(terrariaMessageService).broadcastInstanceEventCreation(event);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
-                ((TerrariaInstanceUpdatedEvent) applicationEventCaptor.getValue()).getChangedInstance());
+                ((TerrariaInstanceApplicationEvent) applicationEventCaptor.getValue()).getChangedInstance());
     }
 
     @Test
@@ -180,7 +178,7 @@ class TerrariaInstanceServiceTest {
 
         terrariaInstanceService.saveEvent(event);
         verify(terrariaInstanceEventRepository).save(event);
-        verify(terrariaMessageService).broadcastInstanceEvent(savedEvent);
+        verify(terrariaMessageService).broadcastInstanceEventCreation(savedEvent);
     }
 
     @Test

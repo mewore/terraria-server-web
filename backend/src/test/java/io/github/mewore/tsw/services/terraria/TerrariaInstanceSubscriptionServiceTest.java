@@ -14,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import io.github.mewore.tsw.events.FakeSubscription;
 import io.github.mewore.tsw.events.Publisher;
 import io.github.mewore.tsw.events.Subscription;
-import io.github.mewore.tsw.events.TerrariaInstanceUpdatedEvent;
+import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceState;
@@ -44,6 +44,9 @@ class TerrariaInstanceSubscriptionServiceTest {
     @Mock
     private Publisher<Long, TerrariaInstanceEntity> publisher;
 
+    @Mock
+    private TerrariaMessageService terrariaMessageService;
+
     @Captor
     private ArgumentCaptor<Function<Long, TerrariaInstanceEntity>> valueSupplierCaptor;
 
@@ -59,10 +62,20 @@ class TerrariaInstanceSubscriptionServiceTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    void testOnApplicationEvent() {
+    void testOnApplicationEvent_created() {
         final TerrariaInstanceEntity instance = makeInstanceWithId(1);
-        terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceUpdatedEvent(instance));
+        terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceApplicationEvent(instance, true));
         verify(publisher).publish(eq(1L), same(instance));
+        verify(terrariaMessageService, only()).broadcastInstanceCreation(same(instance));
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testOnApplicationEvent_changed() {
+        final TerrariaInstanceEntity instance = makeInstanceWithId(1);
+        terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceApplicationEvent(instance, false));
+        verify(publisher).publish(eq(1L), same(instance));
+        verify(terrariaMessageService, only()).broadcastInstanceChange(same(instance));
     }
 
     @Test

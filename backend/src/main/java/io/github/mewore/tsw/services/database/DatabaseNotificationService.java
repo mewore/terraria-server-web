@@ -20,8 +20,6 @@ public interface DatabaseNotificationService {
      * Listen for notifications coming from the database.
      *
      * @param channel The channel to listen for notifications from.
-     * @throws SQLException If the connection to the database or the execution of the SQL statement for the
-     *                      subscription to the channel fails.
      */
-    Subscription<String> subscribe(final String channel) throws SQLException;
+    Subscription<String> subscribe(final String channel);
 }

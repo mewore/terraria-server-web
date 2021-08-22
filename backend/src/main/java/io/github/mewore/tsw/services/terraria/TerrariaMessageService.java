@@ -30,7 +30,7 @@ public class TerrariaMessageService {
         brokerMessagingTemplate.send("/topic/instances/" + instance.getId() + "/deletion", new EmptyMessage());
     }
 
-    public void broadcastInstanceEvent(final TerrariaInstanceEventEntity event) {
+    public void broadcastInstanceEventCreation(final TerrariaInstanceEventEntity event) {
         brokerMessagingTemplate.convertAndSend("/topic/instances/" + event.getInstance().getId() + "/events",
                 new TerrariaInstanceEventMessage(event));
     }

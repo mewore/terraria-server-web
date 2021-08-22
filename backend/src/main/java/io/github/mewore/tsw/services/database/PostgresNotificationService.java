@@ -74,7 +74,7 @@ class PostgresNotificationService implements DatabaseNotificationService {
     }
 
     @Override
-    public Subscription<String> subscribe(final String channel) throws SQLException {
+    public Subscription<String> subscribe(final String channel) {
         return publisher.subscribe(channel);
     }
 
