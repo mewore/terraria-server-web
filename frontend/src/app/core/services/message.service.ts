@@ -39,7 +39,7 @@ export class MessageServiceImpl implements MessageService, OnDestroy {
             },
             heartbeatIncoming: 0,
             heartbeatOutgoing: 20000,
-            reconnectDelay: 2000,
+            reconnectDelay: 20000,
         });
         this.rxStomp.activate();
     }

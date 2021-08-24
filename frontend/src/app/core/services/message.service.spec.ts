@@ -44,6 +44,10 @@ describe('MessageService', () => {
         expect(service).toBeTruthy();
     });
 
+    it('should activate the connection', () => {
+        expect(activateSpy).toHaveBeenCalled();
+    });
+
     it('should configure and then activate the STOMP client', () => {
         expect(stompClient.configure).toHaveBeenCalledBefore(stompClient.activate);
     });
