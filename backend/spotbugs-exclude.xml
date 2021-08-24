@@ -40,7 +40,7 @@
     <!-- TODO: Decide if performance should be sacrificed (more round-trips to the DB) in order to avoid risking sharing
           the same instance across different event listeners. https://github.com/mewore/terraria-server-web/issues/49 -->
     <Match>
-        <Class name="io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent"/>
+        <Class name="~io\.github\.mewore\.tsw\.events\.[^.]+Event"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>

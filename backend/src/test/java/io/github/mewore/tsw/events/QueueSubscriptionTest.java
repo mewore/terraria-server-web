@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.atMostOnce;
@@ -67,6 +68,16 @@ class QueueSubscriptionTest {
     }
 
     @Test
+    void testTake_closed() {
+        try (final ManagedSubscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null)) {
+            subscription.accept(1);
+            subscription.close();
+            final Exception exception = assertThrows(IllegalStateException.class, subscription::take);
+            assertEquals("Cannot take an element from a closed subscription", exception.getMessage());
+        }
+    }
+
+    @Test
     void testWaitFor() throws InterruptedException {
         try (final ManagedSubscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null)) {
             subscription.accept(1);
@@ -119,9 +130,18 @@ class QueueSubscriptionTest {
     @Test
     void testWaitFor_afterClosed() throws InterruptedException {
         try (final ManagedSubscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null)) {
+            subscription.accept(1);
+            subscription.close();
+            assertNull(subscription.waitFor(unused -> true, Duration.ZERO));
+        }
+    }
+
+    @Test
+    void testAccept_afterClosed() throws InterruptedException {
+        try (final ManagedSubscription<Integer> subscription = new QueueSubscription<>(DO_NOTHING, logger, null)) {
             subscription.close();
             subscription.accept(1);
-            assertNull(subscription.waitFor(value -> value == 1, Duration.ZERO));
+            assertNull(subscription.waitFor(unused -> true, Duration.ZERO));
         }
     }
 

@@ -1,10 +1,17 @@
 package io.github.mewore.tsw.services.database;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.impossibl.postgres.api.jdbc.PGNotificationListener;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +31,11 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 class PostgresNotificationService implements DatabaseNotificationService {
+
+    private static final ObjectWriter JSON_WRITER = new ObjectMapper().writer();
+
+    private static final ObjectReader JSON_READER = new ObjectMapper().configure(
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).reader();
 
     private static final String PREFIX = UUID.randomUUID() + ":";
 
@@ -66,16 +78,47 @@ class PostgresNotificationService implements DatabaseNotificationService {
     }
 
     @Override
-    public void send(final String channel, final String payload) throws SQLException {
+    public void sendRaw(final String channel, final String content) throws SQLException {
         try (final Statement statement = postgresConnection.getOrConnect().createStatement()) {
-            logger.info("Sending notification to " + channel + ": " + PREFIX + payload);
-            statement.execute("NOTIFY " + channel + ", '" + PREFIX + payload + "'");
+            logger.info("Sending notification to " + channel + ": " + PREFIX + content);
+            statement.execute("NOTIFY " + channel + ", '" + PREFIX + content + "'");
         }
     }
 
     @Override
-    public Subscription<String> subscribe(final String channel) {
+    public <T> void send(final String channel, final T content) throws SQLException, JsonProcessingException {
+        sendRaw(channel, JSON_WRITER.writeValueAsString(content));
+    }
+
+    @Override
+    public <T> void trySend(final String channel, final T content) {
+        try {
+            send(channel, content);
+        } catch (final JsonProcessingException e) {
+            logger.error("Failed to serialize " + content + " into JSON", e);
+        } catch (final SQLException e) {
+            logger.error("Failed to send a notification to channel \"" + channel + "\"", e);
+        }
+    }
+
+    @Override
+    public Subscription<String> subscribeRaw(final String channel) {
         return publisher.subscribe(channel);
+    }
+
+    @Override
+    public <T> Subscription<T> subscribe(final String channel) {
+        final TypeReference<T> typeReference = new TypeReference<>() {
+        };
+        return subscribeRaw(channel).map(raw -> {
+            try {
+                return JSON_READER.readValue(JSON_READER.createParser(raw), typeReference);
+            } catch (final IOException e) {
+                final String errorMessage = "Failed to parse the raw notification <" + raw + "> as JSON";
+                logger.error(errorMessage, e);
+                throw new RuntimeException(errorMessage, e);
+            }
+        });
     }
 
     private void listen(final String channel) throws SQLException {

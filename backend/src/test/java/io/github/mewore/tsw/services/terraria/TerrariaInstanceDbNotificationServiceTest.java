@@ -1,6 +1,5 @@
 package io.github.mewore.tsw.services.terraria;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import io.github.mewore.tsw.events.FakeSubscription;
-import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
@@ -22,12 +20,8 @@ import io.github.mewore.tsw.services.util.async.InterruptableRunnable;
 import io.github.mewore.tsw.services.util.async.LifecycleThreadPool;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithId;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
@@ -52,12 +46,6 @@ class TerrariaInstanceDbNotificationServiceTest {
     @Mock
     private LifecycleThreadPool lifecycleThreadPool;
 
-    @Mock
-    private Subscription<String> creationSubscription;
-
-    @Mock
-    private Subscription<String> updateSubscription;
-
     @Captor
     private ArgumentCaptor<TerrariaInstanceApplicationEvent> instanceUpdatedEventCaptor;
 
@@ -70,7 +58,7 @@ class TerrariaInstanceDbNotificationServiceTest {
     @Test
     void testWaitForInstanceNotification() throws InterruptedException {
         when(databaseNotificationService.subscribe("terraria_instance_creations")).thenReturn(
-                new FakeSubscription<>("8"));
+                new FakeSubscription<>(8L));
 
         terrariaInstanceDbNotificationService.setUp();
         verify(lifecycleThreadPool, only()).run(creationThreadCaptor.capture(), updateThreadCaptor.capture());
@@ -85,7 +73,7 @@ class TerrariaInstanceDbNotificationServiceTest {
     @Test
     void testWaitForInstanceNotification_notFound() throws InterruptedException {
         when(databaseNotificationService.subscribe("terraria_instance_creations")).thenReturn(
-                new FakeSubscription<>("8"));
+                new FakeSubscription<>(8L));
         terrariaInstanceDbNotificationService.setUp();
         verify(lifecycleThreadPool, only()).run(creationThreadCaptor.capture(), updateThreadCaptor.capture());
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.empty());
@@ -95,23 +83,9 @@ class TerrariaInstanceDbNotificationServiceTest {
     }
 
     @Test
-    void testWaitForInstanceNotification_invalidId() throws InterruptedException {
-        when(databaseNotificationService.subscribe("terraria_instance_creations")).thenReturn(
-                new FakeSubscription<>("not-a-number"));
-        terrariaInstanceDbNotificationService.setUp();
-
-        verify(lifecycleThreadPool, only()).run(creationThreadCaptor.capture(), updateThreadCaptor.capture());
-
-        creationThreadCaptor.getValue().run();
-        verify(terrariaInstanceRepository, never()).findById(anyLong());
-        verify(applicationEventPublisher, never()).publishEvent(any());
-    }
-
-    @Test
     void testWaitForInstanceNotification_update() throws InterruptedException {
         when(databaseNotificationService.subscribe("terraria_instance_creations")).thenReturn(null);
-        when(databaseNotificationService.subscribe("terraria_instance_updates")).thenReturn(
-                new FakeSubscription<>("8"));
+        when(databaseNotificationService.subscribe("terraria_instance_updates")).thenReturn(new FakeSubscription<>(8L));
 
         terrariaInstanceDbNotificationService.setUp();
         verify(lifecycleThreadPool, only()).run(creationThreadCaptor.capture(), updateThreadCaptor.capture());
@@ -124,35 +98,14 @@ class TerrariaInstanceDbNotificationServiceTest {
     }
 
     @Test
-    void testWaitForInstanceNotification_closedSubscription() {
-        when(databaseNotificationService.subscribe("terraria_instance_creations")).thenReturn(creationSubscription);
-        when(creationSubscription.isOpen()).thenReturn(false);
-        when(databaseNotificationService.subscribe("terraria_instance_updates")).thenReturn(updateSubscription);
-
-        terrariaInstanceDbNotificationService.setUp();
-        verify(lifecycleThreadPool, only()).run(creationThreadCaptor.capture(), updateThreadCaptor.capture());
-
-        final Exception exception = assertThrows(InterruptedException.class,
-                () -> creationThreadCaptor.getValue().run());
-        assertEquals("The DB notification subscription for channel terraria_instance_creations is closed",
-                exception.getMessage());
+    void testInstanceCreated() {
+        terrariaInstanceDbNotificationService.instanceCreated(makeInstanceWithId(1L));
+        verify(databaseNotificationService, only()).trySend("terraria_instance_creations", 1L);
     }
 
     @Test
-    void testSendNotification_created() throws SQLException {
-        terrariaInstanceDbNotificationService.onInstanceCreated(makeInstanceWithId(1L));
-        verify(databaseNotificationService, only()).send("terraria_instance_creations", "1");
-    }
-
-    @Test
-    void testSendNotification_created_error() throws SQLException {
-        doThrow(new SQLException("oof")).when(databaseNotificationService).send("terraria_instance_creations", "1");
-        terrariaInstanceDbNotificationService.onInstanceCreated(makeInstanceWithId(1L));
-    }
-
-    @Test
-    void testSendNotification_updated() throws SQLException {
-        terrariaInstanceDbNotificationService.onInstanceUpdated(makeInstanceWithId(1L));
-        verify(databaseNotificationService, only()).send("terraria_instance_updates", "1");
+    void testInstanceUpdated() {
+        terrariaInstanceDbNotificationService.instanceUpdated(makeInstanceWithId(1L));
+        verify(databaseNotificationService, only()).trySend("terraria_instance_updates", 1L);
     }
 }

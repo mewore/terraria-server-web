@@ -52,7 +52,7 @@ class TerrariaInstanceInputServiceTest {
     @Test
     void testSendBreakToInstance() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstance();
-        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(new FakeSubscription<>(null));
+        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(new FakeSubscription<>());
         when(terrariaInstanceSubscriptionService.waitForInstanceState(same(instance), any(), any(), any())).thenReturn(
                 instance);
 
@@ -65,7 +65,7 @@ class TerrariaInstanceInputServiceTest {
     @Test
     void testSendInputToInstance() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstance();
-        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>();
         when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
@@ -85,7 +85,7 @@ class TerrariaInstanceInputServiceTest {
     void testSendInputToInstance_obfuscated()
             throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstance();
-        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(new FakeSubscription<>(null));
+        when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(new FakeSubscription<>());
         when(terrariaInstanceSubscriptionService.waitForInstanceState(same(instance), any(), any(), any())).thenReturn(
                 instance);
 

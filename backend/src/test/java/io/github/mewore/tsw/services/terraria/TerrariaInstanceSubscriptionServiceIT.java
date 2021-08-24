@@ -19,6 +19,7 @@ import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +35,9 @@ class TerrariaInstanceSubscriptionServiceIT {
     @MockBean
     private TerrariaInstanceRepository terrariaInstanceRepository;
 
+    @MockBean
+    private TerrariaInstanceMessageService terrariaInstanceMessageService;
+
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
@@ -45,6 +49,7 @@ class TerrariaInstanceSubscriptionServiceIT {
             eventPublisher.publishEvent(new TerrariaInstanceApplicationEvent(instance, true));
             assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
             verify(terrariaInstanceRepository, never()).getOne(anyLong());
+            verify(terrariaInstanceMessageService, only()).broadcastInstanceCreation(instance);
         }
     }
 
@@ -67,5 +72,12 @@ class TerrariaInstanceSubscriptionServiceIT {
             assertSame(instance, subscription.waitFor(unusedInstance -> true, Duration.ZERO));
             verify(terrariaInstanceRepository, never()).getOne(anyLong());
         }
+    }
+
+    @Test
+    void test_message() {
+        final TerrariaInstanceEntity instance = TerrariaInstanceFactory.makeInstanceWithId(INSTANCE_ID);
+        eventPublisher.publishEvent(new TerrariaInstanceApplicationEvent(instance, true));
+        verify(terrariaInstanceMessageService, only()).broadcastInstanceCreation(instance);
     }
 }

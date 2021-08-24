@@ -85,12 +85,12 @@ describe('TerrariaInstanceListItemComponent', () => {
 
         restApiService = TestBed.inject(RestApiService);
 
+        messageService = TestBed.inject(MessageService);
+        errorService = TestBed.inject(ErrorService);
+
         terrariaInstanceService = TestBed.inject(TerrariaInstanceService);
         spyOn(terrariaInstanceService, 'getStatusLabel').and.returnValue('[Instance status]');
         isStateBadSpy = spyOn(terrariaInstanceService, 'isStateBad').and.returnValue(false);
-
-        messageService = TestBed.inject(MessageService);
-        errorService = TestBed.inject(ErrorService);
 
         [fixture, component] = await initComponent(TerrariaInstanceListItemComponent);
         listItemInfo = new MaterialListItemInfo(fixture);

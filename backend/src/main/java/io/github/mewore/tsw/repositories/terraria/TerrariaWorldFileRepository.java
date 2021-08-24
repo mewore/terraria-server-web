@@ -12,4 +12,6 @@ import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 public interface TerrariaWorldFileRepository extends JpaRepository<TerrariaWorldFileEntity, Long> {
 
     Optional<TerrariaWorldFileEntity> findByWorld(final TerrariaWorldEntity world);
+
+    long deleteByWorld(final TerrariaWorldEntity world);
 }

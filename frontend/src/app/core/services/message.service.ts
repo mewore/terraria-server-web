@@ -10,6 +10,7 @@ import {
     TerrariaInstanceEntity,
     TerrariaInstanceEventMessage,
     TerrariaInstanceMessage,
+    TerrariaWorldEntity,
 } from 'src/generated/backend';
 import { StompService } from './stomp.service';
 
@@ -18,6 +19,7 @@ export abstract class MessageService {
     abstract watchInstanceChanges(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceMessage>;
     abstract watchInstanceDeletion(instance: TerrariaInstanceEntity): Observable<void>;
     abstract watchInstanceEvents(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceEventMessage>;
+    abstract watchWorldDeletion(world: TerrariaWorldEntity): Observable<void>;
 }
 
 @Injectable({
@@ -46,20 +48,24 @@ export class MessageServiceImpl implements MessageService, OnDestroy {
         return map((message: IMessage): T => JSON.parse(message.body));
     }
 
-    public watchHostInstanceCreation(host: HostEntity): Observable<TerrariaInstanceEntity> {
+    watchHostInstanceCreation(host: HostEntity): Observable<TerrariaInstanceEntity> {
         return this.rxStomp.watch(`/topic/hosts/${host.id}/instances`).pipe(MessageServiceImpl.messageParser());
     }
 
-    public watchInstanceChanges(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceMessage> {
+    watchInstanceChanges(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceMessage> {
         return this.rxStomp.watch(`/topic/instances/${instance.id}`).pipe(MessageServiceImpl.messageParser());
     }
 
-    public watchInstanceDeletion(instance: TerrariaInstanceEntity): Observable<void> {
+    watchInstanceDeletion(instance: TerrariaInstanceEntity): Observable<void> {
         return this.rxStomp.watch(`/topic/instances/${instance.id}/deletion`).pipe(map(() => undefined));
     }
 
-    public watchInstanceEvents(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceEventMessage> {
+    watchInstanceEvents(instance: TerrariaInstanceEntity): Observable<TerrariaInstanceEventMessage> {
         return this.rxStomp.watch(`/topic/instances/${instance.id}/events`).pipe(MessageServiceImpl.messageParser());
+    }
+
+    watchWorldDeletion(world: TerrariaWorldEntity): Observable<void> {
+        return this.rxStomp.watch(`/topic/worlds/${world.id}/deletion`).pipe(map(() => undefined));
     }
 
     ngOnDestroy(): void {

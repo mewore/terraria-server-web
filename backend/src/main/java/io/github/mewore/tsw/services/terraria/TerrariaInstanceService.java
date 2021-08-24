@@ -45,7 +45,7 @@ public class TerrariaInstanceService {
 
     private final TerrariaWorldRepository terrariaWorldRepository;
 
-    private final TerrariaMessageService terrariaMessageService;
+    private final TerrariaInstanceMessageService terrariaInstanceMessageService;
 
     private final TerrariaInstanceDbNotificationService terrariaInstanceDbNotificationService;
 
@@ -59,9 +59,9 @@ public class TerrariaInstanceService {
         final TerrariaInstanceEntity result = terrariaInstanceRepository.save(instance);
         applicationEventPublisher.publishEvent(new TerrariaInstanceApplicationEvent(result, isNew));
         if (isNew) {
-            terrariaInstanceDbNotificationService.onInstanceCreated(result);
+            terrariaInstanceDbNotificationService.instanceCreated(result);
         } else {
-            terrariaInstanceDbNotificationService.onInstanceUpdated(result);
+            terrariaInstanceDbNotificationService.instanceUpdated(result);
         }
         return result;
     }
@@ -71,7 +71,7 @@ public class TerrariaInstanceService {
             final List<TerrariaInstanceEventEntity> events) {
         final List<TerrariaInstanceEventEntity> savedEvents = terrariaInstanceEventRepository.saveAll(events);
         for (final TerrariaInstanceEventEntity event : savedEvents) {
-            terrariaMessageService.broadcastInstanceEventCreation(event);
+            terrariaInstanceMessageService.broadcastInstanceEventCreation(event);
         }
         return saveInstance(instance);
     }
@@ -80,14 +80,14 @@ public class TerrariaInstanceService {
     public TerrariaInstanceEntity saveInstanceAndEvent(final TerrariaInstanceEntity instance,
             final TerrariaInstanceEventEntity event) {
         final TerrariaInstanceEventEntity savedEvent = terrariaInstanceEventRepository.save(event);
-        terrariaMessageService.broadcastInstanceEventCreation(savedEvent);
+        terrariaInstanceMessageService.broadcastInstanceEventCreation(savedEvent);
         return saveInstance(instance);
     }
 
     @Transactional
     public void saveEvent(final TerrariaInstanceEventEntity event) {
         final TerrariaInstanceEventEntity savedEvent = terrariaInstanceEventRepository.save(event);
-        terrariaMessageService.broadcastInstanceEventCreation(savedEvent);
+        terrariaInstanceMessageService.broadcastInstanceEventCreation(savedEvent);
     }
 
     public void ensureInstanceHasNoOutputFile(final TerrariaInstanceEntity instance) {
@@ -187,7 +187,7 @@ public class TerrariaInstanceService {
 
         terrariaInstanceRepository.delete(instance);
         logger.info("Done deleting instance {}", instance.getUuid());
-        terrariaMessageService.broadcastInstanceDeletion(instance);
+        terrariaInstanceMessageService.broadcastInstanceDeletion(instance);
     }
 
     public @Nullable Integer getDesiredModOption(final TerrariaInstanceEntity instance) {

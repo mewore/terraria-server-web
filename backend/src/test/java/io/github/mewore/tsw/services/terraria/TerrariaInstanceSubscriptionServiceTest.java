@@ -45,7 +45,7 @@ class TerrariaInstanceSubscriptionServiceTest {
     private Publisher<Long, TerrariaInstanceEntity> publisher;
 
     @Mock
-    private TerrariaMessageService terrariaMessageService;
+    private TerrariaInstanceMessageService terrariaInstanceMessageService;
 
     @Captor
     private ArgumentCaptor<Function<Long, TerrariaInstanceEntity>> valueSupplierCaptor;
@@ -66,7 +66,7 @@ class TerrariaInstanceSubscriptionServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithId(1);
         terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceApplicationEvent(instance, true));
         verify(publisher).publish(eq(1L), same(instance));
-        verify(terrariaMessageService, only()).broadcastInstanceCreation(same(instance));
+        verify(terrariaInstanceMessageService, only()).broadcastInstanceCreation(same(instance));
     }
 
     @SuppressWarnings("deprecation")
@@ -75,12 +75,12 @@ class TerrariaInstanceSubscriptionServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithId(1);
         terrariaInstanceSubscriptionService.onApplicationEvent(new TerrariaInstanceApplicationEvent(instance, false));
         verify(publisher).publish(eq(1L), same(instance));
-        verify(terrariaMessageService, only()).broadcastInstanceChange(same(instance));
+        verify(terrariaInstanceMessageService, only()).broadcastInstanceChange(same(instance));
     }
 
     @Test
     void testSubscribe() {
-        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>();
         when(publisher.subscribe(1L)).thenReturn(subscription);
 
         final Subscription<TerrariaInstanceEntity> result = terrariaInstanceSubscriptionService.subscribe(
@@ -90,7 +90,7 @@ class TerrariaInstanceSubscriptionServiceTest {
 
     @Test
     void testSubscribeToAll() {
-        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>();
         when(publisher.subscribe()).thenReturn(subscription);
 
         final Subscription<TerrariaInstanceEntity> result = terrariaInstanceSubscriptionService.subscribeToAll();

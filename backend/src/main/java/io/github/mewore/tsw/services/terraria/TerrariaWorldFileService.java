@@ -146,4 +146,10 @@ public class TerrariaWorldFileService {
             fileService.setLastModified(TERRARIA_WORLD_DIRECTORY.resolve(name + "." + TWLD_EXTENSION), lastModified);
         }
     }
+
+    void deleteWorldFiles(final TerrariaWorldEntity world) {
+        logger.info("Deleting the local files of world \"" + world.getDisplayName() + "\"...");
+        fileService.deleteRecursively(TERRARIA_WORLD_DIRECTORY.resolve(world.getFileName() + "." + WLD_EXTENSION));
+        fileService.deleteRecursively(TERRARIA_WORLD_DIRECTORY.resolve(world.getFileName() + "." + TWLD_EXTENSION));
+    }
 }

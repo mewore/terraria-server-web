@@ -1,23 +1,27 @@
 package io.github.mewore.tsw.controllers;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
+import io.github.mewore.tsw.config.security.AuthorityRoles;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
-import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
+import io.github.mewore.tsw.services.terraria.TerrariaWorldService;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Import(TestConfig.class)
@@ -28,7 +32,7 @@ class TerrariaWorldControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private TerrariaWorldFileRepository terrariaWorldFileRepository;
+    private TerrariaWorldService terrariaWorldService;
 
     @Test
     void testGetWorldData() throws Exception {
@@ -37,7 +41,7 @@ class TerrariaWorldControllerTest {
                 .content("data".getBytes())
                 .world(mock(TerrariaWorldEntity.class))
                 .build();
-        when(terrariaWorldFileRepository.findById(10L)).thenReturn(Optional.of(worldFile));
+        when(terrariaWorldService.getWorldData(10L)).thenReturn(worldFile);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/terraria/worlds/10/data"))
                 .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
                 .andExpect(MockMvcResultMatchers.content().bytes("data".getBytes()))
@@ -45,10 +49,19 @@ class TerrariaWorldControllerTest {
                         .string("Content-Disposition", "attachment;filename=\"world.zip\""));
     }
 
+    @WithMockUser(authorities = {AuthorityRoles.MANAGE_HOSTS})
     @Test
-    void testGetWorldData_notFound() throws Exception {
-        when(terrariaWorldFileRepository.findById(10L)).thenReturn(Optional.empty());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/terraria/worlds/10/data"))
-                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND.value()));
+    void testDeleteWorld() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/terraria/worlds/10"))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()));
+        verify(terrariaWorldService, only()).deleteWorld(10L);
+    }
+
+    @WithMockUser
+    @Test
+    void testDeleteWorld_noPermissions() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/terraria/worlds/10"))
+                .andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN.value()));
+        verify(terrariaWorldService, never()).deleteWorld(anyLong());
     }
 }

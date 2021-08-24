@@ -302,6 +302,13 @@
             }
         },
         "world": {
+            "dialog": {
+                "delete": {
+                    "title": "Delete the world?",
+                    "description": "This is irreversible. The data of the world will be deleted forever. You might want to download it first just in case you need it later.",
+                    "confirm": "Delete"
+                }
+            },
             "list-item": {
                 "last-modified-tooltip": "Last modified: {{ lastModified }}",
                 "buttons": {
@@ -310,6 +317,9 @@
                 },
                 "status": {
                     "loading": "Loading..."
+                },
+                "errors": {
+                    "used": "A server is currently running with this world."
                 }
             }
         }

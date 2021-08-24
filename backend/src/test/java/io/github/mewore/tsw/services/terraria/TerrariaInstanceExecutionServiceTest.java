@@ -101,7 +101,7 @@ class TerrariaInstanceExecutionServiceTest {
     void testStartInstance() throws ProcessFailureException, ProcessTimeoutException, InterruptedException {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.IDLE);
         instance.setNextOutputBytePosition(10L);
-        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>();
         when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
         when(terrariaInstanceService.saveInstance(instance)).thenAnswer(invocation -> invocation.getArgument(0));
         when(terrariaInstanceSubscriptionService.waitForInstanceState(instance, subscription, Duration.ofMinutes(1),
@@ -499,7 +499,7 @@ class TerrariaInstanceExecutionServiceTest {
         final FileTail tail = mock(FileTail.class);
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(tail);
 
-        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>();
         when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);
@@ -523,7 +523,7 @@ class TerrariaInstanceExecutionServiceTest {
         when(terrariaInstanceOutputService.isTrackingInstance(instance)).thenReturn(false);
         when(terrariaInstanceOutputService.getInstanceOutputTail(instance)).thenReturn(mock(FileTail.class));
 
-        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>(null);
+        final Subscription<TerrariaInstanceEntity> subscription = new FakeSubscription<>();
         when(terrariaInstanceSubscriptionService.subscribe(instance)).thenReturn(subscription);
 
         final TerrariaInstanceEntity awaitedInstance = mock(TerrariaInstanceEntity.class);

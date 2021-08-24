@@ -9,11 +9,24 @@ import io.github.mewore.tsw.events.Subscription;
 class NullDatabaseNotificationService implements DatabaseNotificationService {
 
     @Override
-    public void send(final String channel, final String content) {
+    public void sendRaw(final String channel, final String content) {
     }
 
     @Override
-    public Subscription<String> subscribe(final String channel) {
+    public <T> void send(final String channel, final T content) {
+    }
+
+    @Override
+    public <T> void trySend(final String channel, final T content) {
+    }
+
+    @Override
+    public Subscription<String> subscribeRaw(final String channel) {
+        return new NullSubscription<>();
+    }
+
+    @Override
+    public <T> Subscription<T> subscribe(final String channel) {
         return new NullSubscription<>();
     }
 }

@@ -12,6 +12,8 @@ import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 
 import static io.github.mewore.tsw.models.HostFactory.makeHost;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 class TerrariaWorldFileRepositoryIT {
@@ -35,6 +37,19 @@ class TerrariaWorldFileRepositoryIT {
                 .world(makeWorld())
                 .build());
         terrariaWorldFileRepository.saveAndFlush(file);
+    }
+
+    @Test
+    void testDeleteByWorld() {
+        final TerrariaWorldEntity world = makeWorld();
+        final TerrariaWorldFileEntity file = terrariaWorldFileRepository.save(TerrariaWorldFileEntity.builder()
+                .name(WORLD_NAME + ".zip")
+                .content(new byte[1024])
+                .world(world)
+                .build());
+        assertTrue(terrariaWorldFileRepository.existsById(file.getWorldId()));
+        terrariaWorldFileRepository.deleteByWorld(world);
+        assertFalse(terrariaWorldFileRepository.existsById(file.getWorldId()));
     }
 
     private TerrariaWorldEntity makeWorld() {

@@ -21,6 +21,8 @@ export class HostInfoPageComponent implements OnInit, OnDestroy {
 
     worlds?: TerrariaWorldEntity[];
 
+    usedWorldIds: Set<number> = new Set<number>();
+
     routeSubscription?: Subscription;
     instanceCreationSubscription?: Subscription;
 
@@ -52,6 +54,10 @@ export class HostInfoPageComponent implements OnInit, OnDestroy {
                 this.instanceCreationSubscription = this.messageService.watchHostInstanceCreation(host).subscribe({
                     next: (newInstance: TerrariaInstanceEntity) => this.addInstance(newInstance, instances),
                 });
+                this.instanceCreationSubscription = this.messageService.watchHostInstanceCreation(host).subscribe({
+                    next: (newInstance: TerrariaInstanceEntity) => this.addInstance(newInstance, instances),
+                });
+                this.usedWorldIds = new Set<number>(instances.map((instance) => instance.id));
             } finally {
                 this.loading = false;
             }

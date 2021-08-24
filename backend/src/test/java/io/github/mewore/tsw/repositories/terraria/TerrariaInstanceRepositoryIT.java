@@ -14,11 +14,13 @@ import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceAction;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
 
 import static io.github.mewore.tsw.models.HostFactory.makeHost;
 import static io.github.mewore.tsw.models.HostFactory.makeHostBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,6 +35,9 @@ class TerrariaInstanceRepositoryIT {
 
     @Autowired
     private HostRepository hostRepository;
+
+    @Autowired
+    private TerrariaWorldRepository terrariaWorldRepository;
 
     private static UUID uuidWithSuffix(final String suffix) {
         return UUID.fromString(SMALLEST_UUID.substring(0, SMALLEST_UUID.length() - suffix.length()) + suffix);
@@ -93,5 +98,16 @@ class TerrariaInstanceRepositoryIT {
         terrariaInstanceRepository.saveAndFlush(makeInstance(host, "").build());
         assertThrows(DataIntegrityViolationException.class,
                 () -> terrariaInstanceRepository.saveAndFlush(makeInstance(host, "").build()));
+    }
+
+    @Test
+    void testExistsByWorld() {
+        final HostEntity host = hostRepository.saveAndFlush(makeHost());
+        final TerrariaWorldEntity world = terrariaWorldRepository.saveAndFlush(
+                TerrariaWorldEntity.builder().displayName("World Name").fileName("World_Name").host(host).build());
+
+        assertFalse(terrariaInstanceRepository.existsByWorld(world));
+        terrariaInstanceRepository.saveAndFlush(makeInstance(host, "").world(world).build());
+        assertTrue(terrariaInstanceRepository.existsByWorld(world));
     }
 }

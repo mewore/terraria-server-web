@@ -28,13 +28,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class TerrariaMessageServiceTest {
+class TerrariaInstanceMessageServiceTest {
 
     @InjectMocks
-    private TerrariaMessageService terrariaMessageService;
+    private TerrariaInstanceMessageService terrariaInstanceMessageService;
 
     @Mock
-    private SimpMessagingTemplate brokerMessagingTemplate;
+    private SimpMessagingTemplate messagingTemplate;
 
     @Captor
     private ArgumentCaptor<TerrariaInstanceEntity> instanceCaptor;
@@ -51,8 +51,8 @@ class TerrariaMessageServiceTest {
                 .host(makeHostBuilder().id(8L).build())
                 .build();
 
-        terrariaMessageService.broadcastInstanceCreation(instance);
-        verify(brokerMessagingTemplate).convertAndSend(eq("/topic/hosts/8/instances"), instanceCaptor.capture());
+        terrariaInstanceMessageService.broadcastInstanceCreation(instance);
+        verify(messagingTemplate).convertAndSend(eq("/topic/hosts/8/instances"), instanceCaptor.capture());
         assertSame(instance, instanceCaptor.getValue());
     }
 
@@ -65,8 +65,8 @@ class TerrariaMessageServiceTest {
                 .options(Map.of(1, "option"))
                 .build();
 
-        terrariaMessageService.broadcastInstanceChange(instance);
-        verify(brokerMessagingTemplate).convertAndSend(eq("/topic/instances/8"), instanceMessageCaptor.capture());
+        terrariaInstanceMessageService.broadcastInstanceChange(instance);
+        verify(messagingTemplate).convertAndSend(eq("/topic/instances/8"), instanceMessageCaptor.capture());
         final TerrariaInstanceMessage sentMessage = instanceMessageCaptor.getValue();
         assertSame(instance.getTerrariaVersion(), sentMessage.getTerrariaVersion());
         assertSame(instance.getModLoaderVersion(), sentMessage.getModLoaderVersion());
@@ -80,8 +80,8 @@ class TerrariaMessageServiceTest {
 
     @Test
     void testBroadcastInstanceDeletion() {
-        terrariaMessageService.broadcastInstanceDeletion(makeInstanceBuilder().id(8L).build());
-        verify(brokerMessagingTemplate).send(eq("/topic/instances/8/deletion"), any(EmptyMessage.class));
+        terrariaInstanceMessageService.broadcastInstanceDeletion(makeInstanceBuilder().id(8L).build());
+        verify(messagingTemplate).send(eq("/topic/instances/8/deletion"), any(EmptyMessage.class));
     }
 
     @Test
@@ -93,8 +93,8 @@ class TerrariaMessageServiceTest {
                 .instance(makeInstanceBuilder().id(8L).build())
                 .build();
 
-        terrariaMessageService.broadcastInstanceEventCreation(event);
-        verify(brokerMessagingTemplate).convertAndSend(eq("/topic/instances/8/events"), eventMessageCaptor.capture());
+        terrariaInstanceMessageService.broadcastInstanceEventCreation(event);
+        verify(messagingTemplate).convertAndSend(eq("/topic/instances/8/events"), eventMessageCaptor.capture());
         final TerrariaInstanceEventMessage sentMessage = eventMessageCaptor.getValue();
         assertSame(sentMessage.getType(), sentMessage.getType());
         assertSame(sentMessage.getContent(), sentMessage.getContent());

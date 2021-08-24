@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-class QueueSubscription<T extends @NonNull Object> implements ManagedSubscription<T> {
+class QueueSubscription<T extends @NonNull Object> extends SubscriptionBase<T> implements ManagedSubscription<T> {
 
     private static final int QUEUE_CAPACITY = 10;
 
@@ -37,14 +37,10 @@ class QueueSubscription<T extends @NonNull Object> implements ManagedSubscriptio
     private final AtomicBoolean opened = new AtomicBoolean(true);
 
     @Override
-    public void accept(final T value) {
-        if (opened.get() && !queue.offer(value)) {
-            logger.warn("The subscription blocking queue for has been overfilled! Skipping the next value.");
-        }
-    }
-
-    @Override
     public T take() throws InterruptedException {
+        if (!opened.get()) {
+            throw new IllegalStateException("Cannot take an element from a closed subscription");
+        }
         return queue.take();
     }
 
@@ -52,8 +48,8 @@ class QueueSubscription<T extends @NonNull Object> implements ManagedSubscriptio
     public @Nullable T waitFor(final Predicate<T> predicate, final Duration timeout) throws InterruptedException {
         final Instant deadline = Instant.now().plus(timeout);
         while (true) {
-            final @Nullable T result = queue.poll(Instant.now().until(deadline, ChronoUnit.MILLIS),
-                    TimeUnit.MILLISECONDS);
+            final @Nullable T result = opened.get() ? queue.poll(Instant.now().until(deadline, ChronoUnit.MILLIS),
+                    TimeUnit.MILLISECONDS) : null;
             if (result == null) {
                 break;
             }
@@ -79,5 +75,12 @@ class QueueSubscription<T extends @NonNull Object> implements ManagedSubscriptio
     @Override
     public boolean isOpen() {
         return opened.get();
+    }
+
+    @Override
+    public void accept(final T value) {
+        if (opened.get() && !queue.offer(value)) {
+            logger.warn("The subscription blocking queue for has been overfilled! Skipping the next value.");
+        }
     }
 }

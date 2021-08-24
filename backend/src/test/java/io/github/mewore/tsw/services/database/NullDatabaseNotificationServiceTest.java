@@ -12,19 +12,31 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class NullDatabaseNotificationServiceTest {
 
     @Test
-    void send() {
-        new NullDatabaseNotificationService().send("channel", "content");
+    void testSendRaw() {
+        new NullDatabaseNotificationService().sendRaw("channel", "content");
     }
 
     @Test
-    void subscribe_waitFor() throws InterruptedException {
-        try (final Subscription<String> subscription = new NullDatabaseNotificationService().subscribe("channel")) {
+    void testTrySend() {
+        new NullDatabaseNotificationService().trySend("channel", "content");
+    }
+
+    @Test
+    void testSubscribeRaw_waitFor() throws InterruptedException {
+        try (final Subscription<String> subscription = new NullDatabaseNotificationService().subscribeRaw("channel")) {
             assertNull(subscription.waitFor(unused -> true, Duration.ZERO));
         }
     }
 
     @Test
-    void subscribe_take() {
+    void testSubscribeRaw_take() {
+        try (final Subscription<String> subscription = new NullDatabaseNotificationService().subscribeRaw("channel")) {
+            assertThrows(UnsupportedOperationException.class, subscription::take);
+        }
+    }
+
+    @Test
+    void testSubscribe() {
         try (final Subscription<String> subscription = new NullDatabaseNotificationService().subscribe("channel")) {
             assertThrows(UnsupportedOperationException.class, subscription::take);
         }

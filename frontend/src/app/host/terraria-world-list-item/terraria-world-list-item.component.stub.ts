@@ -8,4 +8,7 @@ import { TerrariaWorldEntity } from 'src/generated/backend';
 export class TerrariaWorldListItemStubComponent {
     @Input()
     world?: TerrariaWorldEntity;
+
+    @Input()
+    usedWorldIds?: Set<number>;
 }

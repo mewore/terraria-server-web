@@ -31,7 +31,7 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
 
     private final Publisher<Long, TerrariaInstanceEntity> instancePublisher;
 
-    private final TerrariaMessageService terrariaMessageService;
+    private final TerrariaInstanceMessageService terrariaInstanceMessageService;
 
     @PostConstruct
     void setUp() {
@@ -53,9 +53,9 @@ public class TerrariaInstanceSubscriptionService implements ApplicationListener<
         instancePublisher.publish(instance.getId(), instance);
 
         if (event.isNew()) {
-            terrariaMessageService.broadcastInstanceCreation(instance);
+            terrariaInstanceMessageService.broadcastInstanceCreation(event.getChangedInstance());
         } else {
-            terrariaMessageService.broadcastInstanceChange(instance);
+            terrariaInstanceMessageService.broadcastInstanceChange(event.getChangedInstance());
         }
     }
 

@@ -19,14 +19,14 @@ import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeI
 
 @Import(TestConfig.class)
 @SpringBootTest("spring.h2.console.enabled=true")
-class TerrariaMessageServiceIT {
+class TerrariaInstanceMessageServiceIT {
 
     @Autowired
-    private TerrariaMessageService terrariaMessageService;
+    private TerrariaInstanceMessageService terrariaInstanceMessageService;
 
     @Test
     void testBroadcastInstanceCreation() {
-        terrariaMessageService.broadcastInstanceCreation(makeInstance());
+        terrariaInstanceMessageService.broadcastInstanceCreation(makeInstance());
     }
 
     @Test
@@ -38,12 +38,12 @@ class TerrariaMessageServiceIT {
                 .options(Map.of(1, "option"))
                 .build();
 
-        terrariaMessageService.broadcastInstanceChange(instance);
+        terrariaInstanceMessageService.broadcastInstanceChange(instance);
     }
 
     @Test
     void testBroadcastInstanceDeletion() {
-        terrariaMessageService.broadcastInstanceDeletion(makeInstance());
+        terrariaInstanceMessageService.broadcastInstanceDeletion(makeInstance());
     }
 
     @Test
@@ -55,6 +55,6 @@ class TerrariaMessageServiceIT {
                 .instance(makeInstanceBuilder().id(8L).build())
                 .build();
 
-        terrariaMessageService.broadcastInstanceEventCreation(event);
+        terrariaInstanceMessageService.broadcastInstanceEventCreation(event);
     }
 }

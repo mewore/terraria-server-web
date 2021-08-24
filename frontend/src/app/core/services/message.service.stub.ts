@@ -5,6 +5,7 @@ import {
     TerrariaInstanceEntity,
     TerrariaInstanceEventMessage,
     TerrariaInstanceMessage,
+    TerrariaWorldEntity,
 } from 'src/generated/backend';
 import { MessageService } from './message.service';
 
@@ -23,6 +24,10 @@ export class MessageServiceStub implements MessageService {
     }
 
     watchInstanceEvents(_instance: TerrariaInstanceEntity): Observable<TerrariaInstanceEventMessage> {
+        throw new Error('Method not mocked.');
+    }
+
+    watchWorldDeletion(_instance: TerrariaWorldEntity): Observable<void> {
         throw new Error('Method not mocked.');
     }
 }

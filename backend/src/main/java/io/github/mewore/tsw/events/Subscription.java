@@ -1,6 +1,7 @@
 package io.github.mewore.tsw.events;
 
 import java.time.Duration;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,6 +20,15 @@ public interface Subscription<T> extends AutoCloseable {
      * @throws InterruptedException If interrupted while waiting.
      */
     T take() throws InterruptedException;
+
+    /**
+     * Wait until a value matching a predicate is received, no matter how long it takes.
+     *
+     * @param predicate The predicate to filter the values by.
+     * @return The first value that is received.
+     * @throws InterruptedException If interrupted while waiting.
+     */
+    T take(final Predicate<T> predicate) throws InterruptedException;
 
     /**
      * Wait until a value matching a predicate is received.
@@ -42,4 +52,14 @@ public interface Subscription<T> extends AutoCloseable {
      * @return @Whether the subscription is still open.
      */
     boolean isOpen();
+
+    /**
+     * Transform the values coming from this subscription. Using the subscription returned by this method uses and
+     * discards the values of this subscription! The returned subscription is merely an interface to this one.
+     *
+     * @param valueMapper The function which transforms the values of this subscription.
+     * @param <V>         The type of the values after they have been transformed.
+     * @return The new subscription.
+     */
+    <V> Subscription<V> map(final Function<T, V> valueMapper);
 }

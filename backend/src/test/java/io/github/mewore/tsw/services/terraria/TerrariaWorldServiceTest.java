@@ -9,17 +9,27 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
+import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
+import io.github.mewore.tsw.exceptions.InvalidRequestException;
+import io.github.mewore.tsw.exceptions.NotFoundException;
 import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
+import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.LocalHostService;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -45,10 +55,22 @@ class TerrariaWorldServiceTest {
     private TerrariaWorldFileService terrariaWorldFileService;
 
     @Mock
+    private TerrariaInstanceRepository terrariaInstanceRepository;
+
+    @Mock
     private TerrariaWorldRepository terrariaWorldRepository;
 
     @Mock
     private TerrariaWorldFileRepository terrariaWorldFileRepository;
+
+    @Mock
+    private TerrariaWorldDbNotificationService terrariaWorldDbNotificationService;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @Captor
+    private ArgumentCaptor<TerrariaWorldDeletionEvent> deletionEventCaptor;
 
     private static TerrariaWorldInfo makeWorldInfo(final long lastModified, final TerrariaWorldFileEntity readResult)
             throws IOException {
@@ -155,6 +177,20 @@ class TerrariaWorldServiceTest {
     }
 
     @Test
+    void testGetWorldData() throws NotFoundException {
+        final TerrariaWorldFileEntity file = mock(TerrariaWorldFileEntity.class);
+        when(terrariaWorldFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        assertSame(file, terrariaWorldService.getWorldData(1L));
+    }
+
+    @Test
+    void testGetWorldData_notFound() {
+        when(terrariaWorldFileRepository.findById(1L)).thenReturn(Optional.empty());
+        final Exception exception = assertThrows(NotFoundException.class, () -> terrariaWorldService.getWorldData(1L));
+        assertEquals("There is no file data for the world with ID 1", exception.getMessage());
+    }
+
+    @Test
     void testUpdateWorld() throws IOException {
         final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
         when(world.getLastModified()).thenReturn(Instant.ofEpochMilli(1L));
@@ -249,5 +285,38 @@ class TerrariaWorldServiceTest {
 
         verify(terrariaWorldRepository, only()).save(same(world));
         verify(terrariaWorldFileRepository).save(same(readFileResult));
+    }
+
+    @Test
+    void testDeleteWorld() throws NotFoundException, InvalidRequestException {
+        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        when(terrariaWorldRepository.findById(1L)).thenReturn(Optional.of(world));
+        when(terrariaInstanceRepository.existsByWorld(world)).thenReturn(false);
+
+        terrariaWorldService.deleteWorld(1L);
+        verify(terrariaWorldRepository).delete(world);
+        verify(applicationEventPublisher, only()).publishEvent(deletionEventCaptor.capture());
+        assertSame(world, deletionEventCaptor.getValue().getDeletedWorld());
+        verify(terrariaWorldDbNotificationService, only()).worldDeleted(world);
+    }
+
+    @Test
+    void testDeleteWorld_notFound() {
+        when(terrariaWorldRepository.findById(1L)).thenReturn(Optional.empty());
+        final Exception exception = assertThrows(NotFoundException.class, () -> terrariaWorldService.deleteWorld(1L));
+        assertEquals("There is no world with ID 1", exception.getMessage());
+    }
+
+    @Test
+    void testDeleteWorld_used() {
+        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        when(world.getDisplayName()).thenReturn("World Name");
+        when(terrariaWorldRepository.findById(1L)).thenReturn(Optional.of(world));
+        when(terrariaInstanceRepository.existsByWorld(world)).thenReturn(true);
+
+        final Exception exception = assertThrows(InvalidRequestException.class,
+                () -> terrariaWorldService.deleteWorld(1L));
+        assertEquals("World \"World Name\" with ID 1 is used by one or more instances. Stop the instances first.",
+                exception.getMessage());
     }
 }

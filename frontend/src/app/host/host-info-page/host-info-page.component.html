@@ -6,7 +6,11 @@
     <mat-list class="compactable-list">
         <mat-divider></mat-divider>
         <div mat-subheader>{{ 'host-info-page.worlds' | translate }}</div>
-        <tsw-terraria-world-list-item *ngFor="let world of worlds" [world]="world"></tsw-terraria-world-list-item>
+        <tsw-terraria-world-list-item
+            *ngFor="let world of worlds"
+            [usedWorldIds]="usedWorldIds"
+            [world]="world"
+        ></tsw-terraria-world-list-item>
     </mat-list>
     <mat-list class="compactable-list">
         <mat-divider></mat-divider>

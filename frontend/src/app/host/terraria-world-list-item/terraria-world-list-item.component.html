@@ -1,7 +1,7 @@
 <mat-list-item>
     <mat-icon
         [class.tsw-loading]="!world"
-        [class.deleted]="missing"
+        [class.deleted]="missing || deleted"
         [matTooltipDisabled]="!!world"
         [matTooltip]="'terraria.world.list-item.status.loading' | translate"
         class="unclickable-icon"
@@ -10,9 +10,10 @@
         public
     </mat-icon>
 
-    <div *ngIf="world" [class.deleted]="!world || missing" mat-line>
+    <div *ngIf="world" [class.deleted]="!world || !canDownload || deleted" mat-line>
         {{ world?.displayName }}
         <ng-container *ngIf="missing">{{ 'list-item.missing' | translate }}</ng-container>
+        <ng-container *ngIf="deleted"> {{ 'list-item.deleted' | translate }}</ng-container>
     </div>
     <div *ngIf="world?.lastModified" class="world-last-modified" mat-line>
         <span
@@ -25,15 +26,27 @@
         </span>
     </div>
 
-    <span [matTooltip]="'general.not-implemented' | translate" class="unimplemented-action-buttons">
-        <button [disabled]="true" [matTooltip]="'terraria.world.list-item.buttons.delete' | translate" mat-icon-button>
+    <span
+        [matTooltipDisabled]="canManageHosts"
+        [matTooltip]="
+            (canManageHosts ? 'terraria.world.list-item.errors.used' : 'no-permission.ableToManageHosts') | translate
+        "
+    >
+        <button
+            (click)="onDeleteClicked()"
+            [disabled]="!canDelete"
+            [matTooltip]="'terraria.world.list-item.buttons.delete' | translate"
+            color="warn"
+            mat-icon-button
+        >
             <mat-icon>delete</mat-icon>
         </button>
     </span>
+
     <ng-container *ngIf="world">
-        <a *ngIf="!missing; else disabledDownloadButton" [href]="'/api/terraria/worlds/' + world.id + '/data'">
+        <a *ngIf="canDownload; else disabledDownloadButton" [href]="'/api/terraria/worlds/' + world.id + '/data'">
             <button
-                [disabled]="missing"
+                [disabled]="!canDownload"
                 [matTooltip]="'terraria.world.list-item.buttons.download' | translate"
                 mat-icon-button
             >

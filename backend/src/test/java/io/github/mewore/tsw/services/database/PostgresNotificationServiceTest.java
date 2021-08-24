@@ -2,6 +2,7 @@ package io.github.mewore.tsw.services.database;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -81,7 +82,7 @@ class PostgresNotificationServiceTest {
         final PGNotificationListener notificationListener = getNotificationListener();
 
         final Statement statement = mockJdbcStatement();
-        postgresNotificationService.send("channel", "payload");
+        postgresNotificationService.sendRaw("channel", "payload");
         verify(statement).execute(stringCaptor.capture());
         final String notification = stringCaptor.getValue()
                 .replaceFirst("^NOTIFY channel, '", "")
@@ -181,17 +182,47 @@ class PostgresNotificationServiceTest {
     }
 
     @Test
-    void testSend() throws SQLException {
+    void testSendRaw() throws SQLException {
         final Statement statement = mockJdbcStatement();
-        postgresNotificationService.send("channel", "payload");
+        postgresNotificationService.sendRaw("channel", "payload");
         verify(statement).execute(matches(Pattern.compile("^NOTIFY channel, '[a-f0-9\\-]{36}:payload'$")));
         verify(statement).close();
     }
 
     @Test
-    void testSubscribe() throws SQLException {
+    void testTrySend() throws SQLException {
+        final Statement statement = mockJdbcStatement();
+        postgresNotificationService.trySend("channel", List.of(1));
+        verify(statement).execute(matches(Pattern.compile("^NOTIFY channel, '[a-f0-9\\-]{36}:\\[1]'$")));
+        verify(statement).close();
+    }
+
+    @Test
+    void testTrySend_sqlError() throws SQLException {
+        final Statement statement = mockJdbcStatement();
+        when(statement.execute(anyString())).thenThrow(new SQLException("oof"));
+        postgresNotificationService.trySend("channel", List.of(1));
+        verify(statement).close();
+    }
+
+    @Test
+    void testSubscribeRaw() {
         when(publisher.subscribe("channel")).thenReturn(subscription);
-        assertSame(subscription, postgresNotificationService.subscribe("channel"));
+        assertSame(subscription, postgresNotificationService.subscribeRaw("channel"));
+    }
+
+    @Test
+    void testSubscribe() throws InterruptedException {
+        when(publisher.subscribe("channel")).thenReturn(new FakeSubscription<>("[1]"));
+        assertEquals(List.of(1), postgresNotificationService.subscribe("channel").take());
+    }
+
+    @Test
+    void testSubscribe_error() {
+        when(publisher.subscribe("channel")).thenReturn(new FakeSubscription<>("invalid"));
+        final Exception exception = assertThrows(RuntimeException.class,
+                () -> postgresNotificationService.subscribe("channel").take());
+        assertEquals("Failed to parse the raw notification <invalid> as JSON", exception.getMessage());
     }
 
     private Statement mockJdbcStatement() throws SQLException {

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
+import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 
 @Transactional
 public interface TerrariaInstanceRepository extends JpaRepository<TerrariaInstanceEntity, Long> {
@@ -17,4 +18,6 @@ public interface TerrariaInstanceRepository extends JpaRepository<TerrariaInstan
     List<TerrariaInstanceEntity> findByHostUuid(final UUID hostUuid);
 
     Optional<TerrariaInstanceEntity> findTopByHostUuidAndPendingActionNotNull(final UUID hostUuid);
+
+    boolean existsByWorld(final TerrariaWorldEntity world);
 }

@@ -11,11 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationEventPublisher;
 
 import io.github.mewore.tsw.models.HostEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.HostRepository;
+import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 import io.github.mewore.tsw.services.LocalHostService;
@@ -46,10 +48,19 @@ class TerrariaWorldServiceIT {
     private TerrariaWorldFileService terrariaWorldFileService;
 
     @Autowired
+    private TerrariaInstanceRepository terrariaInstanceRepository;
+
+    @Autowired
     private TerrariaWorldRepository terrariaWorldRepository;
 
     @Autowired
     private TerrariaWorldFileRepository terrariaWorldFileRepository;
+
+    @MockBean
+    private TerrariaWorldDbNotificationService terrariaWorldDbNotificationService;
+
+    @MockBean
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private static TerrariaWorldInfo makeWorldInfo(final String worldName,
             final long lastModified,
@@ -69,8 +80,9 @@ class TerrariaWorldServiceIT {
     }
 
     private TerrariaWorldService service() {
-        return new TerrariaWorldService(localHostService, terrariaWorldFileService, terrariaWorldRepository,
-                terrariaWorldFileRepository);
+        return new TerrariaWorldService(localHostService, terrariaWorldFileService, terrariaInstanceRepository,
+                terrariaWorldRepository, terrariaWorldFileRepository, terrariaWorldDbNotificationService,
+                applicationEventPublisher);
     }
 
     @Test
@@ -107,7 +119,9 @@ class TerrariaWorldServiceIT {
         assertEquals(Instant.ofEpochMilli(8L), changedWorld.getLastModified());
 
         assertEquals(List.of("Unchanged", "Changed", "WithoutFile", "Deleted", "New"),
-                terrariaWorldFileRepository.findAll().stream().map(file -> file.getWorld().getDisplayName())
+                terrariaWorldFileRepository.findAll()
+                        .stream()
+                        .map(file -> file.getWorld().getDisplayName())
                         .collect(Collectors.toList()));
     }
 
@@ -150,7 +164,8 @@ class TerrariaWorldServiceIT {
     }
 
     private void addFileToWorld(final TerrariaWorldEntity world) {
-        terrariaWorldFileRepository.saveAndFlush(TerrariaWorldFileEntity.builder().name(world.getDisplayName() + ".zip")
+        terrariaWorldFileRepository.saveAndFlush(TerrariaWorldFileEntity.builder()
+                .name(world.getDisplayName() + ".zip")
                 .content(new byte[0])
                 .world(world)
                 .build());

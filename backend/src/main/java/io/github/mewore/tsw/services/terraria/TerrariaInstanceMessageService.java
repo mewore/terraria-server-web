@@ -12,26 +12,25 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
-public class TerrariaMessageService {
+public class TerrariaInstanceMessageService {
 
-    private final SimpMessagingTemplate brokerMessagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public void broadcastInstanceCreation(final TerrariaInstanceEntity instance) {
-        brokerMessagingTemplate.convertAndSend(String.format("/topic/hosts/%d/instances", instance.getHost().getId()),
+    void broadcastInstanceCreation(final TerrariaInstanceEntity instance) {
+        messagingTemplate.convertAndSend(String.format("/topic/hosts/%d/instances", instance.getHost().getId()),
                 instance);
     }
 
-    public void broadcastInstanceChange(final TerrariaInstanceEntity instance) {
-        brokerMessagingTemplate.convertAndSend("/topic/instances/" + instance.getId(),
-                new TerrariaInstanceMessage(instance));
+    void broadcastInstanceChange(final TerrariaInstanceEntity instance) {
+        messagingTemplate.convertAndSend("/topic/instances/" + instance.getId(), new TerrariaInstanceMessage(instance));
     }
 
     public void broadcastInstanceDeletion(final TerrariaInstanceEntity instance) {
-        brokerMessagingTemplate.send("/topic/instances/" + instance.getId() + "/deletion", new EmptyMessage());
+        messagingTemplate.send("/topic/instances/" + instance.getId() + "/deletion", new EmptyMessage());
     }
 
     public void broadcastInstanceEventCreation(final TerrariaInstanceEventEntity event) {
-        brokerMessagingTemplate.convertAndSend("/topic/instances/" + event.getInstance().getId() + "/events",
+        messagingTemplate.convertAndSend("/topic/instances/" + event.getInstance().getId() + "/events",
                 new TerrariaInstanceEventMessage(event));
     }
 }

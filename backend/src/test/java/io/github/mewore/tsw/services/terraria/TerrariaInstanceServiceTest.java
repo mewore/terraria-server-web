@@ -68,7 +68,7 @@ class TerrariaInstanceServiceTest {
     private TerrariaWorldRepository terrariaWorldRepository;
 
     @Mock
-    private TerrariaMessageService terrariaMessageService;
+    private TerrariaInstanceMessageService terrariaInstanceMessageService;
 
     @Mock
     private TerrariaInstanceDbNotificationService terrariaInstanceDbNotificationService;
@@ -111,7 +111,7 @@ class TerrariaInstanceServiceTest {
 
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstance(instance);
         assertSame(savedInstance, result);
-        verify(terrariaInstanceDbNotificationService, only()).onInstanceUpdated(savedInstance);
+        verify(terrariaInstanceDbNotificationService, only()).instanceUpdated(savedInstance);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
                 ((TerrariaInstanceApplicationEvent) applicationEventCaptor.getValue()).getChangedInstance());
@@ -125,7 +125,7 @@ class TerrariaInstanceServiceTest {
         when(terrariaInstanceRepository.save(instance)).thenReturn(savedInstance);
 
         terrariaInstanceService.saveInstance(instance);
-        verify(terrariaInstanceDbNotificationService, only()).onInstanceCreated(savedInstance);
+        verify(terrariaInstanceDbNotificationService, only()).instanceCreated(savedInstance);
     }
 
     @Test
@@ -143,9 +143,9 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstanceAndEvents(instance, events);
         assertSame(savedInstance, result);
         verify(terrariaInstanceEventRepository).saveAll(events);
-        verify(terrariaInstanceDbNotificationService, only()).onInstanceCreated(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceEventCreation(event);
-        verify(terrariaMessageService).broadcastInstanceEventCreation(secondEvent);
+        verify(terrariaInstanceDbNotificationService, only()).instanceCreated(savedInstance);
+        verify(terrariaInstanceMessageService).broadcastInstanceEventCreation(event);
+        verify(terrariaInstanceMessageService).broadcastInstanceEventCreation(secondEvent);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
                 ((TerrariaInstanceApplicationEvent) applicationEventCaptor.getValue()).getChangedInstance());
@@ -163,8 +163,8 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity result = terrariaInstanceService.saveInstanceAndEvent(instance, event);
         assertSame(savedInstance, result);
         verify(terrariaInstanceEventRepository).save(event);
-        verify(terrariaInstanceDbNotificationService, only()).onInstanceCreated(savedInstance);
-        verify(terrariaMessageService).broadcastInstanceEventCreation(event);
+        verify(terrariaInstanceDbNotificationService, only()).instanceCreated(savedInstance);
+        verify(terrariaInstanceMessageService).broadcastInstanceEventCreation(event);
         verify(applicationEventPublisher).publishEvent(applicationEventCaptor.capture());
         assertSame(savedInstance,
                 ((TerrariaInstanceApplicationEvent) applicationEventCaptor.getValue()).getChangedInstance());
@@ -178,7 +178,7 @@ class TerrariaInstanceServiceTest {
 
         terrariaInstanceService.saveEvent(event);
         verify(terrariaInstanceEventRepository).save(event);
-        verify(terrariaMessageService).broadcastInstanceEventCreation(savedEvent);
+        verify(terrariaInstanceMessageService).broadcastInstanceEventCreation(savedEvent);
     }
 
     @Test
@@ -391,7 +391,7 @@ class TerrariaInstanceServiceTest {
         terrariaInstanceService.deleteInstance(instance);
         verify(terrariaInstanceEventRepository, only()).deleteByInstance(instance);
         verify(terrariaInstanceRepository, only()).delete(instance);
-        verify(terrariaMessageService, only()).broadcastInstanceDeletion(instance);
+        verify(terrariaInstanceMessageService, only()).broadcastInstanceDeletion(instance);
     }
 
     @Test

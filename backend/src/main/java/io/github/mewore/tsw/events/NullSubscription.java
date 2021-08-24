@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class NullSubscription<T> implements Subscription<T> {
+public class NullSubscription<T> extends SubscriptionBase<T> {
 
     @Override
     public T take() {
