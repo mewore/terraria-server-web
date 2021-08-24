@@ -8,6 +8,7 @@ import {
     TerrariaInstanceEntity,
     TerrariaInstanceEventMessage,
     TerrariaInstanceMessage,
+    TerrariaWorldEntity,
 } from 'src/generated/backend';
 import { RxStompStub } from 'src/stubs/rx-stomp.stub';
 import { MessageService, MessageServiceImpl } from './message.service';
@@ -158,7 +159,7 @@ describe('MessageService', () => {
             subscription.unsubscribe();
         }));
 
-        it('should watch for instance changes at the correct destination', () => {
+        it('should watch for the instance deletion at the correct destination', () => {
             expect(watchSpy).toHaveBeenCalledOnceWith('/topic/instances/8/deletion');
         });
 
@@ -193,6 +194,31 @@ describe('MessageService', () => {
 
         it('should track the instance messages', () => {
             expect(result).toEqual(sentMessage);
+        });
+    });
+
+    describe('watchWorldDeletion', () => {
+        let watchSpy: jasmine.Spy<(destinationOrOptions: string | IWatchParams, headers?: any) => Subject<IMessage>>;
+        let result: boolean;
+
+        beforeEach(fakeAsync(() => {
+            watchSpy = spyOn(stompClient, 'watch').and.returnValue(
+                new BehaviorSubject<IMessage>({} as IMessage).asObservable()
+            );
+            result = false;
+            const subscription = service.watchWorldDeletion({ id: 8 } as TerrariaWorldEntity).subscribe({
+                next: () => (result = true),
+            });
+            tick(1000);
+            subscription.unsubscribe();
+        }));
+
+        it('should watch for the world deletion at the correct destination', () => {
+            expect(watchSpy).toHaveBeenCalledOnceWith('/topic/worlds/8/deletion');
+        });
+
+        it('should track the world messages', () => {
+            expect(result).toBeTrue();
         });
     });
 });

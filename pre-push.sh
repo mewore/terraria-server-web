@@ -35,7 +35,8 @@ compareNumbers() {
   awk -v first="$1" -v second="$2" 'BEGIN {printf first < second ? "<" : ">="}'
 }
 
-FRONTEND_COVERAGE_TARGET=90
+# The Cobertura plugin thinks the minimum coverage is 100% instead of 80%... oof.
+FRONTEND_COVERAGE_TARGET=100
 grep -Eo -m 4 '[0-9.]+%' ./frontend/coverage/terraria-server-web/index.html | while read match; do
   coverage=`echo "${match}" | sed 's/%//'`
   comparison_result=`compareNumbers "${coverage}" "${FRONTEND_COVERAGE_TARGET}"`
