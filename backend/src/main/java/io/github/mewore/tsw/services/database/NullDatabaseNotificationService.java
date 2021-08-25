@@ -1,5 +1,7 @@
 package io.github.mewore.tsw.services.database;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.springframework.stereotype.Service;
 
 import io.github.mewore.tsw.events.NullSubscription;
@@ -26,7 +28,7 @@ class NullDatabaseNotificationService implements DatabaseNotificationService {
     }
 
     @Override
-    public <T> Subscription<T> subscribe(final String channel) {
+    public <T> Subscription<T> subscribe(final String channel, final TypeReference<T> typeReference) {
         return new NullSubscription<>();
     }
 }

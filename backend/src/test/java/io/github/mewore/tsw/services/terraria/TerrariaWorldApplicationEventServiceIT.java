@@ -10,9 +10,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 
 import io.github.mewore.tsw.config.TestConfig;
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
-import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
@@ -37,9 +37,9 @@ class TerrariaWorldApplicationEventServiceIT {
 
     @Test
     void testOnWorldDeleted() throws InterruptedException {
-        try (final Subscription<TerrariaWorldEntity> subscription =
+        try (final Subscription<DeletedWorldNotification> subscription =
                      terrariaWorldApplicationEventService.subscribeToWorldDeletions()) {
-            final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+            final DeletedWorldNotification world = mock(DeletedWorldNotification.class);
             when(world.getId()).thenReturn(WORLD_ID);
             eventPublisher.publishEvent(new TerrariaWorldDeletionEvent(world));
             assertSame(world, subscription.waitFor(unused -> true, Duration.ZERO));

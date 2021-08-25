@@ -2,11 +2,14 @@ package io.github.mewore.tsw.services.terraria;
 
 import javax.annotation.PostConstruct;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
@@ -31,19 +34,20 @@ public class TerrariaWorldDbNotificationService {
 
     @PostConstruct
     void setUp() {
-        final Subscription<TerrariaWorldEntity> subscriptionForDeletion = databaseNotificationService.subscribe(
-                DELETION_CHANNEL_NAME);
+        final Subscription<DeletedWorldNotification> subscriptionForDeletion = databaseNotificationService.subscribe(
+                DELETION_CHANNEL_NAME, new TypeReference<>() {
+                });
 
         lifecycleThreadPool.run(() -> waitForWorldDeletionNotification(subscriptionForDeletion));
     }
 
     public void worldDeleted(final @NonNull TerrariaWorldEntity world) {
-        databaseNotificationService.trySend(DELETION_CHANNEL_NAME, world);
+        databaseNotificationService.trySend(DELETION_CHANNEL_NAME, new DeletedWorldNotification(world));
     }
 
-    private void waitForWorldDeletionNotification(final Subscription<TerrariaWorldEntity> notificationSubscription)
+    private void waitForWorldDeletionNotification(final Subscription<DeletedWorldNotification> notificationSubscription)
             throws InterruptedException {
-        final TerrariaWorldEntity deletedWorld = notificationSubscription.take();
+        final DeletedWorldNotification deletedWorld = notificationSubscription.take();
         logger.info("Received a notification for the deletion of the world \"{}\" with ID {}",
                 deletedWorld.getDisplayName(), deletedWorld.getId());
         applicationEventPublisher.publishEvent(new TerrariaWorldDeletionEvent(deletedWorld));

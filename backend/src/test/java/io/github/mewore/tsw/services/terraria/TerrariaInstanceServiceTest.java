@@ -1,7 +1,6 @@
 package io.github.mewore.tsw.services.terraria;
 
 import java.io.File;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +34,8 @@ import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldRepository;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithState;
+import static io.github.mewore.tsw.models.terraria.TerrariaWorldFactory.makeWorld;
+import static io.github.mewore.tsw.models.terraria.TerrariaWorldFactory.makeWorldBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -315,8 +316,7 @@ class TerrariaInstanceServiceTest {
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
         when(terrariaInstanceRepository.save(instance)).thenReturn(instance);
 
-        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
-        when(world.getLastModified()).thenReturn(Instant.EPOCH);
+        final TerrariaWorldEntity world = makeWorld();
         when(terrariaWorldRepository.findById(11L)).thenReturn(Optional.of(world));
 
         final TerrariaInstanceEntity result = terrariaInstanceService.updateInstance(8L,
@@ -351,8 +351,7 @@ class TerrariaInstanceServiceTest {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
         when(terrariaInstanceRepository.findById(8L)).thenReturn(Optional.of(instance));
 
-        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
-        when(world.getLastModified()).thenReturn(null);
+        final TerrariaWorldEntity world = makeWorldBuilder().lastModified(null).build();
         when(terrariaWorldRepository.findById(11L)).thenReturn(Optional.of(world));
 
         final Exception exception = assertThrows(InvalidRequestException.class,

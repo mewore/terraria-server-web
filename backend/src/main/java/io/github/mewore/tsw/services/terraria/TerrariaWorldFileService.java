@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaWorldFileRepository;
@@ -147,7 +148,7 @@ public class TerrariaWorldFileService {
         }
     }
 
-    void deleteWorldFiles(final TerrariaWorldEntity world) {
+    void deleteWorldFiles(final DeletedWorldNotification world) {
         logger.info("Deleting the local files of world \"" + world.getDisplayName() + "\"...");
         fileService.deleteRecursively(TERRARIA_WORLD_DIRECTORY.resolve(world.getFileName() + "." + WLD_EXTENSION));
         fileService.deleteRecursively(TERRARIA_WORLD_DIRECTORY.resolve(world.getFileName() + "." + TWLD_EXTENSION));

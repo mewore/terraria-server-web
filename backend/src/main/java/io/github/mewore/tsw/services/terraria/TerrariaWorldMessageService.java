@@ -3,8 +3,8 @@ package io.github.mewore.tsw.services.terraria;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.models.EmptyMessage;
-import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -15,7 +15,7 @@ public class TerrariaWorldMessageService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    void broadcastWorldDeletion(final TerrariaWorldEntity world) {
+    void broadcastWorldDeletion(final DeletedWorldNotification world) {
         messagingTemplate.send(PREFIX + "/" + world.getId() + "/deletion", new EmptyMessage());
     }
 }

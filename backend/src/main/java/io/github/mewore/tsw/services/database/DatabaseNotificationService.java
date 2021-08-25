@@ -3,6 +3,7 @@ package io.github.mewore.tsw.services.database;
 import java.sql.SQLException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.github.mewore.tsw.events.Subscription;
 
@@ -51,9 +52,10 @@ public interface DatabaseNotificationService {
     /**
      * Listen for notifications coming from the database. Automatically deserialize the content from JSON.
      *
-     * @param <T>     The content type.
-     * @param channel The channel to listen for notifications from.
+     * @param <T>           The content type.
+     * @param channel       The channel to listen for notifications from.
+     * @param typeReference The type reference for the serialization.
      * @return The subscription for the channel.
      */
-    <T> Subscription<T> subscribe(final String channel);
+    <T> Subscription<T> subscribe(final String channel, final TypeReference<T> typeReference);
 }

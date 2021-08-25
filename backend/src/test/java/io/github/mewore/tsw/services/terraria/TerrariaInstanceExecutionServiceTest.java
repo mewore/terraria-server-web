@@ -31,6 +31,7 @@ import io.github.mewore.tsw.services.util.process.TmuxService;
 
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.INSTANCE_UUID;
 import static io.github.mewore.tsw.models.terraria.TerrariaInstanceFactory.makeInstanceWithState;
+import static io.github.mewore.tsw.models.terraria.TerrariaWorldFactory.makeWorld;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -403,7 +404,7 @@ class TerrariaInstanceExecutionServiceTest {
     @Test
     void testRunInstance_noOptions() {
         final TerrariaInstanceEntity instance = makeInstanceWithState(TerrariaInstanceState.WORLD_MENU);
-        instance.setWorld(mock(TerrariaWorldEntity.class));
+        instance.setWorld(makeWorld());
         final Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> terrariaInstanceExecutionService.runInstance(instance));
         assertEquals("Cannot run an instance that does not have any options!", exception.getMessage());

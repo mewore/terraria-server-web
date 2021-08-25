@@ -9,14 +9,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.FakeSubscription;
 import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
-import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
+import io.github.mewore.tsw.models.HostFactory;
 import io.github.mewore.tsw.services.database.DatabaseNotificationService;
 import io.github.mewore.tsw.services.util.async.InterruptableRunnable;
 import io.github.mewore.tsw.services.util.async.LifecycleThreadPool;
 
+import static io.github.mewore.tsw.models.terraria.TerrariaWorldFactory.makeWorld;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
@@ -43,10 +48,13 @@ class TerrariaWorldDbNotificationServiceTest {
     @Captor
     private ArgumentCaptor<InterruptableRunnable> deletionThreadCaptor;
 
+    @Captor
+    private ArgumentCaptor<DeletedWorldNotification> deletedWorldCaptor;
+
     @Test
     void testWaitForWorldDeletionNotification() throws InterruptedException {
-        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
-        when(databaseNotificationService.subscribe("terraria_world_deletions")).thenReturn(
+        final DeletedWorldNotification world = mock(DeletedWorldNotification.class);
+        when(databaseNotificationService.subscribe(eq("terraria_world_deletions"), any())).thenReturn(
                 new FakeSubscription<>(world));
 
         terrariaWorldDbNotificationService.setUp();
@@ -59,8 +67,13 @@ class TerrariaWorldDbNotificationServiceTest {
 
     @Test
     void testWorldDeleted() {
-        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
-        terrariaWorldDbNotificationService.worldDeleted(world);
-        verify(databaseNotificationService, only()).trySend("terraria_world_deletions", world);
+        terrariaWorldDbNotificationService.worldDeleted(makeWorld());
+
+        verify(databaseNotificationService, only()).trySend(eq("terraria_world_deletions"),
+                deletedWorldCaptor.capture());
+        assertEquals(1L, deletedWorldCaptor.getValue().getId());
+        assertEquals("World_Name", deletedWorldCaptor.getValue().getFileName());
+        assertEquals("World Name", deletedWorldCaptor.getValue().getDisplayName());
+        assertSame(HostFactory.HOST_UUID, deletedWorldCaptor.getValue().getHostUuid());
     }
 }

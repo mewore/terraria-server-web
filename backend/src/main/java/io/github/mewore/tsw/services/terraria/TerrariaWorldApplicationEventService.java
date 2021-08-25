@@ -5,10 +5,10 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.Publisher;
 import io.github.mewore.tsw.events.Subscription;
 import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
-import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -17,7 +17,7 @@ public class TerrariaWorldApplicationEventService {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final Publisher<Long, TerrariaWorldEntity> worldDeletionPublisher;
+    private final Publisher<Long, DeletedWorldNotification> worldDeletionPublisher;
 
     private final TerrariaWorldMessageService terrariaWorldMessageService;
 
@@ -35,7 +35,7 @@ public class TerrariaWorldApplicationEventService {
         terrariaWorldMessageService.broadcastWorldDeletion(event.getDeletedWorld());
     }
 
-    public Subscription<TerrariaWorldEntity> subscribeToWorldDeletions() {
+    public Subscription<DeletedWorldNotification> subscribeToWorldDeletions() {
         return worldDeletionPublisher.subscribe();
     }
 }

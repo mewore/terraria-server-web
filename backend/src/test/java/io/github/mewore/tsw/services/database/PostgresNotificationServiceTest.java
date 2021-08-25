@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.impossibl.postgres.api.jdbc.PGConnection;
 import com.impossibl.postgres.api.jdbc.PGNotificationListener;
 
@@ -214,14 +215,16 @@ class PostgresNotificationServiceTest {
     @Test
     void testSubscribe() throws InterruptedException {
         when(publisher.subscribe("channel")).thenReturn(new FakeSubscription<>("[1]"));
-        assertEquals(List.of(1), postgresNotificationService.subscribe("channel").take());
+        assertEquals(List.of(1), postgresNotificationService.subscribe("channel", new TypeReference<List<Integer>>() {
+        }).take());
     }
 
     @Test
     void testSubscribe_error() {
         when(publisher.subscribe("channel")).thenReturn(new FakeSubscription<>("invalid"));
         final Exception exception = assertThrows(RuntimeException.class,
-                () -> postgresNotificationService.subscribe("channel").take());
+                () -> postgresNotificationService.subscribe("channel", new TypeReference<List<Integer>>() {
+                }).take());
         assertEquals("Failed to parse the raw notification <invalid> as JSON", exception.getMessage());
     }
 

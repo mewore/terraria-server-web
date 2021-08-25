@@ -10,9 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.FakeSubscription;
-import io.github.mewore.tsw.models.HostEntity;
-import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.services.LocalHostService;
 import io.github.mewore.tsw.services.util.async.InterruptableRunnable;
 import io.github.mewore.tsw.services.util.async.LifecycleThreadPool;
@@ -47,24 +46,18 @@ class TerrariaWorldActionServiceTest {
     @Captor
     private ArgumentCaptor<InterruptableRunnable> waitForWorldDeletionsCaptor;
 
-    private static void assignHostToWorld(final TerrariaWorldEntity world, final UUID uuid) {
-        final HostEntity host = mock(HostEntity.class);
-        when(world.getHost()).thenReturn(host);
-        when(host.getUuid()).thenReturn(uuid);
-    }
-
     @Test
     void testWaitForWorldDeletions() throws InterruptedException {
-        final TerrariaWorldEntity worldAtAnotherHost = mock(TerrariaWorldEntity.class);
-        final TerrariaWorldEntity world = mock(TerrariaWorldEntity.class);
+        final DeletedWorldNotification worldAtAnotherHost = mock(DeletedWorldNotification.class);
+        final DeletedWorldNotification world = mock(DeletedWorldNotification.class);
         when(terrariaWorldApplicationEventService.subscribeToWorldDeletions()).thenReturn(
                 new FakeSubscription<>(worldAtAnotherHost, world));
 
         terrariaWorldActionService.setUp();
         verify(lifecycleThreadPool, only()).run(waitForWorldDeletionsCaptor.capture());
 
-        assignHostToWorld(worldAtAnotherHost, OTHER_HOST_UUID);
-        assignHostToWorld(world, LOCAL_HOST_UUID);
+        when(worldAtAnotherHost.getHostUuid()).thenReturn(OTHER_HOST_UUID);
+        when(world.getHostUuid()).thenReturn(LOCAL_HOST_UUID);
         when(localHostService.getHostUuid()).thenReturn(LOCAL_HOST_UUID);
 
         waitForWorldDeletionsCaptor.getValue().run();

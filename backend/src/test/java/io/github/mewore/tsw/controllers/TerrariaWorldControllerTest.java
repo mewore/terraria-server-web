@@ -13,12 +13,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import io.github.mewore.tsw.config.TestConfig;
 import io.github.mewore.tsw.config.security.AuthorityRoles;
-import io.github.mewore.tsw.models.terraria.world.TerrariaWorldEntity;
 import io.github.mewore.tsw.models.terraria.world.TerrariaWorldFileEntity;
 import io.github.mewore.tsw.services.terraria.TerrariaWorldService;
 
+import static io.github.mewore.tsw.models.terraria.TerrariaWorldFactory.makeWorld;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
@@ -39,7 +38,7 @@ class TerrariaWorldControllerTest {
         final TerrariaWorldFileEntity worldFile = TerrariaWorldFileEntity.builder()
                 .name("world.zip")
                 .content("data".getBytes())
-                .world(mock(TerrariaWorldEntity.class))
+                .world(makeWorld())
                 .build();
         when(terrariaWorldService.getWorldData(10L)).thenReturn(worldFile);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/terraria/worlds/10/data"))

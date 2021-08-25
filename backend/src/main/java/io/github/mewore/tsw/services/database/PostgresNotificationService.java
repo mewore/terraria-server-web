@@ -107,9 +107,7 @@ class PostgresNotificationService implements DatabaseNotificationService {
     }
 
     @Override
-    public <T> Subscription<T> subscribe(final String channel) {
-        final TypeReference<T> typeReference = new TypeReference<>() {
-        };
+    public <T> Subscription<T> subscribe(final String channel, final TypeReference<T> typeReference) {
         return subscribeRaw(channel).map(raw -> {
             try {
                 return JSON_READER.readValue(JSON_READER.createParser(raw), typeReference);

@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
 import io.github.mewore.tsw.exceptions.InvalidRequestException;
 import io.github.mewore.tsw.exceptions.NotFoundException;
@@ -154,7 +155,7 @@ public class TerrariaWorldService {
         final long deletedFileCount = terrariaWorldFileRepository.deleteByWorld(world);
         logger.info("Deleted {} file record(s) of world \"{}\"", deletedFileCount, world.getDisplayName());
         terrariaWorldRepository.delete(world);
-        applicationEventPublisher.publishEvent(new TerrariaWorldDeletionEvent(world));
+        applicationEventPublisher.publishEvent(new TerrariaWorldDeletionEvent(new DeletedWorldNotification(world)));
         terrariaWorldDbNotificationService.worldDeleted(world);
     }
 }

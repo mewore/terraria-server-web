@@ -2,6 +2,8 @@ package io.github.mewore.tsw.services.database;
 
 import java.time.Duration;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.junit.jupiter.api.Test;
 
 import io.github.mewore.tsw.events.Subscription;
@@ -36,8 +38,10 @@ class NullDatabaseNotificationServiceTest {
     }
 
     @Test
-    void testSubscribe() {
-        try (final Subscription<String> subscription = new NullDatabaseNotificationService().subscribe("channel")) {
+    void testSubscribe_take() {
+        try (final Subscription<String> subscription = new NullDatabaseNotificationService().subscribe("channel",
+                new TypeReference<>() {
+                })) {
             assertThrows(UnsupportedOperationException.class, subscription::take);
         }
     }

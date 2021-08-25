@@ -2,6 +2,8 @@ package io.github.mewore.tsw.services.terraria;
 
 import javax.annotation.PostConstruct;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,8 +38,12 @@ public class TerrariaInstanceDbNotificationService {
 
     @PostConstruct
     void setUp() {
-        final Subscription<Long> subscriptionForCreation = databaseNotificationService.subscribe(CREATION_CHANNEL_NAME);
-        final Subscription<Long> subscriptionForUpdates = databaseNotificationService.subscribe(UPDATE_CHANNEL_NAME);
+        final Subscription<Long> subscriptionForCreation = databaseNotificationService.subscribe(CREATION_CHANNEL_NAME,
+                new TypeReference<>() {
+                });
+        final Subscription<Long> subscriptionForUpdates = databaseNotificationService.subscribe(UPDATE_CHANNEL_NAME,
+                new TypeReference<>() {
+                });
 
         lifecycleThreadPool.run(() -> waitForInstanceNotification(subscriptionForCreation, true),
                 () -> waitForInstanceNotification(subscriptionForUpdates, false));
