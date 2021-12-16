@@ -13,6 +13,7 @@ pipeline {
         LAUNCH_COMMAND = 'export TSW_DB_USERNAME="${TSW_DB_USERNAME}"; export TSW_DB_PASSWORD="${TSW_DB_PASSWORD}"; ' +
             'export TSW_KEYSTORE_FILENAME="${TSW_KEYSTORE_ALIAS}.jks"; export TSW_KEYSTORE_ALIAS="${TSW_KEYSTORE_ALIAS}"; export TSW_KEYSTORE_PASSWORD="${TSW_KEYSTORE_PASSWORD}"; ' +
             "nohup bash -c \"java -jar '${DOWNLOADED_JAR_NAME}' --spring.profiles.active=common,prod\" > '${LOG_FILE}' &"
+        PORT = "8443"
     }
 
     stages {
@@ -45,9 +46,9 @@ pipeline {
                         }
                     }
                     sleep 5
-                    curlStatus = sh returnStatus: true, script: "curl --insecure https://localhost:8443"
+                    curlStatus = sh returnStatus: true, script: "curl --insecure https://localhost:${PORT}"
                     if (curlStatus == 0) {
-                        error "The app is still running or something else has taken up port :8080! Kill it manually."
+                        error "The app is still running or something else has taken up port :${PORT}! Kill it manually."
                     }
                     sh "mkdir -p 'old-logs' && mv tsw-*.log ./old-logs || echo 'No logs to move.'"
                 }
@@ -79,7 +80,7 @@ pipeline {
                     } else {
                         error "The app does not have an output file '${LOG_FILE}'!"
                     }
-                    sh "curl --insecure https://localhost:8443 | grep '<tsw-root>'"
+                    sh "curl --insecure https://localhost:${PORT} | grep '<tsw-root>'"
                 }
             }
         }
