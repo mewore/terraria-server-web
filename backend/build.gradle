@@ -48,6 +48,7 @@ repositories {
     mavenCentral()
 }
 
+ext['log4j2.version'] = '2.16.0'
 dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
     compileOnly 'org.hibernate:hibernate-core:5.5.5.Final'
