@@ -8,6 +8,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class NullSubscription<T> extends SubscriptionBase<T> {
 
     @Override
+    public boolean canTake() {
+        return false;
+    }
+
+    @Override
     public T take() {
         throw new UnsupportedOperationException("Cannot take a value from a null subscription");
     }

@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import io.github.mewore.tsw.events.FakeSubscription;
+import io.github.mewore.tsw.events.NullSubscription;
 import io.github.mewore.tsw.events.TerrariaInstanceApplicationEvent;
 import io.github.mewore.tsw.models.terraria.TerrariaInstanceEntity;
 import io.github.mewore.tsw.repositories.terraria.TerrariaInstanceRepository;
@@ -57,6 +58,15 @@ class TerrariaInstanceDbNotificationServiceTest {
     private ArgumentCaptor<InterruptableRunnable> updateThreadCaptor;
 
     @Test
+    void testSetUp_nullSubscription() {
+        when(databaseNotificationService.subscribe(eq("terraria_instance_creations"), any())).thenReturn(
+                new NullSubscription<>());
+
+        terrariaInstanceDbNotificationService.setUp();
+        verify(lifecycleThreadPool, never()).run(any());
+    }
+
+    @Test
     void testWaitForInstanceNotification() throws InterruptedException {
         when(databaseNotificationService.subscribe(eq("terraria_instance_creations"), any())).thenReturn(
                 new FakeSubscription<>(8L));
@@ -85,7 +95,8 @@ class TerrariaInstanceDbNotificationServiceTest {
 
     @Test
     void testWaitForInstanceNotification_update() throws InterruptedException {
-        when(databaseNotificationService.subscribe(eq("terraria_instance_creations"), any())).thenReturn(null);
+        when(databaseNotificationService.subscribe(eq("terraria_instance_creations"), any())).thenReturn(
+                new FakeSubscription<>(1L));
         when(databaseNotificationService.subscribe(eq("terraria_instance_updates"), any())).thenReturn(
                 new FakeSubscription<>(8L));
 

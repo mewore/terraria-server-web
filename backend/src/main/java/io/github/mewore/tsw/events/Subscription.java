@@ -14,6 +14,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface Subscription<T> extends AutoCloseable {
 
     /**
+     * @return Whether taking an element from this subscription is possible.
+     */
+    default boolean canTake() {
+        return true;
+    }
+
+    /**
      * Take the first received value for this subscription that hasn't been acknowledged yet.
      *
      * @return The first value that is received.

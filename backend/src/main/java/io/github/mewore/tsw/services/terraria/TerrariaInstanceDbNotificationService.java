@@ -41,6 +41,10 @@ public class TerrariaInstanceDbNotificationService {
         final Subscription<Long> subscriptionForCreation = databaseNotificationService.subscribe(CREATION_CHANNEL_NAME,
                 new TypeReference<>() {
                 });
+        if (!subscriptionForCreation.canTake()) {
+            return;
+        }
+
         final Subscription<Long> subscriptionForUpdates = databaseNotificationService.subscribe(UPDATE_CHANNEL_NAME,
                 new TypeReference<>() {
                 });

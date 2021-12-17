@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import io.github.mewore.tsw.events.DeletedWorldNotification;
 import io.github.mewore.tsw.events.FakeSubscription;
+import io.github.mewore.tsw.events.NullSubscription;
 import io.github.mewore.tsw.events.TerrariaWorldDeletionEvent;
 import io.github.mewore.tsw.models.HostFactory;
 import io.github.mewore.tsw.services.database.DatabaseNotificationService;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,6 +52,15 @@ class TerrariaWorldDbNotificationServiceTest {
 
     @Captor
     private ArgumentCaptor<DeletedWorldNotification> deletedWorldCaptor;
+
+    @Test
+    void testSetUp_nullSubscription() {
+        when(databaseNotificationService.subscribe(eq("terraria_world_deletions"), any())).thenReturn(
+                new NullSubscription<>());
+
+        terrariaWorldDbNotificationService.setUp();
+        verify(lifecycleThreadPool, never()).run(any());
+    }
 
     @Test
     void testWaitForWorldDeletionNotification() throws InterruptedException {

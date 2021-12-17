@@ -38,7 +38,9 @@ public class TerrariaWorldDbNotificationService {
                 DELETION_CHANNEL_NAME, new TypeReference<>() {
                 });
 
-        lifecycleThreadPool.run(() -> waitForWorldDeletionNotification(subscriptionForDeletion));
+        if (subscriptionForDeletion.canTake()) {
+            lifecycleThreadPool.run(() -> waitForWorldDeletionNotification(subscriptionForDeletion));
+        }
     }
 
     public void worldDeleted(final @NonNull TerrariaWorldEntity world) {
