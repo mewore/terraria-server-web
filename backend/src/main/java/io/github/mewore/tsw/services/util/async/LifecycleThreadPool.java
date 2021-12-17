@@ -1,6 +1,7 @@
 package io.github.mewore.tsw.services.util.async;
 
 import javax.annotation.PreDestroy;
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class LifecycleThreadPool {
 
+    private static final Duration UNKNOWN_EXCEPTION_WAIT_TIME = Duration.ofMinutes(1);
+
     private final Logger logger = LogManager.getLogger(getClass());
 
     private final AtomicBoolean canBeRun = new AtomicBoolean(true);
@@ -36,13 +39,19 @@ public class LifecycleThreadPool {
             newExecutor.submit(() -> {
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        runnable.run();
+                        try {
+                            runnable.run();
+                        } catch (final RuntimeException e) {
+                            logger.warn(
+                                    "Exception thrown in a lifecycle thread; waiting " + UNKNOWN_EXCEPTION_WAIT_TIME +
+                                            " until running again...", e);
+                            //noinspection BusyWait
+                            Thread.sleep(UNKNOWN_EXCEPTION_WAIT_TIME.toMillis());
+                        }
                     } catch (final InterruptedException e) {
                         logger.warn("Lifecycle thread interrupted", e);
                         Thread.currentThread().interrupt();
                         return;
-                    } catch (final RuntimeException e) {
-                        logger.warn("Error thrown in a lifecycle thread", e);
                     }
                 }
             });
