@@ -11,7 +11,7 @@ pipeline {
         LOG_FILE="tsw-${env.BUILD_NUMBER}.log"
         DOWNLOADED_JAR_NAME = "${TSW_BUILD_JOBNAME}-${TSW_BUILD_NUMBER}-${JAR_NAME}"
         LAUNCH_COMMAND = 'export TSW_DB_USERNAME="${TSW_DB_USERNAME}"; export TSW_DB_PASSWORD="${TSW_DB_PASSWORD}"; ' +
-            'export TSW_KEYSTORE_FILENAME="${TSW_KEYSTORE_ALIAS}.jks"; export TSW_KEYSTORE_ALIAS="${TSW_KEYSTORE_ALIAS}"; export TSW_KEYSTORE_PASSWORD="${TSW_KEYSTORE_PASSWORD}"; ' +
+            'export TSW_KEYSTORE_FILENAME="${env.HOME}/${TSW_KEYSTORE_ALIAS}.jks"; export TSW_KEYSTORE_ALIAS="${TSW_KEYSTORE_ALIAS}"; export TSW_KEYSTORE_PASSWORD="${TSW_KEYSTORE_PASSWORD}"; ' +
             "nohup bash -c \"java -jar '${DOWNLOADED_JAR_NAME}' --spring.profiles.active=common,prod\" > '${LOG_FILE}' &"
         PORT = "8443"
     }
