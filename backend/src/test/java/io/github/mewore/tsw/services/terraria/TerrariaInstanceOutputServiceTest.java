@@ -223,7 +223,8 @@ class TerrariaInstanceOutputServiceTest {
         instance.setModLoaderVersion("1.2.3");
         final FileTailEventConsumer tail = track(instance);
         when(terrariaInstanceService.saveInstanceAndEvents(same(instance), any())).thenReturn(instance);
-        simulateText(tail, "Loading: Mod v1\n", "Loading: ModLoader v1.2.3\n", "Loading: ModLoader v1.2.4\n",
+        simulateText(tail, "Loading: Mod v1\n", "Loading: ModLoader v1.2.3\n",
+                "Loading: ModLoader (tModLoader) v1.2.3\n", "Loading: ModLoader v1.2.4\n",
                 "Loading: ModWithoutVersion\n", "Loading: OtherMod v2\n");
         assertEquals(Set.of("Mod v1", "ModLoader v1.2.4", "OtherMod v2"), instance.getLoadedMods());
     }

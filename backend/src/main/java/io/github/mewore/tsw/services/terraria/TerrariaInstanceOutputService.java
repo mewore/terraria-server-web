@@ -252,7 +252,7 @@ public class TerrariaInstanceOutputService {
                 logger.warn("Expected to find a mod name in the following line: {}", line);
                 return false;
             }
-            if (modName.equals("ModLoader v" + instance.getModLoaderVersion()) ||
+            if ((modName.startsWith("ModLoader") && modName.endsWith("v" + instance.getModLoaderVersion())) ||
                     instance.getLoadedMods().contains(modName)) {
                 return true;
             }
